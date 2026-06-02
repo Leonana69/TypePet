@@ -1,0 +1,10 @@
+{
+  "jumpHeight": 50,
+  "walkSpeed": 90,
+  "climbSpeed": 70,
+  "gravity": 900,
+  "roamingChance": 35,
+  "targetFps": 60,
+  "worldPollHz": 8,
+  "spriteSheet": "Assets/pet-spritesheet.png"
+}

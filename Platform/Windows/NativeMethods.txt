@@ -1,0 +1,15 @@
+EnumWindows
+IsWindowVisible
+IsIconic
+GetWindowRect
+GetWindowTextLength
+GetWindowLongPtr
+SetWindowLongPtr
+FindWindow
+DwmGetWindowAttribute
+DWMWINDOWATTRIBUTE
+SHAppBarMessage
+APPBARDATA
+ABM_GETTASKBARPOS
+WINDOW_EX_STYLE
+WINDOW_LONG_PTR_INDEX
