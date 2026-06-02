@@ -13,11 +13,13 @@ namespace MaplePet.Rendering;
 /// </summary>
 public static class PoseRenderTest
 {
-    public static void Run(string outDir)
+    public static void Run(string outDir, string? footageDir = null)
     {
         Directory.CreateDirectory(outDir);
 
-        var sprites = CharacterSprites.Load();
+        var sprites = footageDir is null
+            ? CharacterSprites.Load(hitTestPoses: CharacterAnimator.ActivePoses)
+            : CharacterSprites.Load(footageDir: footageDir, hitTestPoses: CharacterAnimator.ActivePoses);
         if (sprites is null)
         {
             File.WriteAllText(Path.Combine(outDir, "FAILED.txt"), "CharacterSprites.Load() returned null");

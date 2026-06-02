@@ -28,7 +28,7 @@ public partial class App : Application
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    try { MaplePet.Rendering.PoseRenderTest.Run(dir); }
+                    try { MaplePet.Rendering.PoseRenderTest.Run(dir, AppState.RenderPosesFrom); }
                     catch (Exception ex) { File.WriteAllText(Path.Combine(dir, "ERROR.txt"), ex.ToString()); }
                     desktop.Shutdown();
                 });

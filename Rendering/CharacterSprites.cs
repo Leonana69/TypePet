@@ -7,11 +7,12 @@ using Avalonia.Platform;
 namespace MaplePet.Rendering;
 
 /// <summary>
-/// The MapleStory character's drawable footage, loaded once from
-/// <c>Assets/footage/manifest.json</c> (exported by maple-character-builder). For now we render
-/// only the <b>Body</b> and <b>Head</b> categories — the manifest's per-frame <c>draw[]</c> list
-/// is already sorted back-to-front and carries paste-ready canvas coordinates, so we just keep the
-/// layers whose category is Body/Head and store each one's position relative to the body navel.
+/// The MapleStory character's drawable footage, loaded once from a
+/// <c>manifest.json</c> (exported by maple-character-builder). We render every equipped layer the
+/// manifest lists — Body, Head, Hair, Cap, Face, FaceAcc, Earring, Longcoat, Shoes, Weapon, Shield,
+/// and any item effects — in the manifest's order, which is already sorted back-to-front by z. Each
+/// layer is stored as an offset from the body navel. The bundled Body+Head default character is just
+/// a manifest that lists only those two categories, so the same loader renders it as a bald avatar.
 ///
 /// Coordinates: every pose has a fixed canvas with the body navel at canvas pixel
 /// <c>navel{x,y}</c>. We re-express each layer as an offset from the navel (the one stable anchor
@@ -57,10 +58,6 @@ public sealed class CharacterSprites
         HalfWidth = halfWidth;
         HeightAboveFeet = heightAboveFeet;
     }
-
-    // Only these categories are rendered for now (no Hair/Face/Weapon/effects).
-    private static readonly HashSet<string> RenderedCategories =
-        new(StringComparer.OrdinalIgnoreCase) { "Body", "Head" };
 
     /// <summary>
     /// Load and decode the footage. Returns <c>null</c> (and traces) on any failure so the renderer
@@ -143,15 +140,14 @@ public sealed class CharacterSprites
         {
             double delay = fr.TryGetProperty("delayMs", out var d) ? d.GetDouble() : 150;
             var layers = new List<Layer>();
-            double foot = 0;
+            double bodyFoot = 0, anyFoot = 0;
             if (fr.TryGetProperty("draw", out var draws) && draws.ValueKind == JsonValueKind.Array)
             {
                 foreach (var dr in draws.EnumerateArray())
                 {
+                    // Render every equipped layer the manifest lists (Body, Head, Hair, Cap, Face,
+                    // Longcoat, Weapon, Shield, effects, ...). draw[] is already back-to-front.
                     string category = dr.GetProperty("category").GetString() ?? "";
-                    if (!RenderedCategories.Contains(category)) continue;
-                    if (dr.TryGetProperty("isEffect", out var ie) && ie.ValueKind == JsonValueKind.True) continue;
-
                     string image = dr.GetProperty("image").GetString()!;
                     double cx = dr.GetProperty("canvasX").GetDouble();
                     double cy = dr.GetProperty("canvasY").GetDouble();
@@ -161,10 +157,16 @@ public sealed class CharacterSprites
                     // (navelX, navelY) there, so (cx-navelX, cy-navelY) is the navel-relative offset.
                     double oy = cy - navelY;
                     layers.Add(new Layer(loadBitmap(image), cx - navelX, oy, w, h));
-                    foot = Math.Max(foot, oy + h); // lowest pixel below the navel = the foot line
+
+                    // Foot line = the body's lowest pixel. Anchor on the Body category only so a long
+                    // coat, weapon, or shield hanging below the legs can't lift the feet off the ground.
+                    double bottom = oy + h;
+                    anyFoot = Math.Max(anyFoot, bottom);
+                    if (category.Equals("Body", StringComparison.OrdinalIgnoreCase))
+                        bodyFoot = Math.Max(bodyFoot, bottom);
                 }
             }
-            frames.Add(new Frame(layers, delay, foot));
+            frames.Add(new Frame(layers, delay, bodyFoot > 0 ? bodyFoot : anyFoot));
         }
 
         if (cycle.Count == 0)

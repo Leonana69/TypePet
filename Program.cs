@@ -12,6 +12,9 @@ public static class AppState
 
     /// <summary>Dev-only: if set, render the character poses to PNGs in this dir and exit.</summary>
     public static string? RenderPosesDir { get; set; }
+
+    /// <summary>Dev-only: footage dir for <see cref="RenderPosesDir"/> (defaults to Assets/footage).</summary>
+    public static string? RenderPosesFrom { get; set; }
 }
 
 internal static class Program
@@ -21,6 +24,7 @@ internal static class Program
     {
         AppState.SmokeSeconds = ParseSmoke(args);
         AppState.RenderPosesDir = ParseOption(args, "--render-poses");
+        AppState.RenderPosesFrom = ParseOption(args, "--render-from");
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
