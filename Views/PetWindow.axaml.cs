@@ -29,7 +29,6 @@ public partial class PetWindow : Window
     private CharacterAnimator? _animator;
 
     private nint _hwnd;
-    private bool _interactive; // true when the overlay is currently NOT click-through
     private bool _lmbPrev;     // left button state on the previous tick
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
@@ -139,7 +138,6 @@ public partial class PetWindow : Window
         if (OperatingSystem.IsWindows())
         {
             _hwnd = handle.Handle;
-            _interactive = false;
             WindowsInterop.MakeClickThrough(_hwnd);
             if (_winTracker is not null)
                 _winTracker.ExcludeHwnd = _hwnd;
@@ -147,9 +145,12 @@ public partial class PetWindow : Window
     }
 
     /// <summary>
-    /// Poll the global cursor + left mouse button to drive dragging and the click-through toggle.
-    /// While the cursor hovers the pet (or it's being dragged) the overlay is interactive so the
-    /// click is caught here; otherwise it stays click-through.
+    /// Poll the global cursor + left mouse button to drive dragging. The overlay stays permanently
+    /// click-through: making it interactive turns the full-screen layered window into an opaque
+    /// occluder, which makes hardware-accelerated video below it go black until that app repaints
+    /// (the browser's occlusion tracking stops drawing the video). Dragging is driven entirely by
+    /// this global poll, so click-through doesn't affect it — the only consequence is that a click
+    /// on the pet also passes through to the window behind it.
     /// </summary>
     private void UpdateInput()
     {
@@ -173,16 +174,6 @@ public partial class PetWindow : Window
             }
         }
         _lmbPrev = lmb;
-
-        bool desired = overPet || _pet.IsDragging;
-        if (desired != _interactive)
-        {
-            WindowsInterop.SetClickThrough(_hwnd, clickThrough: !desired);
-            _interactive = desired;
-            // Returning to click-through: the style flip can leave hardware-accelerated video below
-            // us black until it repaints. Nudge the window underneath to refresh (mimics clicking it).
-            if (!desired) WindowsInterop.RepaintForegroundWindow();
-        }
     }
 
     private bool TryCursorLogical(out Vec2 logical)

@@ -8,8 +8,6 @@ SetWindowLongPtr
 FindWindow
 GetCursorPos
 GetAsyncKeyState
-GetForegroundWindow
-RedrawWindow
 DwmGetWindowAttribute
 DWMWINDOWATTRIBUTE
 SHAppBarMessage
