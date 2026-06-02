@@ -45,12 +45,14 @@ public sealed class PetController
     public Vec2 Vel;          // px/second
     public PetState State { get; private set; } = PetState.Jump;
     public int Facing { get; private set; } = 1; // +1 = right, -1 = left
+    public bool IsDragging { get; private set; }  // held by the cursor; physics is suspended
 
     private bool _spawned;
     private double _climbX;    // ladder line being climbed
     private int _climbDir;     // -1 = up (y decreasing), +1 = down
     private double _cooldown;
     private double _idleTimer;
+    private bool _standAfterLanding; // after a drag-release, stand where it lands
     private double _lastRolledX = double.NaN; // ladder X whose roaming roll was just resolved
 
     public double FeetY => Pos.Y + Size.Y;
@@ -66,6 +68,7 @@ public sealed class PetController
     public void Update(World world, double dt)
     {
         if (world.Platforms.Count == 0) return;
+        if (IsDragging) return; // position is driven by the cursor while held
         EnsureSpawn(world);
         if (_cooldown > 0) _cooldown -= dt;
 
@@ -76,6 +79,31 @@ public sealed class PetController
             case PetState.Rope: UpdateRope(world, dt); break;
             case PetState.Jump: UpdateJump(world, dt); break;
         }
+    }
+
+    // ---------------------------------------------------------------- Drag (cursor-driven)
+    /// <summary>Begin a cursor drag: suspend physics and hold the pet airborne (JUMP).</summary>
+    public void BeginDrag()
+    {
+        IsDragging = true;
+        State = PetState.Jump;
+        Vel = default;
+    }
+
+    /// <summary>Move the held pet so its center sits at <paramref name="center"/> (logical px).</summary>
+    public void DragTo(Vec2 center)
+    {
+        if (IsDragging)
+            Pos = new Vec2(center.X - Size.X / 2, center.Y - Size.Y / 2);
+    }
+
+    /// <summary>Release the pet: it falls (JUMP) and stands where it lands.</summary>
+    public void EndDrag()
+    {
+        IsDragging = false;
+        State = PetState.Jump;
+        Vel = default;
+        _standAfterLanding = true;
     }
 
     /// <summary>Place the pet on the lowest (closest to bottom) platform — the taskbar.</summary>
@@ -299,8 +327,16 @@ public sealed class PetController
         {
             Pos = new Vec2(newX, landing.Value.Y - Size.Y);
             Vel = default;
-            State = PetState.Walk;
-            _cooldown = ReRollCooldown;
+            if (_standAfterLanding)
+            {
+                _standAfterLanding = false;
+                EnterStand(); // released from a drag -> stand where it lands
+            }
+            else
+            {
+                State = PetState.Walk;
+                _cooldown = ReRollCooldown;
+            }
         }
         else
         {

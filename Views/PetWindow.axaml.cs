@@ -25,6 +25,10 @@ public partial class PetWindow : Window
     private World? _world;
     private PetController? _pet;
 
+    private nint _hwnd;
+    private bool _interactive; // true when the overlay is currently NOT click-through
+    private bool _lmbPrev;     // left button state on the previous tick
+
     public PetWindow()
     {
         InitializeComponent();
@@ -116,10 +120,64 @@ public partial class PetWindow : Window
 
         if (OperatingSystem.IsWindows())
         {
-            WindowsInterop.MakeClickThrough(handle.Handle);
+            _hwnd = handle.Handle;
+            _interactive = false;
+            WindowsInterop.MakeClickThrough(_hwnd);
             if (_winTracker is not null)
-                _winTracker.ExcludeHwnd = handle.Handle;
+                _winTracker.ExcludeHwnd = _hwnd;
         }
+    }
+
+    /// <summary>
+    /// Poll the global cursor + left mouse button to drive dragging and the click-through toggle.
+    /// While the cursor hovers the pet (or it's being dragged) the overlay is interactive so the
+    /// click is caught here; otherwise it stays click-through.
+    /// </summary>
+    private void UpdateInput()
+    {
+        if (_hwnd == 0 || _pet is null || !OperatingSystem.IsWindows()) return;
+
+        bool lmb = WindowsInterop.IsLeftButtonDown();
+        bool overPet = TryCursorLogical(out var cursor) && OverPet(cursor);
+
+        if (!_pet.IsDragging && lmb && !_lmbPrev && overPet)
+            _pet.BeginDrag();
+
+        if (_pet.IsDragging)
+        {
+            if (lmb)
+            {
+                if (TryCursorLogical(out var c)) _pet.DragTo(c);
+            }
+            else
+            {
+                _pet.EndDrag();
+            }
+        }
+        _lmbPrev = lmb;
+
+        bool desired = overPet || _pet.IsDragging;
+        if (desired != _interactive)
+        {
+            WindowsInterop.SetClickThrough(_hwnd, clickThrough: !desired);
+            _interactive = desired;
+        }
+    }
+
+    private bool TryCursorLogical(out Vec2 logical)
+    {
+        logical = default;
+        if (!WindowsInterop.TryGetCursorPos(out int px, out int py)) return false;
+        logical = new Vec2((px - _screen.OriginX) / _screen.Scale, (py - _screen.OriginY) / _screen.Scale);
+        return true;
+    }
+
+    private bool OverPet(Vec2 p)
+    {
+        if (_pet is null) return false;
+        const double margin = 5;
+        return p.X >= _pet.Pos.X - margin && p.X <= _pet.Pos.X + _pet.Size.X + margin
+            && p.Y >= _pet.Pos.Y - margin && p.Y <= _pet.Pos.Y + _pet.Size.Y + margin;
     }
 
     private void PollWorld()
@@ -143,6 +201,7 @@ public partial class PetWindow : Window
 
     private void OnTick(double dt)
     {
+        UpdateInput();
         if (_pet is not null && _world is not null)
         {
             _pet.Update(_world, dt);

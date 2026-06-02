@@ -6,6 +6,8 @@ GetWindowTextLength
 GetWindowLongPtr
 SetWindowLongPtr
 FindWindow
+GetCursorPos
+GetAsyncKeyState
 DwmGetWindowAttribute
 DWMWINDOWATTRIBUTE
 SHAppBarMessage
