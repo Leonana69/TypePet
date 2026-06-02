@@ -29,12 +29,16 @@ public partial class PetWindow : Window
     private bool _interactive; // true when the overlay is currently NOT click-through
     private bool _lmbPrev;     // left button state on the previous tick
 
-    public PetWindow()
+    // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
+    // app always constructs it via the Settings overload below (with the shared instance).
+    public PetWindow() : this(Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"))) { }
+
+    public PetWindow(Settings settings)
     {
         InitializeComponent();
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
 
-        _cfg = Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"));
+        _cfg = settings;
         _loop = new GameLoop(_cfg.TargetFps);
         _loop.Tick += OnTick;
     }

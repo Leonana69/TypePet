@@ -19,6 +19,9 @@ public sealed class Settings
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
 
+    /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
+    [JsonIgnore] public string SourcePath { get; set; } = "";
+
     private static readonly JsonSerializerOptions Options = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -39,6 +42,7 @@ public sealed class Settings
                 if (loaded is not null)
                 {
                     loaded.Sanitize();
+                    loaded.SourcePath = path;
                     return loaded;
                 }
             }
@@ -48,10 +52,19 @@ public sealed class Settings
             // Fall through to defaults on any parse/IO error.
         }
 
-        var defaults = new Settings();
+        var defaults = new Settings { SourcePath = path };
         try { File.WriteAllText(path, JsonSerializer.Serialize(defaults, Options)); }
         catch { /* best effort */ }
         return defaults;
+    }
+
+    /// <summary>Sanitize and persist the current values back to <see cref="SourcePath"/>.</summary>
+    public void Save()
+    {
+        Sanitize();
+        if (string.IsNullOrEmpty(SourcePath)) return;
+        try { File.WriteAllText(SourcePath, JsonSerializer.Serialize(this, Options)); }
+        catch { /* best effort */ }
     }
 
     /// <summary>
