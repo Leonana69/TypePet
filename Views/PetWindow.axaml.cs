@@ -30,6 +30,7 @@ public partial class PetWindow : Window
 
     private nint _hwnd;
     private bool _lmbPrev;     // left button state on the previous tick
+    private MouseClickBlocker? _clickBlocker; // eats the grab click so it doesn't hit the window behind
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
     // app always constructs it via the Settings overload below (with the shared instance).
@@ -83,6 +84,7 @@ public partial class PetWindow : Window
     {
         _loop.Stop();
         _pollTimer?.Stop();
+        _clickBlocker?.Dispose();
         base.OnClosed(e);
     }
 
@@ -141,16 +143,21 @@ public partial class PetWindow : Window
             WindowsInterop.MakeClickThrough(_hwnd);
             if (_winTracker is not null)
                 _winTracker.ExcludeHwnd = _hwnd;
+
+            // The overlay stays click-through (so it never occludes video); this low-level hook
+            // swallows the left click only when it lands on the pet, so grabbing the pet doesn't
+            // also click the window behind it.
+            _clickBlocker = new MouseClickBlocker();
+            _clickBlocker.Install();
         }
     }
 
     /// <summary>
     /// Poll the global cursor + left mouse button to drive dragging. The overlay stays permanently
-    /// click-through: making it interactive turns the full-screen layered window into an opaque
-    /// occluder, which makes hardware-accelerated video below it go black until that app repaints
-    /// (the browser's occlusion tracking stops drawing the video). Dragging is driven entirely by
-    /// this global poll, so click-through doesn't affect it — the only consequence is that a click
-    /// on the pet also passes through to the window behind it.
+    /// click-through (so it never occludes hardware-accelerated video below it — making it
+    /// interactive would black the video out). The grab click is instead "caught" by a low-level
+    /// mouse hook (<see cref="MouseClickBlocker"/>) that eats the press/release only when it lands on
+    /// the pet, so it doesn't reach the window behind. Dragging itself is driven by this poll.
     /// </summary>
     private void UpdateInput()
     {
@@ -185,21 +192,53 @@ public partial class PetWindow : Window
     }
 
     private bool OverPet(Vec2 p)
+        => TryPetHitBoxLogical(out double l, out double t, out double r, out double b)
+           && p.X >= l && p.X <= r && p.Y >= t && p.Y <= b;
+
+    /// <summary>
+    /// The pet's clickable box in logical (overlay) px. Matches the drawn character: centered on
+    /// CenterX, rising HeightAboveFeet above the feet (well past the small physics box); falls back to
+    /// the physics box when footage didn't load. Used for both hover hit-testing and the click hook.
+    /// </summary>
+    private bool TryPetHitBoxLogical(out double left, out double top, out double right, out double bottom)
     {
+        left = top = right = bottom = 0;
         if (_pet is null) return false;
         const double margin = 5;
 
-        // Match the drawn character: the sprite is centered on CenterX and rises HeightAboveFeet
-        // above the feet (well past the small physics box). Fall back to the physics box when the
-        // footage didn't load (the renderer then draws the placeholder rectangle there).
         if (_sprites is { } s)
         {
-            return p.X >= _pet.CenterX - s.HalfWidth - margin && p.X <= _pet.CenterX + s.HalfWidth + margin
-                && p.Y >= _pet.FeetY - s.HeightAboveFeet - margin && p.Y <= _pet.FeetY + margin;
+            left = _pet.CenterX - s.HalfWidth - margin;
+            right = _pet.CenterX + s.HalfWidth + margin;
+            top = _pet.FeetY - s.HeightAboveFeet - margin;
+            bottom = _pet.FeetY + margin;
         }
+        else
+        {
+            left = _pet.Pos.X - margin;
+            right = _pet.Pos.X + _pet.Size.X + margin;
+            top = _pet.Pos.Y - margin;
+            bottom = _pet.Pos.Y + _pet.Size.Y + margin;
+        }
+        return true;
+    }
 
-        return p.X >= _pet.Pos.X - margin && p.X <= _pet.Pos.X + _pet.Size.X + margin
-            && p.Y >= _pet.Pos.Y - margin && p.Y <= _pet.Pos.Y + _pet.Size.Y + margin;
+    /// <summary>Tell the click hook where the pet is, in physical screen px (inverse of TryCursorLogical).</summary>
+    private void PublishPetHitBox()
+    {
+        if (_clickBlocker is null) return;
+        if (TryPetHitBoxLogical(out double l, out double t, out double r, out double b))
+        {
+            _clickBlocker.SetPetRect(true,
+                (int)Math.Floor(l * _screen.Scale + _screen.OriginX),
+                (int)Math.Floor(t * _screen.Scale + _screen.OriginY),
+                (int)Math.Ceiling(r * _screen.Scale + _screen.OriginX),
+                (int)Math.Ceiling(b * _screen.Scale + _screen.OriginY));
+        }
+        else
+        {
+            _clickBlocker.SetPetRect(false, 0, 0, 0, 0);
+        }
     }
 
     private void PollWorld()
@@ -233,6 +272,7 @@ public partial class PetWindow : Window
             _animator?.Update(_sprites, _pet.State, dt);
             View.Pet = _pet;
         }
+        PublishPetHitBox(); // keep the click hook's pet rect current
         View.InvalidateVisual();
     }
 

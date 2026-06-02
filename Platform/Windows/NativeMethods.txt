@@ -8,6 +8,15 @@ SetWindowLongPtr
 FindWindow
 GetCursorPos
 GetAsyncKeyState
+SetWindowsHookEx
+CallNextHookEx
+UnhookWindowsHookEx
+GetModuleHandle
+MSLLHOOKSTRUCT
+WINDOWS_HOOK_ID
+WM_LBUTTONDOWN
+WM_LBUTTONUP
+LLMHF_INJECTED
 DwmGetWindowAttribute
 DWMWINDOWATTRIBUTE
 SHAppBarMessage
