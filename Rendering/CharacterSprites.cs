@@ -22,8 +22,10 @@ namespace MaplePet.Rendering;
 /// </summary>
 public sealed class CharacterSprites
 {
-    /// <summary>One bitmap of one pose-frame, positioned by its top-left offset from the navel.</summary>
-    public sealed record Layer(Bitmap Image, double OffsetX, double OffsetY, double Width, double Height);
+    /// <summary>One bitmap of one pose-frame, positioned by its top-left offset from the navel.
+    /// <paramref name="IsEffect"/> marks item-effect auras/glows, which render but are excluded from
+    /// the drag hit-test (they can be far larger than the character).</summary>
+    public sealed record Layer(Bitmap Image, double OffsetX, double OffsetY, double Width, double Height, bool IsEffect);
 
     /// <summary>
     /// The layers of a single animation frame (back-to-front), how long to hold it, and
@@ -153,10 +155,15 @@ public sealed class CharacterSprites
                     double cy = dr.GetProperty("canvasY").GetDouble();
                     double w = dr.GetProperty("width").GetDouble();
                     double h = dr.GetProperty("height").GetDouble();
+                    // Item-effect overlays: flagged isEffect, or the dedicated "effect" layer slot
+                    // (some exports leave isEffect=false but still name the layer "effect").
+                    string layerName = dr.TryGetProperty("layer", out var ln) ? (ln.GetString() ?? "") : "";
+                    bool isEffect = (dr.TryGetProperty("isEffect", out var ie) && ie.ValueKind == JsonValueKind.True)
+                                    || layerName.Equals("effect", StringComparison.OrdinalIgnoreCase);
                     // canvasX/Y are the layer's top-left in the pose canvas; the navel sits at
                     // (navelX, navelY) there, so (cx-navelX, cy-navelY) is the navel-relative offset.
                     double oy = cy - navelY;
-                    layers.Add(new Layer(loadBitmap(image), cx - navelX, oy, w, h));
+                    layers.Add(new Layer(loadBitmap(image), cx - navelX, oy, w, h, isEffect));
 
                     // Foot line = the body's lowest pixel. Anchor on the Body category only so a long
                     // coat, weapon, or shield hanging below the legs can't lift the feet off the ground.
@@ -191,6 +198,7 @@ public sealed class CharacterSprites
             foreach (var frame in pose.Frames)
                 foreach (var l in frame.Layers)
                 {
+                    if (l.IsEffect) continue; // effect auras/glows can dwarf the character; not grabbable area
                     halfWidth = Math.Max(halfWidth, Math.Max(Math.Abs(l.OffsetX), Math.Abs(l.OffsetX + l.Width)));
                     heightAboveFeet = Math.Max(heightAboveFeet, frame.FootOffset - l.OffsetY);
                 }
