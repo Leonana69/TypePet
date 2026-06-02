@@ -30,7 +30,10 @@ public sealed class PetController
     private const double ArriveTol = 1.5;   // horizontal "reached the waypoint" tolerance
     private const double IdleMinSeconds = 0.8;
     private const double IdleMaxSeconds = 2.4;
-    private const int TargetTries = 16;     // attempts to find a reachable random target
+    private const int TargetTries = 16;        // attempts to find a reachable random target
+    private const double TargetEdgeMargin = 18;// keep random targets off the very corners
+    private const double JumpClearance = 12;   // apex height above the platform we jump up onto
+    private const double DropClearance = 2;    // sink below the source platform before a down-jump
 
     public Vec2 Pos;          // top-left, logical px
     public Vec2 Size;         // width/height, logical px
@@ -161,21 +164,30 @@ public sealed class PetController
     private bool PickTarget(World world)
     {
         if (_graph is null) return false;
-        var eligible = _graph.EligibleTargets(_cfg.RoamingHeight);
-        if (eligible.Count == 0) return false;
+        var plats = _graph.EligiblePlatforms(_cfg.RoamingHeight);
+        if (plats.Count == 0) return false;
 
         for (int attempt = 0; attempt < TargetTries; attempt++)
         {
-            var node = _graph.Nodes[eligible[_rng.Next(eligible.Count)]];
-            // Skip targets we're basically already at.
-            if (Math.Abs(node.X - CenterX) < 24 && Math.Abs(node.Y - FeetY) < SupportTol) continue;
+            var p = world.Platforms[plats[_rng.Next(plats.Count)]];
+            // A random point INSIDE the top edge, not a corner.
+            double margin = Math.Min(TargetEdgeMargin, p.Width / 3.0);
+            double inner = p.Width - 2 * margin;
+            double tx = inner > 1 ? p.XStart + margin + _rng.NextDouble() * inner : p.CenterX;
 
-            var path = _graph.FindPath(CenterX, FeetY, _graph.NearestNode(node.X, node.Y));
+            // Skip targets we're basically already at. Bound the skip radius below half the interior
+            // band, otherwise on a narrow platform it would reject the whole band and the pet (when
+            // this is its only roamable platform) would idle forever.
+            double skipR = Math.Min(24.0, Math.Max(ArriveTol, inner / 2.0 - ArriveTol));
+            if (Math.Abs(tx - CenterX) < skipR && Math.Abs(p.Y - FeetY) < SupportTol) continue;
+
+            var target = new Vec2(tx, p.Y);
+            var path = PlanTo(target);
             if (path is { Count: > 0 })
             {
                 _path = path;
                 _step = 0;
-                _targetPos = new Vec2(node.X, node.Y);
+                _targetPos = target;
                 _hasTarget = true;
                 _pendingReplan = false;
                 return true;
@@ -184,12 +196,32 @@ public sealed class PetController
         return false;
     }
 
+    /// <summary>
+    /// Plan a route from the pet's current position to <paramref name="target"/>, a point that may
+    /// be in the interior of its platform. We path to the nearest graph node on the target platform,
+    /// then append a final walk to the exact target x so the pet stops at the chosen spot.
+    /// </summary>
+    private List<PathStep>? PlanTo(Vec2 target)
+    {
+        if (_graph is null) return null;
+        int pi = _graph.PlatformAt(target.X, target.Y);
+        int goal = pi >= 0 ? _graph.NearestNodeOnPlatform(pi, target.X)
+                           : _graph.NearestNode(target.X, target.Y);
+        if (goal < 0) return null;
+
+        var path = _graph.FindPath(CenterX, FeetY, goal);
+        if (path is null) return null;
+
+        if (path.Count == 0 || Math.Abs(path[^1].X - target.X) > ArriveTol)
+            path.Add(new PathStep(MoveKind.Walk, target.X, target.Y, -1));
+        return path;
+    }
+
     private void RecomputePath(World world)
     {
         _pendingReplan = false;
         if (!_hasTarget || _graph is null) { _path = null; return; }
-        int goal = _graph.NearestNode(_targetPos.X, _targetPos.Y);
-        _path = _graph.FindPath(CenterX, FeetY, goal);
+        _path = PlanTo(_targetPos);
         _step = 0;
         if (_path is null) _hasTarget = false; // target no longer reachable; idle/pick anew
     }
@@ -215,17 +247,15 @@ public sealed class PetController
                 if (WalkToward(world, dt, step.X)) Advance(world);
                 break;
             case MoveKind.ClimbUp:
-            case MoveKind.ClimbDown:
                 if (WalkToward(world, dt, step.X)) StartRope(world, step);
                 break;
+            case MoveKind.JumpUp:
+                // The previous step walked us to the launch x; arc up onto (step.X, step.Y).
+                LaunchArc(step.X, step.Y);
+                break;
             case MoveKind.DropDown:
-                if (WalkToward(world, dt, step.X))
-                {
-                    // Step the feet just off the source surface first, otherwise FindLanding would
-                    // immediately re-detect the platform we're leaving and we'd never actually fall.
-                    Pos = new Vec2(Pos.X, Pos.Y + 4.0);
-                    BeginFall(); // lands on the platform below -> replan from there
-                }
+                // Down-jump: drop through this platform and arc onto (step.X, step.Y) below.
+                BeginDrop(step.X, step.Y);
                 break;
         }
     }
@@ -314,6 +344,43 @@ public sealed class PetController
     // ---------------------------------------------------------------- Jump / fall
     private void BeginFall(double vx = 0)
     {
+        Vel = new Vec2(vx, 0);
+        State = PetState.Jump;
+    }
+
+    /// <summary>
+    /// Launch a ballistic jump UP from the current feet position, arcing onto (<paramref name="landX"/>,
+    /// <paramref name="landY"/>) where landY is above. The apex clears the target by
+    /// <see cref="JumpClearance"/>, so the pet rises past the platform and settles down onto it —
+    /// landing is detected by the normal descent test in <see cref="UpdateJump"/>.
+    /// </summary>
+    private void LaunchArc(double landX, double landY)
+    {
+        double x0 = CenterX, y0 = FeetY;
+        double g = Math.Max(1.0, _cfg.Gravity);
+        double apexY = Math.Min(y0, landY) - JumpClearance; // highest point (smallest Y)
+        double rise = Math.Max(1.0, y0 - apexY);            // launch -> apex
+        double v0 = Math.Sqrt(2 * g * rise);                // upward launch speed
+        double disc = Math.Max(0.0, v0 * v0 - 2 * g * (y0 - landY));
+        double t = (v0 + Math.Sqrt(disc)) / g;              // time to descend onto landY
+        double vx = t > 1e-3 ? (landX - x0) / t : 0;
+        Vel = new Vec2(vx, -v0);
+        State = PetState.Jump;
+    }
+
+    /// <summary>
+    /// Down-jump: drop through the current platform and arc onto (<paramref name="landX"/>,
+    /// <paramref name="landY"/>) below. We first sink the feet just under the source surface so
+    /// <see cref="Physics.FindLanding"/> won't immediately re-detect it, then fall (no upward pop)
+    /// with the horizontal velocity needed to reach landX — a downward parabola.
+    /// </summary>
+    private void BeginDrop(double landX, double landY)
+    {
+        Pos = new Vec2(Pos.X, FeetY + DropClearance - Size.Y); // sink slightly below the source
+        double g = Math.Max(1.0, _cfg.Gravity);
+        double fall = Math.Max(1.0, landY - FeetY);
+        double t = Math.Sqrt(2 * fall / g);                    // free-fall time (vy0 = 0)
+        double vx = t > 1e-3 ? (landX - CenterX) / t : 0;
         Vel = new Vec2(vx, 0);
         State = PetState.Jump;
     }

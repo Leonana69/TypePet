@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Media;
 using MaplePet.Engine;
 
@@ -45,9 +46,46 @@ public static class DebugOverlay
         double px = pet.CenterX, py = pet.FeetY;
         foreach (var s in path)
         {
-            ctx.DrawLine(PathPen, new Avalonia.Point(px, py), new Avalonia.Point(s.X, s.Y));
+            switch (s.Kind)
+            {
+                case MoveKind.JumpUp:
+                    DrawArc(ctx, px, py, s.X, s.Y, upward: true);
+                    break;
+                case MoveKind.DropDown:
+                    DrawArc(ctx, px, py, s.X, s.Y, upward: false);
+                    break;
+                default:
+                    ctx.DrawLine(PathPen, new Avalonia.Point(px, py), new Avalonia.Point(s.X, s.Y));
+                    break;
+            }
             ctx.DrawEllipse(NodeBrush, null, new Avalonia.Point(s.X, s.Y), 3, 3);
             px = s.X; py = s.Y;
+        }
+    }
+
+    /// <summary>Sample a parabola between two waypoints so a jump/drop reads as an arc, not a chord.</summary>
+    private static void DrawArc(DrawingContext ctx, double x0, double y0, double x1, double y1, bool upward)
+    {
+        const int n = 12;
+        double prevX = x0, prevY = y0;
+        for (int i = 1; i <= n; i++)
+        {
+            double s = i / (double)n;
+            double x = x0 + (x1 - x0) * s;
+            double y;
+            if (upward)
+            {
+                // Rise above the higher endpoint, then settle onto the target (apex ~12px over it).
+                double apex = Math.Min(y0, y1) - 12;
+                double lin = y0 + (y1 - y0) * s;
+                y = lin - (y0 - apex) * 4 * s * (1 - s);
+            }
+            else
+            {
+                y = y0 + (y1 - y0) * s * s; // drop from rest: zero initial slope
+            }
+            ctx.DrawLine(PathPen, new Avalonia.Point(prevX, prevY), new Avalonia.Point(x, y));
+            prevX = x; prevY = y;
         }
     }
 }

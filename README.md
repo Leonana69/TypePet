@@ -14,7 +14,8 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 | Window tracker | Detects visible windows (DWM visible bounds; cloaked/minimized/tool-window filtered) + taskbar |
 | Visible-only geometry | Window top/side edges are clipped against windows **in front** (Z-order) and the taskbar, so an occluded edge yields only its visible segments |
 | Debug overlay | Draws windows, **platforms** (green), and **ladders** (orange) |
-| Roaming | Treats the visible platforms/ladders as a navigation graph: picks a random reachable target (no higher than `roamingHeight`%), plans a path, and follows it — walking, climbing ladders (mountable within `jumpHeight`), and dropping off cliff edges |
+| Roaming | Treats the visible platforms/ladders as a navigation graph: picks a random point on a reachable window top edge (no higher than `roamingHeight`%), plans a path, and follows it — walking, **jumping up** onto platforms within `jumpHeight`, climbing ladders only for taller gaps, and **down-jumping** through to the platform below |
+| Jumps | Jumps and down-jumps follow a real **parabolic arc** under gravity (state JUMP) |
 | States | STAND (idle) / WALK / ROPE (climbing) / JUMP (airborne); idles between trips |
 | Drag | Grab the pet with the mouse (it follows the cursor in JUMP); release and it falls to the platform below and stands |
 | Tray menu | A tray icon with **Settings…** (live-editable parameters) and **Exit** |
@@ -22,7 +23,7 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 
 The pet is tinted by state: pale-blue idle, **blue** walking, **green** on a rope, **orange** airborne.
 
-Not yet implemented: a true ballistic jump arc and sprite animation.
+Not yet implemented: sprite animation (the pet is still a tinted rectangle).
 
 ## Requirements
 
@@ -36,8 +37,9 @@ dotnet run --project MaplePet.csproj
 ```
 
 You'll see your detected windows outlined, the derived platforms/ladders drawn on top,
-and a rectangle (the pet) roaming them — walking, climbing window edges, and dropping
-between them. The overlay is click-through, so everything behind it stays usable; you can
+and a rectangle (the pet) roaming them — walking, jumping up onto nearby ledges, climbing
+window edges for taller gaps, and down-jumping between them. The overlay is click-through,
+so everything behind it stays usable; you can
 still grab and drag the pet with the mouse. Quit from the tray icon's **Exit** (or Ctrl+C
 in its console).
 
@@ -53,7 +55,7 @@ dotnet run --project MaplePet.csproj -- --smoke 3
 
 | Key | Default | Meaning |
 |---|---|---|
-| `jumpHeight` | `50` | Max vertical reach (px) to grab a ladder from a platform |
+| `jumpHeight` | `50` | Max vertical reach (px) to jump straight up onto a higher platform (taller gaps need a ladder) |
 | `roamingHeight` | `100` | 0–100% — the highest the pet roams to (taskbar = 0, screen top = 100) |
 | `walkSpeed` | `90` | px / second |
 | `climbSpeed` | `70` | px / second |
