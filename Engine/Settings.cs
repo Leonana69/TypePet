@@ -14,7 +14,7 @@ public sealed class Settings
     public double WalkSpeed { get; set; } = 90;      // px / second
     public double ClimbSpeed { get; set; } = 70;     // px / second
     public double Gravity { get; set; } = 900;       // px / second^2
-    public double RoamingChance { get; set; } = 35;  // 0..100 %: chance to climb a ladder it passes
+    public double RoamingHeight { get; set; } = 100; // 0..100 %: max height it roams to (taskbar=0, screen top=100)
     public int TargetFps { get; set; } = 60;
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
@@ -80,7 +80,7 @@ public sealed class Settings
         ClimbSpeed = Positive(ClimbSpeed, d.ClimbSpeed);
         Gravity = Positive(Gravity, d.Gravity);
         WorldPollHz = Positive(WorldPollHz, d.WorldPollHz);
-        RoamingChance = double.IsFinite(RoamingChance) ? Math.Clamp(RoamingChance, 0, 100) : d.RoamingChance;
+        RoamingHeight = double.IsFinite(RoamingHeight) ? Math.Clamp(RoamingHeight, 0, 100) : d.RoamingHeight;
         TargetFps = TargetFps is >= 1 and <= 240 ? TargetFps : d.TargetFps;
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
 

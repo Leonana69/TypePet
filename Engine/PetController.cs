@@ -11,19 +11,12 @@ public enum PetState
 }
 
 /// <summary>
-/// The pet's state machine and physics integration. Platform-agnostic: it only ever reads a
-/// <see cref="World"/> of platforms/ladders, so it is fully unit-testable.
-///
-/// States: STAND (idle) / WALK / ROPE (on a ladder) / JUMP (airborne).
-///
-/// Movement rules:
-///  - Walks left/right on platforms; pauses to idle (STAND) now and then; turns at solid ends.
-///  - UP is only via ladders. When it passes close to a reachable ladder it climbs with
-///    probability <c>RoamingChance</c>. A ladder is reachable if its grab point is within
-///    <c>JumpHeight</c> above the platform.
-///  - DOWN is via a ladder OR by walking off a cliff edge and dropping.
-///  - The world is re-resolved every tick (dynamic-world rule): if the surface the pet is on
-///    or the ladder it climbs disappears, it falls.
+/// The pet's brain + physics. It treats the visible platforms/ladders as a navigation map
+/// (<see cref="MapGraph"/>): it picks a random reachable target (no higher than
+/// <c>RoamingHeight</c>% of the screen), plans a path of walk / climb / drop moves, and follows
+/// it, idling (STAND) between trips. The world is re-resolved every tick — if a window moves or
+/// closes, the graph is rebuilt and the route is replanned; if the surface it stands on or the
+/// ladder it climbs disappears, it falls and replans on landing.
 ///
 /// Position is the pet's top-left corner, in logical pixels.
 /// </summary>
@@ -32,31 +25,44 @@ public sealed class PetController
     private readonly Settings _cfg;
     private readonly Random _rng;
 
-    private const double SupportTol = 8.0;      // feet-to-platform snap tolerance
-    private const double LadderXTol = 5.0;      // how near the ladder line counts as "on" it
-    private const double DetachCooldown = 0.45; // seconds; suppress re-grab right after (de)taching
-    private const double ReRollCooldown = 0.12; // seconds; avoid re-rolling the same encounter
-    private const double IdleChancePerSecond = 0.3; // how often a walking pet pauses to idle
-    private const double IdleMinSeconds = 1.0;
-    private const double IdleMaxSeconds = 3.0;
+    private const double SupportTol = 8.0;  // feet-to-platform snap tolerance
+    private const double LadderXTol = 5.0;  // how near the ladder line counts as "on" it
+    private const double ArriveTol = 1.5;   // horizontal "reached the waypoint" tolerance
+    private const double IdleMinSeconds = 0.8;
+    private const double IdleMaxSeconds = 2.4;
+    private const int TargetTries = 16;     // attempts to find a reachable random target
 
     public Vec2 Pos;          // top-left, logical px
     public Vec2 Size;         // width/height, logical px
     public Vec2 Vel;          // px/second
     public PetState State { get; private set; } = PetState.Jump;
     public int Facing { get; private set; } = 1; // +1 = right, -1 = left
-    public bool IsDragging { get; private set; }  // held by the cursor; physics is suspended
+    public bool IsDragging { get; private set; }
+
+    // Navigation
+    private MapGraph? _graph;
+    private World? _graphWorld;
+    private List<PathStep>? _path;
+    private int _step;
+    private Vec2 _targetPos;
+    private bool _hasTarget;
+    private bool _pendingReplan;
 
     private bool _spawned;
-    private double _climbX;    // ladder line being climbed
-    private int _climbDir;     // -1 = up (y decreasing), +1 = down
-    private double _cooldown;
     private double _idleTimer;
     private bool _standAfterLanding; // after a drag-release, stand where it lands
-    private double _lastRolledX = double.NaN; // ladder X whose roaming roll was just resolved
+
+    // Rope execution
+    private double _ropeX;
+    private double _ropeTargetY;
+    private int _ropeDir; // -1 up, +1 down
 
     public double FeetY => Pos.Y + Size.Y;
     public double CenterX => Pos.X + Size.X / 2;
+
+    public IReadOnlyList<PathStep>? Path => _path;
+    public Vec2 TargetPos => _targetPos;
+    public bool HasTarget => _hasTarget;
 
     public PetController(Settings cfg, Vec2 size, int? seed = null)
     {
@@ -69,8 +75,16 @@ public sealed class PetController
     {
         if (world.Platforms.Count == 0) return;
         if (IsDragging) return; // position is driven by the cursor while held
+
         EnsureSpawn(world);
-        if (_cooldown > 0) _cooldown -= dt;
+
+        // Rebuild the nav graph whenever the world changes (windows moved/opened/closed).
+        if (!ReferenceEquals(world, _graphWorld))
+        {
+            _graph = MapGraph.Build(world, _cfg.JumpHeight);
+            _graphWorld = world;
+            _pendingReplan = true;
+        }
 
         switch (State)
         {
@@ -81,8 +95,21 @@ public sealed class PetController
         }
     }
 
-    // ---------------------------------------------------------------- Drag (cursor-driven)
-    /// <summary>Begin a cursor drag: suspend physics and hold the pet airborne (JUMP).</summary>
+    private void EnsureSpawn(World world)
+    {
+        if (_spawned) return;
+        Platform ground = world.Platforms[0];
+        foreach (var p in world.Platforms)
+            if (p.Y > ground.Y) ground = p;
+
+        Pos = new Vec2(ground.CenterX - Size.X / 2, ground.Y - Size.Y);
+        Vel = default;
+        Facing = 1;
+        _spawned = true;
+        EnterStand(0.3);
+    }
+
+    // ---------------------------------------------------------------- Drag
     public void BeginDrag()
     {
         IsDragging = true;
@@ -90,229 +117,207 @@ public sealed class PetController
         Vel = default;
     }
 
-    /// <summary>Move the held pet so its center sits at <paramref name="center"/> (logical px).</summary>
     public void DragTo(Vec2 center)
     {
         if (IsDragging)
             Pos = new Vec2(center.X - Size.X / 2, center.Y - Size.Y / 2);
     }
 
-    /// <summary>Release the pet: it falls (JUMP) and stands where it lands.</summary>
     public void EndDrag()
     {
         IsDragging = false;
         State = PetState.Jump;
         Vel = default;
         _standAfterLanding = true;
-    }
-
-    /// <summary>Place the pet on the lowest (closest to bottom) platform — the taskbar.</summary>
-    private void EnsureSpawn(World world)
-    {
-        if (_spawned) return;
-
-        Platform ground = world.Platforms[0];
-        foreach (var p in world.Platforms)
-            if (p.Y > ground.Y) ground = p;
-
-        Pos = new Vec2(ground.CenterX - Size.X / 2, ground.Y - Size.Y);
-        Vel = default;
-        State = PetState.Walk;
-        Facing = 1;
-        _spawned = true;
+        _path = null;
+        _hasTarget = false;
     }
 
     // ---------------------------------------------------------------- Stand (idle)
+    private void EnterStand(double seconds = -1)
+    {
+        State = PetState.Stand;
+        Vel = default;
+        _path = null;
+        _hasTarget = false;
+        _idleTimer = seconds >= 0 ? seconds : IdleMinSeconds + _rng.NextDouble() * (IdleMaxSeconds - IdleMinSeconds);
+    }
+
     private void UpdateStand(World world, double dt)
     {
         var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
-        if (support is null) { BeginFall(0); return; } // ground vanished beneath us
+        if (support is null) { BeginFall(); return; }
         Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
 
         _idleTimer -= dt;
         if (_idleTimer <= 0)
         {
-            State = PetState.Walk;
-            if (_rng.NextDouble() < 0.5) Facing = -Facing; // sometimes wander the other way
+            if (PickTarget(world)) State = PetState.Walk;
+            else _idleTimer = 0.5; // nothing reachable yet; try again shortly
         }
     }
 
-    private void EnterStand()
+    // ---------------------------------------------------------------- Target selection
+    private bool PickTarget(World world)
     {
-        State = PetState.Stand;
-        Vel = default;
-        _idleTimer = IdleMinSeconds + _rng.NextDouble() * (IdleMaxSeconds - IdleMinSeconds);
+        if (_graph is null) return false;
+        var eligible = _graph.EligibleTargets(_cfg.RoamingHeight);
+        if (eligible.Count == 0) return false;
+
+        for (int attempt = 0; attempt < TargetTries; attempt++)
+        {
+            var node = _graph.Nodes[eligible[_rng.Next(eligible.Count)]];
+            // Skip targets we're basically already at.
+            if (Math.Abs(node.X - CenterX) < 24 && Math.Abs(node.Y - FeetY) < SupportTol) continue;
+
+            var path = _graph.FindPath(CenterX, FeetY, _graph.NearestNode(node.X, node.Y));
+            if (path is { Count: > 0 })
+            {
+                _path = path;
+                _step = 0;
+                _targetPos = new Vec2(node.X, node.Y);
+                _hasTarget = true;
+                _pendingReplan = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void RecomputePath(World world)
+    {
+        _pendingReplan = false;
+        if (!_hasTarget || _graph is null) { _path = null; return; }
+        int goal = _graph.NearestNode(_targetPos.X, _targetPos.Y);
+        _path = _graph.FindPath(CenterX, FeetY, goal);
+        _step = 0;
+        if (_path is null) _hasTarget = false; // target no longer reachable; idle/pick anew
+    }
+
+    private void OnPathDone() => EnterStand();
+
+    private void Advance(World world)
+    {
+        _step++;
+        if (_path is null || _step >= _path.Count) OnPathDone();
     }
 
     // ---------------------------------------------------------------- Walk
     private void UpdateWalk(World world, double dt)
     {
-        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
-        if (support is null) { BeginFall(0); return; } // surface vanished
-        var plat = support.Value;
-        Pos = new Vec2(Pos.X, plat.Y - Size.Y); // snap feet onto the platform
+        if (_pendingReplan) RecomputePath(world);
+        if (_path is null || _step >= _path.Count) { OnPathDone(); return; }
 
-        // Occasionally stop and idle.
-        if (_cooldown <= 0 && _rng.NextDouble() < IdleChancePerSecond * dt)
+        var step = _path[_step];
+        switch (step.Kind)
         {
-            EnterStand();
-            return;
+            case MoveKind.Walk:
+                if (WalkToward(world, dt, step.X)) Advance(world);
+                break;
+            case MoveKind.ClimbUp:
+            case MoveKind.ClimbDown:
+                if (WalkToward(world, dt, step.X)) StartRope(world, step);
+                break;
+            case MoveKind.DropDown:
+                if (WalkToward(world, dt, step.X))
+                {
+                    // Step the feet just off the source surface first, otherwise FindLanding would
+                    // immediately re-detect the platform we're leaving and we'd never actually fall.
+                    Pos = new Vec2(Pos.X, Pos.Y + 4.0);
+                    BeginFall(); // lands on the platform below -> replan from there
+                }
+                break;
         }
-
-        double prevCenter = CenterX;
-        double nextX = Pos.X + Facing * _cfg.WalkSpeed * dt;
-        double nextCenter = nextX + Size.X / 2;
-
-        // Did we pass close to a reachable ladder this step? Maybe climb it.
-        if (TryStartClimb(world, plat.Y, prevCenter, nextCenter)) return;
-
-        // Hit a platform edge?
-        if (nextCenter < plat.XStart) { ResolveEdge(world, plat.XStart); return; }
-        if (nextCenter > plat.XEnd) { ResolveEdge(world, plat.XEnd); return; }
-
-        Pos = new Vec2(nextX, Pos.Y);
     }
 
-    /// <summary>
-    /// At a platform end: step across to continuous ground if a neighbour platform continues at
-    /// ~the same height (abutting same-height windows); else drop off if it's a cliff; else turn around.
-    /// </summary>
-    private void ResolveEdge(World world, double edgeX)
+    /// <summary>Walk toward <paramref name="targetX"/> on the current platform. True once reached.</summary>
+    private bool WalkToward(World world, double dt, double targetX)
     {
-        Pos = new Vec2(edgeX - Size.X / 2, Pos.Y); // center exactly on the edge
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) { BeginFall(); return false; } // lost the ground
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
 
-        double probeX = edgeX + Facing * (Physics.Eps + 1.0); // just past the current platform's lip
-        var across = Physics.FindSupport(world, probeX, FeetY, SupportTol);
-        if (across is not null)
-        {
-            // Continuous walkable ground (a different platform at ~same Y) -> keep walking onto it.
-            Pos = new Vec2(probeX - Size.X / 2, across.Value.Y - Size.Y);
-            return;
-        }
+        double delta = targetX - CenterX;
+        if (Math.Abs(delta) <= ArriveTol) return true;
 
-        if (Physics.HasPlatformBelow(world, edgeX, FeetY))
+        int dir = delta > 0 ? 1 : -1;
+        Facing = dir;
+        double advance = _cfg.WalkSpeed * dt;
+        double nextCenter = CenterX + dir * advance;
+        if ((dir > 0 && nextCenter >= targetX) || (dir < 0 && nextCenter <= targetX))
         {
-            Pos = new Vec2(Pos.X + Facing * 1.0, Pos.Y); // nudge just past the lip
-            BeginFall(Facing * _cfg.WalkSpeed);          // carry walk momentum off the edge (drop down)
+            Pos = new Vec2(targetX - Size.X / 2, Pos.Y);
+            return true;
         }
-        else
-        {
-            Facing = -Facing; // solid ground / screen edge -> turn around
-        }
+        Pos = new Vec2(Pos.X + dir * advance, Pos.Y);
+        return false;
     }
 
-    private void BeginFall(double vx)
+    // ---------------------------------------------------------------- Rope
+    private void StartRope(World world, PathStep step)
+    {
+        if (step.LadderIndex < 0 || step.LadderIndex >= world.Ladders.Count) { _pendingReplan = true; return; }
+        var l = world.Ladders[step.LadderIndex];
+        _ropeX = l.X;
+        _ropeTargetY = step.Y;
+        _ropeDir = step.Y < FeetY ? -1 : 1;
+
+        double grab = Clamp(FeetY, l.YTop, l.YBottom); // jump up to the bottom if we're below it
+        Pos = new Vec2(l.X - Size.X / 2, grab - Size.Y);
+        Vel = default;
+        State = PetState.Rope;
+    }
+
+    private void UpdateRope(World world, double dt)
+    {
+        var seg = Physics.FindLadderAt(world, _ropeX, FeetY, LadderXTol, SupportTol, _ropeDir);
+        if (seg is null) { BeginFall(); return; } // ladder vanished
+        var l = seg.Value;
+        _ropeX = l.X;
+
+        double feet = FeetY + _ropeDir * _cfg.ClimbSpeed * dt;
+
+        if (_ropeDir < 0) // climbing up
+        {
+            double top = Math.Max(_ropeTargetY, l.YTop);
+            if (feet <= top) { SnapRope(top); FinishRopeOnto(world, top); return; }
+        }
+        else // climbing down
+        {
+            if (_ropeTargetY <= l.YBottom + 0.5)
+            {
+                if (feet >= _ropeTargetY) { SnapRope(_ropeTargetY); FinishRopeOnto(world, _ropeTargetY); return; }
+            }
+            else if (feet >= l.YBottom) // target platform is below the ladder bottom -> drop the gap
+            {
+                SnapRope(l.YBottom);
+                BeginFall();
+                return;
+            }
+        }
+
+        SnapRope(feet);
+    }
+
+    private void SnapRope(double feet) => Pos = new Vec2(_ropeX - Size.X / 2, feet - Size.Y);
+
+    private void FinishRopeOnto(World world, double feetY)
+    {
+        var support = Physics.FindSupport(world, CenterX, feetY, SupportTol);
+        if (support is null) { BeginFall(); return; }
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
+        Vel = default;
+        State = PetState.Walk;
+        Advance(world);
+    }
+
+    // ---------------------------------------------------------------- Jump / fall
+    private void BeginFall(double vx = 0)
     {
         Vel = new Vec2(vx, 0);
         State = PetState.Jump;
     }
 
-    // ---------------------------------------------------------------- Climb decision
-    private bool TryStartClimb(World world, double platformY, double prevCenter, double nextCenter)
-    {
-        if (_cooldown > 0) return false;
-
-        // Forget the last rolled ladder once we've clearly walked past it.
-        if (!double.IsNaN(_lastRolledX) && Math.Abs(CenterX - _lastRolledX) > LadderXTol)
-            _lastRolledX = double.NaN;
-
-        double lo = Math.Min(prevCenter, nextCenter) - Physics.Eps;
-        double hi = Math.Max(prevCenter, nextCenter) + Physics.Eps;
-
-        Ladder? chosen = null;
-        int chosenDir = 0;
-        double bestDist = double.MaxValue;
-        foreach (var l in world.Ladders)
-        {
-            if (l.X < lo || l.X > hi) continue;            // not crossed this step
-            if (!double.IsNaN(_lastRolledX) && Math.Abs(l.X - _lastRolledX) <= LadderXTol)
-                continue;                                  // already rolled this exact ladder
-            int dir = ClimbDirection(l, platformY);
-            if (dir == 0) continue;                        // not reachable / nothing to climb
-            double d = Math.Abs(l.X - prevCenter);
-            if (d < bestDist) { bestDist = d; chosen = l; chosenDir = dir; }
-        }
-        if (chosen is null) return false;
-
-        // Resolve this encounter exactly once. Remembering the ladder X (rather than a blanket
-        // time cooldown) stops the same ladder being re-rolled while we sweep across it — the
-        // crossing window spans a couple of ticks — without suppressing distinct nearby ladders.
-        _lastRolledX = chosen.Value.X;
-        if (_rng.NextDouble() * 100.0 >= _cfg.RoamingChance)
-            return false; // failed the roaming roll -> keep walking past it
-
-        Attach(chosen.Value, platformY, chosenDir);
-        return true;
-    }
-
-    /// <summary>
-    /// Decide which way (if any) the pet can take a ladder from a platform at <paramref name="platformY"/>:
-    /// -1 climb up (preferred), +1 climb down, 0 = not reachable. Up requires the grab point to be
-    /// within <c>JumpHeight</c> above the platform.
-    /// </summary>
-    private int ClimbDirection(Ladder l, double platformY)
-    {
-        double yTop = l.YTop, yBottom = l.YBottom, p = platformY;
-
-        bool canUp;
-        if (p > yBottom) canUp = (p - yBottom) <= _cfg.JumpHeight; // jump up to the ladder's bottom
-        else if (p >= yTop) canUp = yTop < p - Physics.Eps;        // ladder crosses platform, more above
-        else canUp = false;                                        // ladder lies below the platform
-
-        bool canDown = p >= yTop && p <= yBottom && yBottom > p + Physics.Eps;
-
-        if (canUp) return -1;
-        if (canDown) return 1;
-        return 0;
-    }
-
-    private void Attach(Ladder l, double platformY, int dir)
-    {
-        double feet = dir < 0 && platformY > l.YBottom
-            ? l.YBottom                                  // jumped up to grab the bottom
-            : Clamp(platformY, l.YTop, l.YBottom);
-
-        _climbX = l.X;
-        _climbDir = dir;
-        Pos = new Vec2(l.X - Size.X / 2, feet - Size.Y);
-        Vel = default;
-        State = PetState.Rope;
-    }
-
-    // ---------------------------------------------------------------- Rope (climbing)
-    private void UpdateRope(World world, double dt)
-    {
-        var seg = Physics.FindLadderAt(world, _climbX, FeetY, LadderXTol, SupportTol);
-        if (seg is null) { BeginFall(0); _cooldown = DetachCooldown; return; } // ladder vanished
-        var l = seg.Value;
-        _climbX = l.X;
-
-        double feet = FeetY + _climbDir * _cfg.ClimbSpeed * dt;
-
-        if (_climbDir < 0 && feet <= l.YTop) { DetachAt(world, l.YTop, faceInward: true); return; }
-        if (_climbDir > 0 && feet >= l.YBottom) { DetachAt(world, l.YBottom, faceInward: false); return; }
-
-        Pos = new Vec2(l.X - Size.X / 2, feet - Size.Y);
-    }
-
-    private void DetachAt(World world, double feetY, bool faceInward)
-    {
-        Pos = new Vec2(_climbX - Size.X / 2, feetY - Size.Y);
-        _cooldown = DetachCooldown;
-
-        var support = Physics.FindSupport(world, CenterX, feetY, SupportTol);
-        if (support is null) { BeginFall(0); return; } // e.g. occluded top -> fall
-
-        var p = support.Value;
-        Pos = new Vec2(Pos.X, p.Y - Size.Y);
-        Vel = default;
-        State = PetState.Walk;
-
-        if (faceInward) // stepped onto a window top at its edge -> walk inward, not off it
-            Facing = Math.Abs(_climbX - p.XStart) <= Math.Abs(_climbX - p.XEnd) ? 1 : -1;
-    }
-
-    // ---------------------------------------------------------------- Jump (airborne)
     private void UpdateJump(World world, double dt)
     {
         double vy = Vel.Y + _cfg.Gravity * dt;
@@ -334,12 +339,27 @@ public sealed class PetController
             }
             else
             {
+                // Reached a surface — continue toward the target from wherever we actually landed.
                 State = PetState.Walk;
-                _cooldown = ReRollCooldown;
+                _pendingReplan = true;
             }
         }
         else
         {
+            // Void recovery: a pet dragged below the ground (or released where no platform is below
+            // it) would otherwise fall forever. If it drops well past the lowest surface, rescue it.
+            Platform ground = world.Platforms[0];
+            foreach (var p in world.Platforms) if (p.Y > ground.Y) ground = p;
+            if (newFeet > ground.Y + 200)
+            {
+                Pos = new Vec2(ground.CenterX - Size.X / 2, ground.Y - Size.Y);
+                Vel = default;
+                _pendingReplan = true;
+                if (_standAfterLanding) { _standAfterLanding = false; EnterStand(); }
+                else State = PetState.Walk;
+                return;
+            }
+
             Pos = new Vec2(newX, Pos.Y + vy * dt);
             Vel = new Vec2(vx, vy);
         }

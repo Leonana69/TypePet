@@ -64,18 +64,25 @@ public static class Physics
     /// <paramref name="feetY"/> (within <paramref name="yTol"/>). Used to re-resolve the climbed
     /// ladder every tick — if it returns null the ladder vanished and the pet must fall.
     /// </summary>
-    public static Ladder? FindLadderAt(World world, double x, double feetY, double xTol, double yTol)
+    public static Ladder? FindLadderAt(World world, double x, double feetY, double xTol, double yTol, int dir = 0)
     {
         Ladder? best = null;
-        double bestDx = double.MaxValue;
+        double bestScore = double.MaxValue;
         foreach (var l in world.Ladders)
         {
             double dx = Math.Abs(l.X - x);
             if (dx > xTol) continue;
             if (feetY < l.YTop - yTol || feetY > l.YBottom + yTol) continue;
-            if (dx < bestDx)
+
+            // At a shared-x junction of two abutting ladders, prefer the segment that extends in
+            // the climb direction (up = above the feet, down = below) so we don't pick the wrong one.
+            bool aligned =
+                (dir < 0 && feetY > l.YTop + Eps) ||
+                (dir > 0 && feetY < l.YBottom - Eps);
+            double score = (aligned ? 0.0 : 1_000_000.0) + dx;
+            if (score < bestScore)
             {
-                bestDx = dx;
+                bestScore = score;
                 best = l;
             }
         }

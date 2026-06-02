@@ -14,6 +14,9 @@ public static class DebugOverlay
     private static readonly IPen TaskbarPen = new Pen(new SolidColorBrush(Color.FromArgb(200, 255, 0, 200)), 2);
     private static readonly IPen PlatformPen = new Pen(new SolidColorBrush(Color.FromArgb(225, 80, 230, 120)), 3);
     private static readonly IPen LadderPen = new Pen(new SolidColorBrush(Color.FromArgb(205, 255, 170, 40)), 3);
+    private static readonly IPen PathPen = new Pen(new SolidColorBrush(Color.FromArgb(220, 255, 240, 90)), 2);
+    private static readonly IBrush NodeBrush = new SolidColorBrush(Color.FromArgb(220, 255, 240, 90));
+    private static readonly IBrush TargetBrush = new SolidColorBrush(Color.FromArgb(230, 240, 70, 70));
 
     public static void Draw(DrawingContext ctx, WorldGeometry geo, World world)
     {
@@ -29,5 +32,22 @@ public static class DebugOverlay
 
         foreach (var l in world.Ladders)
             ctx.DrawLine(LadderPen, new Avalonia.Point(l.X, l.YTop), new Avalonia.Point(l.X, l.YBottom));
+    }
+
+    /// <summary>Draw the pet's current planned path and its target marker.</summary>
+    public static void DrawPath(DrawingContext ctx, PetController pet)
+    {
+        var path = pet.Path;
+        if (pet.HasTarget)
+            ctx.DrawEllipse(TargetBrush, null, new Avalonia.Point(pet.TargetPos.X, pet.TargetPos.Y), 5, 5);
+        if (path is null || path.Count == 0) return;
+
+        double px = pet.CenterX, py = pet.FeetY;
+        foreach (var s in path)
+        {
+            ctx.DrawLine(PathPen, new Avalonia.Point(px, py), new Avalonia.Point(s.X, s.Y));
+            ctx.DrawEllipse(NodeBrush, null, new Avalonia.Point(s.X, s.Y), 3, 3);
+            px = s.X; py = s.Y;
+        }
     }
 }

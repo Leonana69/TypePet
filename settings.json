@@ -3,7 +3,7 @@
   "walkSpeed": 90,
   "climbSpeed": 70,
   "gravity": 900,
-  "roamingChance": 35,
+  "roamingHeight": 100,
   "targetFps": 60,
   "worldPollHz": 8,
   "spriteSheet": "Assets/pet-spritesheet.png"

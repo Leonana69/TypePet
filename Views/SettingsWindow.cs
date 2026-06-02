@@ -29,7 +29,7 @@ public sealed class SettingsWindow : Window
         var rows = new StackPanel { Spacing = 8 };
         rows.Children.Add(new TextBlock { Text = "MaplePet Settings", FontWeight = FontWeight.Bold, FontSize = 16 });
         rows.Children.Add(Row("Jump height (px)", cfg.JumpHeight, 0, 4000, 5, out _jump));
-        rows.Children.Add(Row("Roaming chance (%)", cfg.RoamingChance, 0, 100, 5, out _roam));
+        rows.Children.Add(Row("Roaming height (%)", cfg.RoamingHeight, 0, 100, 5, out _roam));
         rows.Children.Add(Row("Walk speed (px/s)", cfg.WalkSpeed, 1, 2000, 5, out _walk));
         rows.Children.Add(Row("Climb speed (px/s)", cfg.ClimbSpeed, 1, 2000, 5, out _climb));
         rows.Children.Add(Row("Gravity (px/s^2)", cfg.Gravity, 1, 10000, 50, out _gravity));
@@ -59,7 +59,7 @@ public sealed class SettingsWindow : Window
         static double D(NumericUpDown n, double fallback) => n.Value is { } v ? (double)v : fallback;
 
         _cfg.JumpHeight = D(_jump, _cfg.JumpHeight);
-        _cfg.RoamingChance = D(_roam, _cfg.RoamingChance);
+        _cfg.RoamingHeight = D(_roam, _cfg.RoamingHeight);
         _cfg.WalkSpeed = D(_walk, _cfg.WalkSpeed);
         _cfg.ClimbSpeed = D(_climb, _cfg.ClimbSpeed);
         _cfg.Gravity = D(_gravity, _cfg.Gravity);

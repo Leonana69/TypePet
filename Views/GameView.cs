@@ -31,6 +31,9 @@ public sealed class GameView : Control
             DebugOverlay.Draw(context, geo, world);
 
         if (Pet is { } pet)
+        {
+            if (ShowDebug) DebugOverlay.DrawPath(context, pet);
             PetRenderer.Draw(context, pet);
+        }
     }
 }
