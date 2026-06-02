@@ -2,3 +2,6 @@ bin/
 obj/
 *.user
 .vs/
+
+# User-imported pet characters (runtime store; read from disk, not committed)
+Assets/Characters/

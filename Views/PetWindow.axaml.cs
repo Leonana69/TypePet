@@ -17,6 +17,7 @@ namespace MaplePet.Views;
 public partial class PetWindow : Window
 {
     private readonly Settings _cfg;
+    private readonly CharacterStore _store;
     private readonly GameLoop _loop;
     private DispatcherTimer? _pollTimer;
 
@@ -33,15 +34,16 @@ public partial class PetWindow : Window
     private MouseClickBlocker? _clickBlocker; // eats the grab click so it doesn't hit the window behind
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
-    // app always constructs it via the Settings overload below (with the shared instance).
-    public PetWindow() : this(Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"))) { }
+    // app always constructs it via the overload below (with the shared instances).
+    public PetWindow() : this(Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json")), new CharacterStore()) { }
 
-    public PetWindow(Settings settings)
+    public PetWindow(Settings settings, CharacterStore store)
     {
         InitializeComponent();
         TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent };
 
         _cfg = settings;
+        _store = store;
         _loop = new GameLoop(_cfg.TargetFps);
         _loop.Tick += OnTick;
     }
@@ -55,12 +57,14 @@ public partial class PetWindow : Window
         ApplyClickThrough();
 
         _pet = new PetController(_cfg, new Vec2(30, 38));
+        // Keep the pet clear of the screen bottom (it's drawn tall, above its feet): don't roam
+        // onto platforms lower than 150px above the bottom edge.
+        _pet.RoamMaxY = Height - 150;
 
-        // Load the MapleStory character footage. Prefer the full equipped export under
-        // Assets/footage; fall back to the bundled Body+Head default character that always ships.
-        // If both fail, the renderer falls back to the placeholder shape so the overlay still works.
-        _sprites = CharacterSprites.Load(hitTestPoses: CharacterAnimator.ActivePoses)
-                   ?? CharacterSprites.Load(footageDir: "Assets/DefaultCharacter", hitTestPoses: CharacterAnimator.ActivePoses);
+        // Load the currently selected character (a user import from the store, or the bundled
+        // Body+Head default). CharacterLoader falls back to the default if the footage can't be
+        // decoded; if even that fails, the renderer draws the placeholder shape.
+        _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId, CharacterAnimator.ActivePoses);
         _animator = new CharacterAnimator();
         View.Sprites = _sprites;
         View.Animator = _animator;
@@ -85,7 +89,23 @@ public partial class PetWindow : Window
         _loop.Stop();
         _pollTimer?.Stop();
         _clickBlocker?.Dispose();
+        _sprites?.Dispose();
         base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// Swap the pet's visual to a different character at runtime (from the character picker). Updates
+    /// the drag hit-box too, since it's measured from the sprites. A null value means "footage failed
+    /// to load" — the renderer then falls back to the placeholder shape. The animator is unchanged:
+    /// poses are keyed by name and shared across characters.
+    /// </summary>
+    public void SetCharacter(CharacterSprites? sprites)
+    {
+        if (ReferenceEquals(_sprites, sprites)) return;
+        var old = _sprites;
+        _sprites = sprites;
+        View.Sprites = sprites;
+        old?.Dispose(); // free the previous character's bitmaps (each load owns its own instances)
     }
 
     /// <summary>Size and position the overlay to span the whole virtual screen.</summary>

@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using MaplePet.Engine;
+using MaplePet.Rendering;
 using MaplePet.Views;
 
 namespace MaplePet;
@@ -14,8 +15,11 @@ namespace MaplePet;
 public partial class App : Application
 {
     private Settings? _settings;
+    private CharacterStore? _store;
+    private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private SettingsWindow? _settingsWindow;
+    private CharacterWindow? _characterWindow;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -37,7 +41,18 @@ public partial class App : Application
             }
 
             _settings = Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"));
-            desktop.MainWindow = new PetWindow(_settings);
+            _store = new CharacterStore();
+
+            // If the remembered character's folder is gone (deleted out-of-band while closed), fall
+            // back to the default and persist it, so the pet and the picker's highlight agree.
+            if (_store.Get(_settings.CurrentCharacterId) is null)
+            {
+                _settings.CurrentCharacterId = CharacterStore.DefaultId;
+                _settings.Save();
+            }
+
+            _petWindow = new PetWindow(_settings, _store);
+            desktop.MainWindow = _petWindow;
             SetupTrayIcon(desktop);
         }
 
@@ -46,6 +61,9 @@ public partial class App : Application
 
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        var charactersItem = new NativeMenuItem("Characters…");
+        charactersItem.Click += (_, _) => ShowCharacters();
+
         var settingsItem = new NativeMenuItem("Settings…");
         settingsItem.Click += (_, _) => ShowSettings();
 
@@ -53,6 +71,7 @@ public partial class App : Application
         exitItem.Click += (_, _) => desktop.Shutdown();
 
         var menu = new NativeMenu();
+        menu.Items.Add(charactersItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
@@ -79,6 +98,31 @@ public partial class App : Application
         _settingsWindow = new SettingsWindow(_settings);
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
+    }
+
+    private void ShowCharacters()
+    {
+        if (_settings is null || _store is null) return;
+        if (_characterWindow is not null)
+        {
+            _characterWindow.Activate();
+            return;
+        }
+        _characterWindow = new CharacterWindow(_store, _settings, ApplyCharacter);
+        _characterWindow.Closed += (_, _) => _characterWindow = null;
+        _characterWindow.Show();
+    }
+
+    /// <summary>Make the pet wear the given character and remember the choice. Invoked by the
+    /// character picker when a card is selected, a new import is added, or the worn one is deleted.</summary>
+    private void ApplyCharacter(string id)
+    {
+        if (_settings is null || _store is null || _petWindow is null) return;
+
+        var sprites = CharacterLoader.Load(_store, id, CharacterAnimator.ActivePoses);
+        _petWindow.SetCharacter(sprites);
+        _settings.CurrentCharacterId = id;
+        _settings.Save();
     }
 
     /// <summary>Render a small rounded blue square (matching the pet) to use as the tray icon.</summary>

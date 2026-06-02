@@ -20,6 +20,7 @@ public sealed class Settings
     public int TargetFps { get; set; } = 60;
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
+    public string CurrentCharacterId { get; set; } = "default"; // selected character (CharacterStore id), or "default"
 
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
@@ -85,6 +86,7 @@ public sealed class Settings
         RoamingLevel = double.IsFinite(RoamingLevel) ? Math.Clamp(RoamingLevel, 0, 100) : d.RoamingLevel;
         TargetFps = TargetFps is >= 1 and <= 240 ? TargetFps : d.TargetFps;
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
+        if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
 
         static double Positive(double value, double fallback) =>
             double.IsFinite(value) && value > 0 ? value : fallback;

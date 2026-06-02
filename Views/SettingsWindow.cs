@@ -42,19 +42,6 @@ public sealed class SettingsWindow : Window
         _overlay = new CheckBox { Content = "Show window/path overlay", IsChecked = cfg.ShowOverlay };
         rows.Children.Add(_overlay);
 
-        rows.Children.Add(new TextBlock { Text = "Changes apply immediately.", FontSize = 11, Opacity = 0.7 });
-
-        var close = new Button
-        {
-            Content = "Close",
-            Width = 80,
-            IsDefault = true,
-            IsCancel = true,
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
-        close.Click += (_, _) => Close();
-        rows.Children.Add(close);
-
         Content = new Border { Padding = new Thickness(16), Child = rows };
 
         // Wire change handlers only now that initial values are in place, so populating the controls

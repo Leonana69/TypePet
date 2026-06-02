@@ -19,7 +19,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets/**" />
+    <!-- Bundle the built-in footage (DefaultCharacter, footage), but NOT the user character store
+         (read from disk at runtime) or loose import/export zips — embedding those would bloat the
+         assembly with data the code never reads via avares://. -->
+    <AvaloniaResource Include="Assets/**" Exclude="Assets/Characters/**;Assets/*.zip" />
   </ItemGroup>
 
   <ItemGroup>
