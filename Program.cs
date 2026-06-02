@@ -25,6 +25,14 @@ internal static class Program
         AppState.SmokeSeconds = ParseSmoke(args);
         AppState.RenderPosesDir = ParseOption(args, "--render-poses");
         AppState.RenderPosesFrom = ParseOption(args, "--render-from");
+
+        // Dev-only: run the pure-engine path-planner checks and exit (no Avalonia needed).
+        if (ParseOption(args, "--nav-test") is string navOut)
+        {
+            MaplePet.Engine.NavTest.Run(navOut);
+            return 0;
+        }
+
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 

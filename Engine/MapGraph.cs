@@ -135,7 +135,10 @@ public sealed class MapGraph
                     // A down-jump only needs a shared column to fall through — no MinOverlap gate,
                     // otherwise a platform a ladder can climb ONTO (ladders need no overlap) but that
                     // overlaps the floor below by < MinOverlap would have no way back down (soft-lock).
-                    foreach (var (lx, tx) in ValidHops(lo, hi, x => HighestBelow(platforms, x, pa.Y) == b))
+                    // Down-jumps go STRAIGHT DOWN when the column below is clear (MapleStory-style):
+                    // a leaning drop makes the pet launch one way and land the other, so it walks to
+                    // the launch point then jumps backward. preferStraight tries the vertical hop first.
+                    foreach (var (lx, tx) in ValidHops(lo, hi, x => HighestBelow(platforms, x, pa.Y) == b, preferStraight: true))
                     {
                         attach[a].Add(lx); attach[b].Add(tx);
                         drops.Add((a, lx, b, tx));
@@ -241,10 +244,23 @@ public sealed class MapGraph
     /// if partial occlusion hid the center — a scan across the overlap for ANY clear column. So as
     /// long as a clear column exists anywhere in the overlap, the edge is emitted.
     /// </summary>
-    private static IEnumerable<(double launchX, double landX)> ValidHops(double lo, double hi, System.Func<double, bool> clear)
+    private static IEnumerable<(double launchX, double landX)> ValidHops(double lo, double hi, System.Func<double, bool> clear, bool preferStraight = false)
     {
         double center = (lo + hi) / 2.0;
         double half = System.Math.Min(HopDist / 2.0, (hi - lo) / 2.0 - 0.5);
+
+        // Down-jumps ALWAYS drop straight down (launchX == landX). A leaning arc only validates its
+        // two endpoint columns, so it could sweep through an intermediate platform between A and B
+        // and land the pet on the wrong window; it also produces the jarring "walk one way, leap the
+        // other" motion. Any clear column lands directly on B, so straight is both correct and enough.
+        if (preferStraight)
+        {
+            if (clear(center)) { yield return (center, center); yield break; }
+            double dstep = System.Math.Max(2.0, (hi - lo) / 32.0);
+            for (double x = lo + 0.5; x <= hi - 0.5; x += dstep)
+                if (clear(x)) { yield return (x, x); yield break; }
+            yield break; // no clear column straight down: no drop here
+        }
 
         // Preferred: a centered leaning arc with both ends clear.
         if (half >= 1.0 && clear(center - half) && clear(center + half))
@@ -330,19 +346,6 @@ public sealed class MapGraph
         return best;
     }
 
-    /// <summary>The node on platform <paramref name="pi"/> closest in x, or -1 if it has none.</summary>
-    public int NearestNodeOnPlatform(int pi, double x)
-    {
-        int best = -1; double bestD = double.MaxValue;
-        for (int i = 0; i < _nodes.Count; i++)
-        {
-            if (_nodes[i].PlatformIndex != pi) continue;
-            double d = System.Math.Abs(_nodes[i].X - x);
-            if (d < bestD) { bestD = d; best = i; }
-        }
-        return best;
-    }
-
     /// <summary>Platform indices whose top edge is no higher than <paramref name="roamingHeightPct"/>.</summary>
     public List<int> EligiblePlatforms(double roamingHeightPct)
     {
@@ -357,16 +360,50 @@ public sealed class MapGraph
     /// <summary>Dijkstra from the pet's position to <paramref name="goal"/>; null if unreachable.</summary>
     public List<PathStep>? FindPath(double startX, double startFeetY, int goal)
     {
-        int n = _nodes.Count;
-        if (goal < 0 || goal >= n) return null;
-        int startPlat = PlatformAt(startX, startFeetY);
-        if (startPlat < 0) return null;
+        if (goal < 0 || goal >= _nodes.Count) return null;
+        if (!Dijkstra(startX, startFeetY, out var dist, out var pn, out var pk, out var pl)) return null;
+        return Reconstruct(goal, dist, pn, pk, pl);
+    }
 
-        var dist = new double[n];
-        var predNode = new int[n];
-        var predKind = new MoveKind[n];
-        var predLadder = new int[n];
+    /// <summary>
+    /// Plan to an exact point (<paramref name="targetX"/>) on platform <paramref name="pi"/>: arrive
+    /// at whichever node on that platform minimizes (cost to reach it + walk to the point), then walk
+    /// to the point. Choosing the entry by that sum means the final approach is always toward the
+    /// target — the pet never overshoots to a far edge node and walks back. Null if unreachable.
+    /// </summary>
+    public List<PathStep>? FindPathToTarget(double startX, double startFeetY, int pi, double targetX, double targetY)
+    {
+        if (!Dijkstra(startX, startFeetY, out var dist, out var pn, out var pk, out var pl)) return null;
+
+        int best = -1; double bestCost = double.PositiveInfinity;
+        for (int i = 0; i < _nodes.Count; i++)
+        {
+            if (_nodes[i].PlatformIndex != pi || double.IsInfinity(dist[i])) continue;
+            double c = dist[i] + System.Math.Abs(_nodes[i].X - targetX);
+            if (c < bestCost) { bestCost = c; best = i; }
+        }
+        if (best < 0) return null;
+
+        var path = Reconstruct(best, dist, pn, pk, pl);
+        if (path is null) return null;
+
+        // Finish with a walk to the exact target (unless we already arrive there walking).
+        if (path.Count == 0 || path[^1].Kind != MoveKind.Walk || System.Math.Abs(path[^1].X - targetX) > Eps)
+            path.Add(new PathStep(MoveKind.Walk, targetX, targetY, -1));
+        return path;
+    }
+
+    /// <summary>Shortest-path tree from the feet position; multi-source over the start platform's
+    /// nodes. Returns false if the start isn't on any platform.</summary>
+    private bool Dijkstra(double startX, double startFeetY,
+        out double[] dist, out int[] predNode, out MoveKind[] predKind, out int[] predLadder)
+    {
+        int n = _nodes.Count;
+        dist = new double[n]; predNode = new int[n]; predKind = new MoveKind[n]; predLadder = new int[n];
         for (int i = 0; i < n; i++) { dist[i] = double.PositiveInfinity; predNode[i] = -2; }
+
+        int startPlat = PlatformAt(startX, startFeetY);
+        if (startPlat < 0) return false;
 
         var pq = new PriorityQueue<int, double>();
         for (int i = 0; i < n; i++)
@@ -380,7 +417,6 @@ public sealed class MapGraph
         while (pq.TryDequeue(out int u, out double du))
         {
             if (du > dist[u]) continue;
-            if (u == goal) break;
             foreach (var (to, kind, cost, ladder) in _adj[u])
             {
                 double nd = du + cost;
@@ -391,17 +427,29 @@ public sealed class MapGraph
                 }
             }
         }
+        return true;
+    }
 
-        if (double.IsInfinity(dist[goal])) return null;
-
+    private List<PathStep>? Reconstruct(int end, double[] dist, int[] predNode, MoveKind[] predKind, int[] predLadder)
+    {
+        if (double.IsInfinity(dist[end])) return null;
         var steps = new List<PathStep>();
-        for (int cur = goal; cur != -1; cur = predNode[cur])
+        for (int cur = end; cur != -1; cur = predNode[cur])
         {
             if (cur == -2) return null; // corrupt chain (shouldn't happen)
             var node = _nodes[cur];
             steps.Add(new PathStep(predKind[cur], node.X, node.Y, predLadder[cur]));
         }
         steps.Reverse();
+
+        // Collapse consecutive Walk steps at the same point — a walk-across seam has two coincident
+        // nodes (one per platform), which would otherwise emit a zero-length duplicate waypoint.
+        for (int i = steps.Count - 1; i > 0; i--)
+            if (steps[i].Kind == MoveKind.Walk && steps[i - 1].Kind == MoveKind.Walk
+                && System.Math.Abs(steps[i].X - steps[i - 1].X) <= Eps
+                && System.Math.Abs(steps[i].Y - steps[i - 1].Y) <= Eps)
+                steps.RemoveAt(i);
+
         return steps;
     }
 }

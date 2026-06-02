@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace MaplePet.Engine;
 
@@ -88,12 +89,17 @@ public sealed class PetController
 
         EnsureSpawn(world);
 
-        // Rebuild the nav graph whenever the world changes (windows moved/opened/closed).
+        // Rebuild the nav graph only when the window geometry actually changed. A fresh World
+        // instance is produced every poll even when nothing moved; rebuilding + replanning every
+        // poll would reset the route to step 0 mid-walk and make the pet stutter / shuttle in place.
         if (!ReferenceEquals(world, _graphWorld))
         {
-            _graph = MapGraph.Build(world, _cfg.JumpHeight);
+            if (_graph is null || _graphWorld is null || !SameGeometry(_graphWorld, world))
+            {
+                _graph = MapGraph.Build(world, _cfg.JumpHeight);
+                _pendingReplan = true;
+            }
             _graphWorld = world;
-            _pendingReplan = true;
         }
 
         switch (State)
@@ -215,8 +221,21 @@ public sealed class PetController
     {
         if (_graph is null) return null;
         int pi = _graph.PlatformAt(target.X, target.Y);
-        int goal = pi >= 0 ? _graph.NearestNodeOnPlatform(pi, target.X)
-                           : _graph.NearestNode(target.X, target.Y);
+
+        // Already standing on the target's platform? Walk straight to it — a single platform is one
+        // contiguous walkable segment. Routing through a graph node here could pick an edge node on
+        // the FAR side of the target, and (with periodic replanning resetting the step) leave the pet
+        // shuttling to the platform edge instead of stopping at the target.
+        if (pi >= 0 && _graph.PlatformAt(CenterX, FeetY) == pi)
+            return new List<PathStep> { new(MoveKind.Walk, target.X, target.Y, -1) };
+
+        // Target on a known platform: enter at whichever node minimizes (reach cost + walk to target)
+        // and finish by walking to the exact target, so the pet never overshoots to a far edge.
+        if (pi >= 0)
+            return _graph.FindPathToTarget(CenterX, FeetY, pi, target.X, target.Y);
+
+        // Target not resolvable to a platform: fall back to the nearest node, then walk to it.
+        int goal = _graph.NearestNode(target.X, target.Y);
         if (goal < 0) return null;
 
         var path = _graph.FindPath(CenterX, FeetY, goal);
@@ -348,7 +367,7 @@ public sealed class PetController
         // Within range: launch. vx is sized so x reaches the ladder exactly at the apex.
         double vx = tApex > 1e-3 ? dist / tApex : 0;
         Vel = new Vec2(vx, -v0);
-        Facing = vx >= 0 ? 1 : (vx < 0 ? -1 : Facing);
+        if (Math.Abs(vx) > 1e-3) Facing = vx > 0 ? 1 : -1; // face the way we leap (else keep facing)
         State = PetState.Jump;
         _grabbingLadder = true;
         _grabLadderX = l.X;
@@ -441,6 +460,7 @@ public sealed class PetController
         double vx = t > 1e-3 ? (landX - x0) / t : 0;
         _grabbingLadder = false;
         Vel = new Vec2(vx, -v0);
+        if (Math.Abs(vx) > 1e-3) Facing = vx > 0 ? 1 : -1; // face the way we leap
         State = PetState.Jump;
     }
 
@@ -459,6 +479,7 @@ public sealed class PetController
         double vx = t > 1e-3 ? (landX - CenterX) / t : 0;
         _grabbingLadder = false;
         Vel = new Vec2(vx, 0);
+        if (Math.Abs(vx) > 1e-3) Facing = vx > 0 ? 1 : -1; // face the way we drop
         State = PetState.Jump;
     }
 
@@ -534,5 +555,35 @@ public sealed class PetController
         }
     }
 
+    /// <summary>Test seam (destructive: rebuilds the graph and teleports Pos — use only on a
+    /// throwaway controller): build the graph for <paramref name="world"/> and plan a route from the
+    /// feet-center <paramref name="fromCenterFeet"/> to <paramref name="target"/> (see NavTest).</summary>
+    internal List<PathStep>? PlanForTest(World world, Vec2 fromCenterFeet, Vec2 target)
+    {
+        _graph = MapGraph.Build(world, _cfg.JumpHeight);
+        Pos = new Vec2(fromCenterFeet.X - Size.X / 2, fromCenterFeet.Y - Size.Y);
+        return PlanTo(target);
+    }
+
     private static double Clamp(double v, double lo, double hi) => v < lo ? lo : v > hi ? hi : v;
+
+    /// <summary>
+    /// True if two worlds describe the same platforms and ladders (value equality), so the nav graph
+    /// can be reused. Order-INSENSITIVE: window geometry is emitted in Z-order, which reshuffles on a
+    /// mere focus change with nothing actually moving — comparing in order would then needlessly
+    /// rebuild + replan (resetting the route). Overlapping windows that swap Z-order genuinely change
+    /// their visible segments, so their sorted values still differ and a rebuild correctly happens.
+    /// </summary>
+    internal static bool SameGeometry(World a, World b)
+    {
+        if (a.Platforms.Count != b.Platforms.Count || a.Ladders.Count != b.Ladders.Count) return false;
+
+        var pa = a.Platforms.OrderBy(p => p.Y).ThenBy(p => p.XStart).ThenBy(p => p.XEnd);
+        var pb = b.Platforms.OrderBy(p => p.Y).ThenBy(p => p.XStart).ThenBy(p => p.XEnd);
+        if (!pa.SequenceEqual(pb)) return false;
+
+        var la = a.Ladders.OrderBy(l => l.X).ThenBy(l => l.YTop).ThenBy(l => l.YBottom);
+        var lb = b.Ladders.OrderBy(l => l.X).ThenBy(l => l.YTop).ThenBy(l => l.YBottom);
+        return la.SequenceEqual(lb);
+    }
 }
