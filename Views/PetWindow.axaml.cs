@@ -179,6 +179,9 @@ public partial class PetWindow : Window
         {
             WindowsInterop.SetClickThrough(_hwnd, clickThrough: !desired);
             _interactive = desired;
+            // Returning to click-through: the style flip can leave hardware-accelerated video below
+            // us black until it repaints. Nudge the window underneath to refresh (mimics clicking it).
+            if (!desired) WindowsInterop.RepaintForegroundWindow();
         }
     }
 

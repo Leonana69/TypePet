@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace MaplePet.Platform.Windows;
@@ -26,6 +28,21 @@ public static class WindowsInterop
         if (clickThrough) ex |= (long)WINDOW_EX_STYLE.WS_EX_TRANSPARENT;
         else ex &= ~(long)WINDOW_EX_STYLE.WS_EX_TRANSPARENT;
         PInvoke.SetWindowLongPtr(h, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (nint)ex);
+    }
+
+    /// <summary>
+    /// Ask the foreground window (and its children) to repaint. Flipping the overlay's click-through
+    /// extended style on top of hardware-accelerated video can make the app below stop presenting its
+    /// video plane — it stays black until the app repaints (which is why clicking it brings it back).
+    /// Invalidating it when the overlay returns to click-through mimics that click so the video
+    /// recovers on its own. Best-effort: a no-op if there is no foreground window.
+    /// </summary>
+    public static void RepaintForegroundWindow()
+    {
+        HWND fg = PInvoke.GetForegroundWindow();
+        if (fg == HWND.Null) return;
+        PInvoke.RedrawWindow(fg, (RECT?)null, (SafeHandle?)null,
+            REDRAW_WINDOW_FLAGS.RDW_INVALIDATE | REDRAW_WINDOW_FLAGS.RDW_ERASE | REDRAW_WINDOW_FLAGS.RDW_ALLCHILDREN);
     }
 
     /// <summary>Current cursor position in physical screen pixels.</summary>
