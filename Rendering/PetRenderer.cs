@@ -9,10 +9,11 @@ namespace MaplePet.Rendering;
 /// </summary>
 public static class PetRenderer
 {
-    // Tinted per state so the walk/climb/fall behavior is visible at a glance.
+    // Tinted per state so the stand/walk/climb/jump behavior is visible at a glance.
     private static readonly IBrush WalkBody = new SolidColorBrush(Color.FromArgb(235, 66, 135, 245));  // blue
-    private static readonly IBrush ClimbBody = new SolidColorBrush(Color.FromArgb(235, 80, 200, 120)); // green
-    private static readonly IBrush FallBody = new SolidColorBrush(Color.FromArgb(235, 240, 150, 60));  // orange
+    private static readonly IBrush StandBody = new SolidColorBrush(Color.FromArgb(235, 150, 180, 235)); // pale blue
+    private static readonly IBrush RopeBody = new SolidColorBrush(Color.FromArgb(235, 80, 200, 120));  // green
+    private static readonly IBrush JumpBody = new SolidColorBrush(Color.FromArgb(235, 240, 150, 60));  // orange
     private static readonly IBrush Eye = Brushes.White;
     private static readonly IPen Outline = new Pen(new SolidColorBrush(Color.FromArgb(235, 20, 40, 90)), 2);
 
@@ -20,8 +21,9 @@ public static class PetRenderer
     {
         var fill = pet.State switch
         {
-            PetState.Climbing => ClimbBody,
-            PetState.Falling => FallBody,
+            PetState.Stand => StandBody,
+            PetState.Rope => RopeBody,
+            PetState.Jump => JumpBody,
             _ => WalkBody,
         };
         var body = new Avalonia.Rect(pet.Pos.X, pet.Pos.Y, pet.Size.X, pet.Size.Y);

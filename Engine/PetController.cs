@@ -4,17 +4,20 @@ namespace MaplePet.Engine;
 
 public enum PetState
 {
-    Walking,
-    Climbing,
-    Falling,
+    Stand, // idle, standing still on a platform
+    Walk,  // walking left/right on a platform
+    Rope,  // on a ladder (a window's side edge), climbing up or down
+    Jump,  // airborne: jumping, falling, or being dragged
 }
 
 /// <summary>
 /// The pet's state machine and physics integration. Platform-agnostic: it only ever reads a
 /// <see cref="World"/> of platforms/ladders, so it is fully unit-testable.
 ///
-/// Movement rules (see the user's spec):
-///  - Walks left/right on platforms; turns around at solid (ground) ends.
+/// States: STAND (idle) / WALK / ROPE (on a ladder) / JUMP (airborne).
+///
+/// Movement rules:
+///  - Walks left/right on platforms; pauses to idle (STAND) now and then; turns at solid ends.
 ///  - UP is only via ladders. When it passes close to a reachable ladder it climbs with
 ///    probability <c>RoamingChance</c>. A ladder is reachable if its grab point is within
 ///    <c>JumpHeight</c> above the platform.
@@ -29,21 +32,25 @@ public sealed class PetController
     private readonly Settings _cfg;
     private readonly Random _rng;
 
-    private const double SupportTol = 8.0;     // feet-to-platform snap tolerance
-    private const double LadderXTol = 5.0;     // how near the ladder line counts as "on" it
+    private const double SupportTol = 8.0;      // feet-to-platform snap tolerance
+    private const double LadderXTol = 5.0;      // how near the ladder line counts as "on" it
     private const double DetachCooldown = 0.45; // seconds; suppress re-grab right after (de)taching
     private const double ReRollCooldown = 0.12; // seconds; avoid re-rolling the same encounter
+    private const double IdleChancePerSecond = 0.3; // how often a walking pet pauses to idle
+    private const double IdleMinSeconds = 1.0;
+    private const double IdleMaxSeconds = 3.0;
 
     public Vec2 Pos;          // top-left, logical px
     public Vec2 Size;         // width/height, logical px
     public Vec2 Vel;          // px/second
-    public PetState State { get; private set; } = PetState.Falling;
+    public PetState State { get; private set; } = PetState.Jump;
     public int Facing { get; private set; } = 1; // +1 = right, -1 = left
 
     private bool _spawned;
     private double _climbX;    // ladder line being climbed
     private int _climbDir;     // -1 = up (y decreasing), +1 = down
     private double _cooldown;
+    private double _idleTimer;
     private double _lastRolledX = double.NaN; // ladder X whose roaming roll was just resolved
 
     public double FeetY => Pos.Y + Size.Y;
@@ -64,9 +71,10 @@ public sealed class PetController
 
         switch (State)
         {
-            case PetState.Walking: UpdateWalking(world, dt); break;
-            case PetState.Climbing: UpdateClimbing(world, dt); break;
-            case PetState.Falling: UpdateFalling(world, dt); break;
+            case PetState.Stand: UpdateStand(world, dt); break;
+            case PetState.Walk: UpdateWalk(world, dt); break;
+            case PetState.Rope: UpdateRope(world, dt); break;
+            case PetState.Jump: UpdateJump(world, dt); break;
         }
     }
 
@@ -81,18 +89,47 @@ public sealed class PetController
 
         Pos = new Vec2(ground.CenterX - Size.X / 2, ground.Y - Size.Y);
         Vel = default;
-        State = PetState.Walking;
+        State = PetState.Walk;
         Facing = 1;
         _spawned = true;
     }
 
-    // ---------------------------------------------------------------- Walking
-    private void UpdateWalking(World world, double dt)
+    // ---------------------------------------------------------------- Stand (idle)
+    private void UpdateStand(World world, double dt)
+    {
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) { BeginFall(0); return; } // ground vanished beneath us
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
+
+        _idleTimer -= dt;
+        if (_idleTimer <= 0)
+        {
+            State = PetState.Walk;
+            if (_rng.NextDouble() < 0.5) Facing = -Facing; // sometimes wander the other way
+        }
+    }
+
+    private void EnterStand()
+    {
+        State = PetState.Stand;
+        Vel = default;
+        _idleTimer = IdleMinSeconds + _rng.NextDouble() * (IdleMaxSeconds - IdleMinSeconds);
+    }
+
+    // ---------------------------------------------------------------- Walk
+    private void UpdateWalk(World world, double dt)
     {
         var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
         if (support is null) { BeginFall(0); return; } // surface vanished
         var plat = support.Value;
         Pos = new Vec2(Pos.X, plat.Y - Size.Y); // snap feet onto the platform
+
+        // Occasionally stop and idle.
+        if (_cooldown <= 0 && _rng.NextDouble() < IdleChancePerSecond * dt)
+        {
+            EnterStand();
+            return;
+        }
 
         double prevCenter = CenterX;
         double nextX = Pos.X + Facing * _cfg.WalkSpeed * dt;
@@ -139,7 +176,7 @@ public sealed class PetController
     private void BeginFall(double vx)
     {
         Vel = new Vec2(vx, 0);
-        State = PetState.Falling;
+        State = PetState.Jump;
     }
 
     // ---------------------------------------------------------------- Climb decision
@@ -211,11 +248,11 @@ public sealed class PetController
         _climbDir = dir;
         Pos = new Vec2(l.X - Size.X / 2, feet - Size.Y);
         Vel = default;
-        State = PetState.Climbing;
+        State = PetState.Rope;
     }
 
-    // ---------------------------------------------------------------- Climbing
-    private void UpdateClimbing(World world, double dt)
+    // ---------------------------------------------------------------- Rope (climbing)
+    private void UpdateRope(World world, double dt)
     {
         var seg = Physics.FindLadderAt(world, _climbX, FeetY, LadderXTol, SupportTol);
         if (seg is null) { BeginFall(0); _cooldown = DetachCooldown; return; } // ladder vanished
@@ -241,14 +278,14 @@ public sealed class PetController
         var p = support.Value;
         Pos = new Vec2(Pos.X, p.Y - Size.Y);
         Vel = default;
-        State = PetState.Walking;
+        State = PetState.Walk;
 
         if (faceInward) // stepped onto a window top at its edge -> walk inward, not off it
             Facing = Math.Abs(_climbX - p.XStart) <= Math.Abs(_climbX - p.XEnd) ? 1 : -1;
     }
 
-    // ---------------------------------------------------------------- Falling
-    private void UpdateFalling(World world, double dt)
+    // ---------------------------------------------------------------- Jump (airborne)
+    private void UpdateJump(World world, double dt)
     {
         double vy = Vel.Y + _cfg.Gravity * dt;
         double vx = Vel.X;
@@ -262,7 +299,7 @@ public sealed class PetController
         {
             Pos = new Vec2(newX, landing.Value.Y - Size.Y);
             Vel = default;
-            State = PetState.Walking;
+            State = PetState.Walk;
             _cooldown = ReRollCooldown;
         }
         else
