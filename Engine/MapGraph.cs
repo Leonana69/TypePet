@@ -34,8 +34,14 @@ public sealed class MapGraph
     private const double Eps = 0.5;
     private const double YTol = 8.0;       // platform/feet vertical tolerance
     private const double XMerge = 3.0;     // merge attach points closer than this
-    private const double RopeBias = 2.0;   // cost penalty so walking is preferred over climbing
-    private const double JumpBias = 0.5;   // < RopeBias: a within-reach jump always beats a ladder
+    // Climb/jump biases satisfy JumpBias < RopeBias < 2*JumpBias, so:
+    //   * a single within-reach gap is JUMPED, not climbed (JumpBias < RopeBias), yet
+    //   * one continuous rope climb to a stop above intermediate platforms beats chaining two or
+    //     more jumps over the same total gap (RopeBias < 2*JumpBias) — i.e. when a rope reaches a
+    //     target above a middle platform, the pet climbs straight past it at a fixed speed instead
+    //     of hopping onto the platform in between.
+    private const double JumpBias = 0.5;
+    private const double RopeBias = 0.75;
     private const double DropBias = 1.0;   // cost penalty for a down-jump
     private const double MinOverlap = 12.0; // need at least this much shared x to jump/drop between
     private const double HopDist = 28.0;    // horizontal span of a jump/drop arc (bounded for sane vx)
@@ -178,20 +184,26 @@ public sealed class MapGraph
             }
         }
 
-        // Climb-up edges between consecutive stops along each ladder (UP only — never climb down).
+        // Climb-up edges (UP only — never climb down). Connect each stop to EVERY higher stop on
+        // the same ladder, not just the adjacent one, so reaching a stop above an intermediate
+        // platform is a single continuous climb (cost = total gap + one RopeBias) rather than a
+        // chain that pauses/re-grabs at each platform in between. The direct edge is cheaper than
+        // any chained or jump-onto-the-middle route, so the pet climbs the rope at a fixed speed
+        // straight past a platform whose top it passes on the way to a higher target.
         for (int li = 0; li < ladders.Count; li++)
         {
             var l = ladders[li];
-            var stops = ladderStops[li];
-            for (int k = 0; k + 1 < stops.Count; k++)
-            {
-                int upper = stops[k];     // higher (smaller Y)
-                int lower = stops[k + 1]; // lower (larger Y)
-                int upId = NodeFor(upper, l.X);
-                int loId = NodeFor(lower, l.X);
-                double cost = System.Math.Abs(platforms[lower].Y - platforms[upper].Y) + RopeBias;
-                g.AddEdge(loId, upId, MoveKind.ClimbUp, cost, li);
-            }
+            var stops = ladderStops[li]; // sorted top (smaller Y) first
+            for (int hiIdx = 0; hiIdx < stops.Count; hiIdx++)
+                for (int loIdx = hiIdx + 1; loIdx < stops.Count; loIdx++)
+                {
+                    int upper = stops[hiIdx]; // higher (smaller Y)
+                    int lower = stops[loIdx]; // lower (larger Y)
+                    int upId = NodeFor(upper, l.X);
+                    int loId = NodeFor(lower, l.X);
+                    double cost = System.Math.Abs(platforms[lower].Y - platforms[upper].Y) + RopeBias;
+                    g.AddEdge(loId, upId, MoveKind.ClimbUp, cost, li);
+                }
         }
 
         // Walk-across edges (seam x's were registered into attach[] above).
