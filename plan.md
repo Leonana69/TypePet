@@ -1,5 +1,4 @@
-1. Add different states for the pet: JUMP, STAND, ROPE, WALK.
-2. Add the function to drag the pet. When being dragged, the pet is in the JUMP state. When released, it should fall (be in JUMP state) to the platform below and stand there.
-3. Add a system tray icon for the program, and when right clicked, show a window with `Exit` and `Settings`. When click Settings, it should pop a setting window to adjust the configurable parameters.
-4. The random movement should be like this: consider the visible platforms and edges as a whole map, it randomly pick one target location and just try to move to it. The movement should consider the jump height. For example, if there is no window's bottom edge is within the jump height, the pet won't be able to jump on the ladder (the bottom point of left/right edges). Then the random movement will stay in the same platform or any platform below it. The `romaing chance` should be replaced as `romaing height (%)`, which means the maximum height the pet will try to go (start bar is at height 0, the top of the screen is 100%).
-5. When the pet tries to find and follow the path, you can refer to the file `D:\Git\MapleSimulator\src-tauri\src\ms\map_def.rs`. But ignore the teleport, just use walk, jump, and down jump. That file is for real control for a game, but here you just need to render the pet's location according to the path.
+1. Don't use corner of the window as the target movement location. Use a random point inside the top edge.
+2. No need to climb down on ladder to reach the target. You should be able to down jump to the platform below (except the lowest platform).
+3. You should be able to `jump` to a higher platform if the platform is within the jump height. Right now it always climb the ladder even if the platform is very close. This is for path finding.
+4. When you actually do the jump, you should follow a parabola curve.
