@@ -1,0 +1,2439 @@
+{
+  "category": "Longcoat",
+  "equipId": "01050247",
+  "name": "Evergreen Magistrate Outfit",
+  "poses": {
+    "stand1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stand1_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -10,
+              "canvasX": 20,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 22,
+              "height": 28,
+              "origin": {
+                "x": 6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__stand1_f00.png",
+              "isEffect": false,
+              "x": 7,
+              "y": -8,
+              "canvasX": 33,
+              "canvasY": 40,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 10,
+              "height": 12,
+              "origin": {
+                "x": -7,
+                "y": 8
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stand1_f01.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -10,
+              "canvasX": 20,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 22,
+              "height": 28,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__stand1_f01.png",
+              "isEffect": false,
+              "x": 8,
+              "y": -9,
+              "canvasX": 34,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 10,
+              "height": 13,
+              "origin": {
+                "x": -7,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stand1_f02.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -10,
+              "canvasX": 19,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__stand1_f02.png",
+              "isEffect": false,
+              "x": 8,
+              "y": -9,
+              "canvasX": 34,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 11,
+              "height": 13,
+              "origin": {
+                "x": -6,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stand2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__stand2_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -10,
+              "canvasX": 27,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 22,
+              "height": 28,
+              "origin": {
+                "x": 6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__stand2_f00.png",
+              "isEffect": false,
+              "x": 5,
+              "y": -9,
+              "canvasX": 38,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 9,
+              "height": 14,
+              "origin": {
+                "x": -5,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__stand2_f01.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -10,
+              "canvasX": 27,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 22,
+              "height": 28,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__stand2_f01.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -9,
+              "canvasX": 39,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 9,
+              "height": 14,
+              "origin": {
+                "x": -5,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__stand2_f02.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -10,
+              "canvasX": 26,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__stand2_f02.png",
+              "isEffect": false,
+              "x": 7,
+              "y": -9,
+              "canvasX": 40,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 9,
+              "height": 14,
+              "origin": {
+                "x": -5,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "walk1": {
+      "frameCount": 4,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f00.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -11,
+              "canvasX": 27,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 21,
+              "height": 28,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__walk1_f00.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 38,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 11,
+              "height": 10,
+              "origin": {
+                "x": -6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -10,
+              "canvasX": 24,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 26,
+              "height": 27,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__walk1_f01.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -9,
+              "canvasX": 40,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 7,
+              "height": 14,
+              "origin": {
+                "x": -6,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f02.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -11,
+              "canvasX": 27,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 27,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__walk1_f02.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 38,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 11,
+              "height": 9,
+              "origin": {
+                "x": -6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f03.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -12,
+              "canvasX": 25,
+              "canvasY": 36,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 28,
+              "height": 27,
+              "origin": {
+                "x": 9,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 3,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__walk1_f03.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -12,
+              "canvasX": 40,
+              "canvasY": 36,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 13,
+              "height": 10,
+              "origin": {
+                "x": -6,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "walk2": {
+      "frameCount": 4,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f00.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -11,
+              "canvasX": 29,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 21,
+              "height": 28,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__walk2_f00.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -10,
+              "canvasX": 42,
+              "canvasY": 38,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 7,
+              "height": 14,
+              "origin": {
+                "x": -6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk2_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -10,
+              "canvasX": 26,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 26,
+              "height": 27,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__walk2_f01.png",
+              "isEffect": false,
+              "x": 5,
+              "y": -9,
+              "canvasX": 41,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 7,
+              "height": 14,
+              "origin": {
+                "x": -5,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk1_f02.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -11,
+              "canvasX": 29,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 27,
+              "origin": {
+                "x": 7,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__walk2_f02.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -10,
+              "canvasX": 42,
+              "canvasY": 38,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 7,
+              "height": 14,
+              "origin": {
+                "x": -6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__walk2_f03.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -12,
+              "canvasX": 27,
+              "canvasY": 36,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 28,
+              "height": 27,
+              "origin": {
+                "x": 9,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 3,
+              "order": 7,
+              "layer": "mailArm",
+              "image": "mailArm__walk2_f03.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -11,
+              "canvasX": 42,
+              "canvasY": 37,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 8,
+              "height": 14,
+              "origin": {
+                "x": -6,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "alert": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__alert_f00.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -10,
+              "canvasX": 26,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 26,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "mailArm",
+              "image": "mailArm__alert_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 38,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 9,
+              "height": 13,
+              "origin": {
+                "x": -4,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__alert_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -11,
+              "canvasX": 26,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "mailArm",
+              "image": "mailArm__alert_f01.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 38,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 8,
+              "height": 15,
+              "origin": {
+                "x": -4,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__alert_f02.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -11,
+              "canvasX": 26,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "mailArm",
+              "image": "mailArm__alert_f02.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 38,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 8,
+              "height": 15,
+              "origin": {
+                "x": -4,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "jump": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__jump_f00.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -12,
+              "canvasX": 12,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 31,
+              "height": 27,
+              "origin": {
+                "x": 11,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 14,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__jump_f00.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -10,
+              "canvasX": 29,
+              "canvasY": 39,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 7,
+              "height": 11,
+              "origin": {
+                "x": -6,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "prone": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__prone_f00.png",
+              "isEffect": false,
+              "x": -32,
+              "y": -12,
+              "canvasX": 21,
+              "canvasY": 26,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 49,
+              "height": 16,
+              "origin": {
+                "x": 32,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__prone_f00.png",
+              "isEffect": false,
+              "x": -4,
+              "y": -4,
+              "canvasX": 49,
+              "canvasY": 34,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 12,
+              "height": 9,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "proneStab": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__prone_f00.png",
+              "isEffect": false,
+              "x": -32,
+              "y": -12,
+              "canvasX": 33,
+              "canvasY": 26,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 49,
+              "height": 16,
+              "origin": {
+                "x": 32,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__prone_f00.png",
+              "isEffect": false,
+              "x": -4,
+              "y": -4,
+              "canvasX": 61,
+              "canvasY": 34,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 12,
+              "height": 9,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__proneStab_f01.png",
+              "isEffect": false,
+              "x": -32,
+              "y": -12,
+              "canvasX": 33,
+              "canvasY": 26,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 49,
+              "height": 16,
+              "origin": {
+                "x": 32,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__proneStab_f01.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -5,
+              "canvasX": 45,
+              "canvasY": 33,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 19,
+              "height": 8,
+              "origin": {
+                "x": 20,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fly": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__fly_f00.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -13,
+              "canvasX": 16,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 30,
+              "height": 31,
+              "origin": {
+                "x": 8,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 14,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__fly_f00.png",
+              "isEffect": false,
+              "x": 5,
+              "y": -11,
+              "canvasX": 29,
+              "canvasY": 39,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 7,
+              "height": 11,
+              "origin": {
+                "x": -5,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__fly_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -13,
+              "canvasX": 16,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 31,
+              "origin": {
+                "x": 8,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 14,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__fly_f00.png",
+              "isEffect": false,
+              "x": 5,
+              "y": -11,
+              "canvasX": 29,
+              "canvasY": 39,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 7,
+              "height": 11,
+              "origin": {
+                "x": -5,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ladder": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__ladder_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -15,
+              "canvasX": 10,
+              "canvasY": 32,
+              "z": 51,
+              "zSlot": "backPants",
+              "width": 23,
+              "height": 34,
+              "origin": {
+                "x": 12,
+                "y": 15
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__ladder_f01.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -15,
+              "canvasX": 11,
+              "canvasY": 32,
+              "z": 51,
+              "zSlot": "backPants",
+              "width": 23,
+              "height": 34,
+              "origin": {
+                "x": 11,
+                "y": 15
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "rope": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__rope_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -17,
+              "canvasX": 10,
+              "canvasY": 31,
+              "z": 51,
+              "zSlot": "backPants",
+              "width": 23,
+              "height": 35,
+              "origin": {
+                "x": 12,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__rope_f01.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -11,
+              "canvasX": 10,
+              "canvasY": 37,
+              "z": 51,
+              "zSlot": "backPants",
+              "width": 25,
+              "height": 29,
+              "origin": {
+                "x": 12,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "heal": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__alert_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -11,
+              "canvasX": 26,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "mailArm",
+              "image": "mailArm__alert_f01.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -10,
+              "canvasX": 40,
+              "canvasY": 39,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 8,
+              "height": 15,
+              "origin": {
+                "x": -4,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__heal_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -12,
+              "canvasX": 26,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 28,
+              "height": 27,
+              "origin": {
+                "x": 10,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__heal_f01.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -10,
+              "canvasX": 19,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 16,
+              "height": 7,
+              "origin": {
+                "x": 17,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__heal_f02.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -11,
+              "canvasX": 27,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 29,
+              "origin": {
+                "x": 9,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__heal_f02.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -13,
+              "canvasX": 20,
+              "canvasY": 36,
+              "z": 105,
+              "zSlot": "mailArmBelowHead",
+              "width": 18,
+              "height": 9,
+              "origin": {
+                "x": 16,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__swingO1_f00.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -12,
+              "canvasX": 21,
+              "canvasY": 39,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 29,
+              "height": 26,
+              "origin": {
+                "x": 10,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__swingO1_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -9,
+              "canvasX": 19,
+              "canvasY": 42,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 11,
+              "height": 10,
+              "origin": {
+                "x": 12,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__swingO1_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -11,
+              "canvasX": 21,
+              "canvasY": 40,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 27,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "mailArm",
+              "image": "mailArm__swingO1_f01.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -11,
+              "canvasX": 20,
+              "canvasY": 40,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 13,
+              "height": 7,
+              "origin": {
+                "x": 11,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__swingO1_f02.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -10,
+              "canvasX": 23,
+              "canvasY": 41,
+              "z": 95,
+              "zSlot": "mailChest",
+              "width": 37,
+              "height": 24,
+              "origin": {
+                "x": 8,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "mailArm",
+              "image": "mailArm__swingO1_f02.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -19,
+              "canvasX": 32,
+              "canvasY": 32,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 14,
+              "height": 13,
+              "origin": {
+                "x": -1,
+                "y": 19
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__heal_f02.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -11,
+              "canvasX": 24,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 23,
+              "height": 29,
+              "origin": {
+                "x": 9,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__heal_f02.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -13,
+              "canvasX": 17,
+              "canvasY": 36,
+              "z": 105,
+              "zSlot": "mailArmBelowHead",
+              "width": 18,
+              "height": 9,
+              "origin": {
+                "x": 16,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__heal_f01.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -12,
+              "canvasX": 23,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 28,
+              "height": 27,
+              "origin": {
+                "x": 10,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__heal_f01.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -10,
+              "canvasX": 16,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 16,
+              "height": 7,
+              "origin": {
+                "x": 17,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__swingO2_f02.png",
+              "isEffect": false,
+              "x": -13,
+              "y": -12,
+              "canvasX": 20,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 33,
+              "height": 26,
+              "origin": {
+                "x": 13,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__swingO2_f02.png",
+              "isEffect": false,
+              "x": 3,
+              "y": -12,
+              "canvasX": 36,
+              "canvasY": 37,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 15,
+              "height": 12,
+              "origin": {
+                "x": -3,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "mail",
+              "image": "mail__swingO3_f00.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -11,
+              "canvasX": 40,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 42,
+              "height": 24,
+              "origin": {
+                "x": 21,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__swingO3_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -13,
+              "canvasX": 63,
+              "canvasY": 35,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 15,
+              "height": 9,
+              "origin": {
+                "x": -2,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__swingO3_f01.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -12,
+              "canvasX": 52,
+              "canvasY": 36,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 30,
+              "height": 26,
+              "origin": {
+                "x": 9,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__swingO3_f01.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -12,
+              "canvasX": 46,
+              "canvasY": 36,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 15,
+              "height": 10,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "mail",
+              "image": "mail__swingO1_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -12,
+              "canvasX": 55,
+              "canvasY": 36,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 29,
+              "height": 26,
+              "origin": {
+                "x": 6,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "mailArm",
+              "image": "mailArm__swingO3_f02.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -9,
+              "canvasX": 53,
+              "canvasY": 39,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 11,
+              "height": 10,
+              "origin": {
+                "x": 8,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO1": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stabO1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -12,
+              "canvasX": 50,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 31,
+              "height": 27,
+              "origin": {
+                "x": 17,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "mailArm",
+              "image": "mailArm__stabO1_f00.png",
+              "isEffect": false,
+              "x": 5,
+              "y": -11,
+              "canvasX": 72,
+              "canvasY": 38,
+              "z": 120,
+              "zSlot": "mailArm",
+              "width": 12,
+              "height": 11,
+              "origin": {
+                "x": -5,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stabO1_f01.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -12,
+              "canvasX": 56,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 36,
+              "height": 24,
+              "origin": {
+                "x": 11,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__stabO1_f01.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -11,
+              "canvasX": 46,
+              "canvasY": 38,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 18,
+              "height": 5,
+              "origin": {
+                "x": 21,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO2": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stabO2_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -12,
+              "canvasX": 47,
+              "canvasY": 37,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 31,
+              "height": 29,
+              "origin": {
+                "x": 16,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__stabO2_f00.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -12,
+              "canvasX": 69,
+              "canvasY": 37,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 12,
+              "height": 7,
+              "origin": {
+                "x": -6,
+                "y": 12
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 4,
+              "layer": "mail",
+              "image": "mail__stabO2_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -11,
+              "canvasX": 55,
+              "canvasY": 38,
+              "z": 91,
+              "zSlot": "mailChestOverPants",
+              "width": 36,
+              "height": 26,
+              "origin": {
+                "x": 8,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "mailArmOverHair",
+              "image": "mailArmOverHair__stabO2_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -10,
+              "canvasX": 44,
+              "canvasY": 39,
+              "z": 151,
+              "zSlot": "mailArmOverHair",
+              "width": 18,
+              "height": 5,
+              "origin": {
+                "x": 19,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

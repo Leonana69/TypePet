@@ -1,0 +1,1064 @@
+{
+  "category": "Shield",
+  "equipId": "01092029",
+  "name": "Esther Shield",
+  "poses": {
+    "stand1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -7,
+              "canvasX": 6,
+              "canvasY": 41,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 11,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -7,
+              "canvasX": 5,
+              "canvasY": 41,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -7,
+              "canvasX": 4,
+              "canvasY": 41,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 15,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "walk1": {
+      "frameCount": 4,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -16,
+              "canvasX": 5,
+              "canvasY": 32,
+              "z": 113,
+              "zSlot": "shield",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 9,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 20,
+                  "y": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -15,
+              "canvasX": 5,
+              "canvasY": 33,
+              "z": 113,
+              "zSlot": "shield",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 20,
+                  "y": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -16,
+              "canvasX": 5,
+              "canvasY": 32,
+              "z": 113,
+              "zSlot": "shield",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 9,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 20,
+                  "y": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 5,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -17,
+              "canvasX": 7,
+              "canvasY": 31,
+              "z": 113,
+              "zSlot": "shield",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 18,
+                  "y": 11
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "alert": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -18,
+              "canvasX": 8,
+              "canvasY": 30,
+              "z": 159,
+              "zSlot": "shieldOverHair",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 18,
+                  "y": 13
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -16,
+              "canvasX": 8,
+              "canvasY": 32,
+              "z": 159,
+              "zSlot": "shieldOverHair",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 18,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -14,
+              "canvasX": 8,
+              "canvasY": 34,
+              "z": 159,
+              "zSlot": "shieldOverHair",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 19,
+                  "y": 8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "jump": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -15,
+              "canvasX": 0,
+              "canvasY": 34,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "prone": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__prone_f00.png",
+              "isEffect": false,
+              "x": -53,
+              "y": -17,
+              "canvasX": 0,
+              "canvasY": 21,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 34,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 43,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "proneStab": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__prone_f00.png",
+              "isEffect": false,
+              "x": -53,
+              "y": -17,
+              "canvasX": 12,
+              "canvasY": 21,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 34,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 43,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__prone_f00.png",
+              "isEffect": false,
+              "x": -53,
+              "y": -17,
+              "canvasX": 12,
+              "canvasY": 21,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 34,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 43,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fly": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -16,
+              "canvasX": 0,
+              "canvasY": 34,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 14,
+                  "y": 11
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -16,
+              "canvasX": 0,
+              "canvasY": 34,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 14,
+                  "y": 11
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "heal": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -16,
+              "canvasX": 8,
+              "canvasY": 33,
+              "z": 159,
+              "zSlot": "shieldOverHair",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 18,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -21,
+              "canvasX": 13,
+              "canvasY": 28,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -12,
+              "canvasX": 12,
+              "canvasY": 37,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 14,
+                  "y": 7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -19,
+              "canvasX": 21,
+              "canvasY": 32,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 14
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -4,
+              "y": -15,
+              "canvasX": 27,
+              "canvasY": 36,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -18,
+              "canvasX": 9,
+              "canvasY": 33,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -12,
+              "canvasX": 9,
+              "canvasY": 37,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 14,
+                  "y": 7
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -21,
+              "canvasX": 10,
+              "canvasY": 28,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -33,
+              "y": -23,
+              "canvasX": 0,
+              "canvasY": 26,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 24,
+                  "y": 17
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shield",
+              "image": "shield__walk1_f00.png",
+              "isEffect": false,
+              "x": -43,
+              "y": -22,
+              "canvasX": 18,
+              "canvasY": 26,
+              "z": 113,
+              "zSlot": "shield",
+              "width": 33,
+              "height": 32,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 33,
+                  "y": 17
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -18,
+              "canvasX": 49,
+              "canvasY": 30,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 2,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -19,
+              "canvasX": 55,
+              "canvasY": 29,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 9,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO1": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -36,
+              "y": -18,
+              "canvasX": 31,
+              "canvasY": 31,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 26,
+                  "y": 13
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -19,
+              "canvasX": 56,
+              "canvasY": 30,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 1,
+                  "y": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO2": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -37,
+              "y": -18,
+              "canvasX": 26,
+              "canvasY": 31,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 27,
+                  "y": 13
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "shield",
+              "image": "shield__stand1_f00.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -16,
+              "canvasX": 53,
+              "canvasY": 33,
+              "z": 81,
+              "zSlot": "shieldBelowBody",
+              "width": 29,
+              "height": 28,
+              "origin": {
+                "x": 10,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

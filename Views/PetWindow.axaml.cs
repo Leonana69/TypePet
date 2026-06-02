@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using MaplePet.Engine;
 using MaplePet.Platform;
 using MaplePet.Platform.Windows;
+using MaplePet.Rendering;
 
 namespace MaplePet.Views;
 
@@ -24,6 +25,8 @@ public partial class PetWindow : Window
     private ScreenSpace _screen = new(0, 0, 1);
     private World? _world;
     private PetController? _pet;
+    private CharacterSprites? _sprites;
+    private CharacterAnimator? _animator;
 
     private nint _hwnd;
     private bool _interactive; // true when the overlay is currently NOT click-through
@@ -52,6 +55,16 @@ public partial class PetWindow : Window
         ApplyClickThrough();
 
         _pet = new PetController(_cfg, new Vec2(30, 38));
+
+        // Load the MapleStory character footage. Prefer the full equipped export under
+        // Assets/footage; fall back to the bundled Body+Head default character that always ships.
+        // If both fail, the renderer falls back to the placeholder shape so the overlay still works.
+        _sprites = CharacterSprites.Load(hitTestPoses: CharacterAnimator.ActivePoses)
+                   ?? CharacterSprites.Load(footageDir: "Assets/DefaultCharacter", hitTestPoses: CharacterAnimator.ActivePoses);
+        _animator = new CharacterAnimator();
+        View.Sprites = _sprites;
+        View.Animator = _animator;
+
         PollWorld(); // prime the world before the first frame
 
         _pollTimer = new DispatcherTimer
@@ -180,6 +193,16 @@ public partial class PetWindow : Window
     {
         if (_pet is null) return false;
         const double margin = 5;
+
+        // Match the drawn character: the sprite is centered on CenterX and rises HeightAboveFeet
+        // above the feet (well past the small physics box). Fall back to the physics box when the
+        // footage didn't load (the renderer then draws the placeholder rectangle there).
+        if (_sprites is { } s)
+        {
+            return p.X >= _pet.CenterX - s.HalfWidth - margin && p.X <= _pet.CenterX + s.HalfWidth + margin
+                && p.Y >= _pet.FeetY - s.HeightAboveFeet - margin && p.Y <= _pet.FeetY + margin;
+        }
+
         return p.X >= _pet.Pos.X - margin && p.X <= _pet.Pos.X + _pet.Size.X + margin
             && p.Y >= _pet.Pos.Y - margin && p.Y <= _pet.Pos.Y + _pet.Size.Y + margin;
     }
@@ -209,6 +232,7 @@ public partial class PetWindow : Window
         if (_pet is not null && _world is not null)
         {
             _pet.Update(_world, dt);
+            _animator?.Update(_sprites, _pet.State, dt);
             View.Pet = _pet;
         }
         View.InvalidateVisual();

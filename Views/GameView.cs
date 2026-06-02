@@ -15,6 +15,8 @@ public sealed class GameView : Control
     public WorldGeometry? Geometry { get; set; }
     public World? World { get; set; }
     public PetController? Pet { get; set; }
+    public CharacterSprites? Sprites { get; set; }
+    public CharacterAnimator? Animator { get; set; }
     public bool ShowDebug { get; set; } = true;
 
     public GameView()
@@ -33,7 +35,7 @@ public sealed class GameView : Control
         if (Pet is { } pet)
         {
             if (ShowDebug) DebugOverlay.DrawPath(context, pet);
-            PetRenderer.Draw(context, pet);
+            PetRenderer.Draw(context, pet, Sprites, Animator);
         }
     }
 }

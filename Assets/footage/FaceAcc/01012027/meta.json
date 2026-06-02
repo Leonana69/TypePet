@@ -1,0 +1,1425 @@
+{
+  "category": "FaceAcc",
+  "equipId": "01012027",
+  "name": "Bandage Strip",
+  "poses": {
+    "stand1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 30,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 30,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 30,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stand2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 37,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 37,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 4,
+              "y": -16,
+              "canvasX": 37,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "walk1": {
+      "frameCount": 4,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 36,
+              "canvasY": 31,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -16,
+              "canvasX": 36,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 36,
+              "canvasY": 31,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -18,
+              "canvasX": 36,
+              "canvasY": 30,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "walk2": {
+      "frameCount": 4,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 38,
+              "canvasY": 31,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -16,
+              "canvasX": 38,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 38,
+              "canvasY": 31,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 12,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -18,
+              "canvasX": 38,
+              "canvasY": 30,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "alert": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 9,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -16,
+              "canvasX": 35,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 9,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -16,
+              "canvasX": 35,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 9,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -16,
+              "canvasX": 35,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "jump": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -17,
+              "canvasX": 24,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "prone": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -6,
+              "canvasX": 37,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "proneStab": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -6,
+              "canvasX": 49,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -6,
+              "canvasX": 49,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fly": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 0,
+              "y": -18,
+              "canvasX": 24,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 11,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 0,
+              "y": -18,
+              "canvasX": 24,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ladder": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -14,
+              "canvasX": 21,
+              "canvasY": 33,
+              "z": -1,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 0,
+              "y": -14,
+              "canvasX": 22,
+              "canvasY": 33,
+              "z": -1,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "rope": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -14,
+              "canvasX": 21,
+              "canvasY": 34,
+              "z": -1,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 0,
+              "y": -15,
+              "canvasX": 22,
+              "canvasY": 33,
+              "z": -1,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "heal": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 9,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -16,
+              "canvasX": 35,
+              "canvasY": 33,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -5,
+              "y": -17,
+              "canvasX": 31,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 38,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -15,
+              "canvasX": 23,
+              "canvasY": 36,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 11,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -2,
+              "y": -16,
+              "canvasX": 29,
+              "canvasY": 35,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 11,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -13,
+              "canvasX": 23,
+              "canvasY": 38,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -17,
+              "canvasX": 35,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -5,
+              "y": -17,
+              "canvasX": 28,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -16,
+              "canvasX": 27,
+              "canvasY": 33,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingO3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -3,
+              "y": -16,
+              "canvasX": 58,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -16,
+              "canvasX": 54,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -4,
+              "y": -15,
+              "canvasX": 57,
+              "canvasY": 33,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO1": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -17,
+              "canvasX": 68,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -16,
+              "canvasX": 58,
+              "canvasY": 33,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO2": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -17,
+              "canvasX": 64,
+              "canvasY": 32,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 10,
+              "layer": "default",
+              "image": "default__stand1_f00.png",
+              "isEffect": false,
+              "x": -10,
+              "y": -14,
+              "canvasX": 53,
+              "canvasY": 35,
+              "z": 132,
+              "zSlot": "accessoryFace",
+              "width": 10,
+              "height": 7,
+              "origin": {
+                "x": 15,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -19,
+                  "y": -40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -23,6 +23,19 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // Dev-only: render the character poses to PNGs and exit (no overlay/tray).
+            if (AppState.RenderPosesDir is string dir)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    try { MaplePet.Rendering.PoseRenderTest.Run(dir); }
+                    catch (Exception ex) { File.WriteAllText(Path.Combine(dir, "ERROR.txt"), ex.ToString()); }
+                    desktop.Shutdown();
+                });
+                base.OnFrameworkInitializationCompleted();
+                return;
+            }
+
             _settings = Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"));
             desktop.MainWindow = new PetWindow(_settings);
             SetupTrayIcon(desktop);

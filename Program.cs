@@ -9,6 +9,9 @@ public static class AppState
 {
     /// <summary>If &gt; 0, the overlay auto-closes after this many seconds (smoke test).</summary>
     public static double SmokeSeconds { get; set; }
+
+    /// <summary>Dev-only: if set, render the character poses to PNGs in this dir and exit.</summary>
+    public static string? RenderPosesDir { get; set; }
 }
 
 internal static class Program
@@ -17,6 +20,7 @@ internal static class Program
     public static int Main(string[] args)
     {
         AppState.SmokeSeconds = ParseSmoke(args);
+        AppState.RenderPosesDir = ParseOption(args, "--render-poses");
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
@@ -36,5 +40,12 @@ internal static class Program
             return 3;
         }
         return 0;
+    }
+
+    private static string? ParseOption(string[] args, string name)
+    {
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == name) return args[i + 1];
+        return null;
     }
 }
