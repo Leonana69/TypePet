@@ -17,7 +17,7 @@ public sealed class GameView : Control
     public PetController? Pet { get; set; }
     public CharacterSprites? Sprites { get; set; }
     public CharacterAnimator? Animator { get; set; }
-    public bool ShowDebug { get; set; } = true;
+    public bool ShowDebug { get; set; } = false; // driven by Settings.ShowOverlay via PetWindow
 
     public GameView()
     {

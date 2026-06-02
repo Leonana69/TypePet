@@ -13,17 +13,19 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 | Overlay | Transparent, borderless, topmost, click-through, full-virtual-screen (`WS_EX_TRANSPARENT \| WS_EX_LAYERED`) |
 | Window tracker | Detects visible windows (DWM visible bounds; cloaked/minimized/tool-window filtered) + taskbar |
 | Visible-only geometry | Window top/side edges are clipped against windows **in front** (Z-order) and the taskbar, so an occluded edge yields only its visible segments |
-| Debug overlay | Draws windows, **platforms** (green), and **ladders** (orange) |
-| Roaming | Treats the visible platforms/ladders as a navigation graph: picks a random point on a reachable window top edge (no higher than `roamingHeight`%), plans a path, and follows it — walking, **jumping up** onto platforms within `jumpHeight`, climbing ladders only for taller gaps, and **down-jumping** through to the platform below |
+| Debug overlay | Draws windows, **platforms** (green), and **ladders** (orange) — toggle with `showOverlay` |
+| Roaming | Treats the visible platforms/ladders as a navigation graph (clipped to the visible screen): picks a random point on a reachable window top edge, plans a path, and follows it — walking, **jumping up** onto platforms within `jumpHeight`, climbing ladders only for taller gaps, and **down-jumping** through to the platform below. How often it wanders is set by `roamingLevel` |
 | Jumps | Jumps and down-jumps follow a real **parabolic arc** under gravity (state JUMP); to mount a ladder the pet runs up and jumps early so the arc's **peak meets the ladder line**, then grabs on mid-air |
 | States | STAND (idle) / WALK / ROPE (climbing) / JUMP (airborne); idles between trips |
 | Drag | Grab the pet with the mouse (it follows the cursor in JUMP); release and it falls to the platform below and stands |
 | Tray menu | A tray icon with **Settings…** (live-editable parameters) and **Exit** |
 | Dynamic world | Rebuilds the graph and replans whenever windows move/open/close; if its surface vanishes it falls and recovers |
 
-The pet is tinted by state: pale-blue idle, **blue** walking, **green** on a rope, **orange** airborne.
+The pet is a MapleStory character (Body + Head + equipped items, including item effects, rendered
+from `Assets/footage`) that stands, walks, jumps, and climbs with per-state poses. If the footage
+fails to load it falls back to a state-tinted rectangle.
 
-Not yet implemented: sprite animation (the pet is still a tinted rectangle).
+Not yet implemented: attack animations (the footage already carries swing/stab/shoot poses to wire up).
 
 ## Requirements
 
@@ -37,7 +39,7 @@ dotnet run --project MaplePet.csproj
 ```
 
 You'll see your detected windows outlined, the derived platforms/ladders drawn on top,
-and a rectangle (the pet) roaming them — walking, jumping up onto nearby ledges, climbing
+and the MapleStory character (the pet) roaming them — walking, jumping up onto nearby ledges, climbing
 window edges for taller gaps, and down-jumping between them. The overlay is click-through,
 so everything behind it stays usable; you can
 still grab and drag the pet with the mouse. Quit from the tray icon's **Exit** (or Ctrl+C
@@ -56,15 +58,16 @@ dotnet run --project MaplePet.csproj -- --smoke 3
 | Key | Default | Meaning |
 |---|---|---|
 | `jumpHeight` | `150` | Max vertical reach (px) to jump straight up onto a higher platform (taller gaps need a ladder) |
-| `roamingHeight` | `100` | 0–100% — the highest the pet roams to (taskbar = 0, screen top = 100) |
+| `roamingLevel` | `50` | 0–100 restlessness: chance it wanders to a new spot when idle (0 = stay put, 100 = always roam; eased so low values stay put far more than linear) |
 | `walkSpeed` | `90` | px / second |
 | `climbSpeed` | `70` | px / second |
 | `gravity` | `900` | px / second² |
 | `targetFps` | `60` | render/physics tick rate |
 | `worldPollHz` | `8` | how often window geometry is re-read |
+| `showOverlay` | `false` | Draw the debug window-edge / path overlay |
 
-Lower `roamingHeight` to keep the pet nearer the taskbar; raise `jumpHeight` to let it reach
-windows that float higher above the taskbar. Edit these live via the tray **Settings…** dialog.
+Lower `roamingLevel` to make the pet calmer (it wanders less often); raise `jumpHeight` to let it
+reach windows that float higher above the taskbar. Edit these live via the tray **Settings…** dialog.
 
 ## Replacing the placeholder pet
 

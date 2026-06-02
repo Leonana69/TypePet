@@ -53,16 +53,7 @@ public sealed class MapGraph
     public IReadOnlyList<NavNode> Nodes => _nodes;
     public World World => _world;
 
-    /// <summary>The ground level (taskbar top): the largest platform Y. Height % is measured from here.</summary>
-    public double GroundY { get; }
-
-    private MapGraph(World world)
-    {
-        _world = world;
-        double ground = 0;
-        foreach (var p in world.Platforms) ground = System.Math.Max(ground, p.Y);
-        GroundY = ground;
-    }
+    private MapGraph(World world) => _world = world;
 
     private int AddNode(NavNode n) { _nodes.Add(n); _adj.Add(new()); return _nodes.Count - 1; }
     private void AddEdge(int from, int to, MoveKind kind, double cost, int ladder)
@@ -346,14 +337,11 @@ public sealed class MapGraph
         return best;
     }
 
-    /// <summary>Platform indices whose top edge is no higher than <paramref name="roamingHeightPct"/>.</summary>
-    public List<int> EligiblePlatforms(double roamingHeightPct)
+    /// <summary>All platform indices the pet may roam to (per-target reachability is checked in PlanTo).</summary>
+    public List<int> RoamablePlatforms()
     {
-        double maxHeight = GroundY * (roamingHeightPct / 100.0);
-        var result = new List<int>();
-        for (int i = 0; i < _world.Platforms.Count; i++)
-            if (GroundY - _world.Platforms[i].Y <= maxHeight + Eps)
-                result.Add(i);
+        var result = new List<int>(_world.Platforms.Count);
+        for (int i = 0; i < _world.Platforms.Count; i++) result.Add(i);
         return result;
     }
 

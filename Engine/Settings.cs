@@ -14,7 +14,9 @@ public sealed class Settings
     public double WalkSpeed { get; set; } = 90;      // px / second
     public double ClimbSpeed { get; set; } = 70;     // px / second
     public double Gravity { get; set; } = 900;       // px / second^2
-    public double RoamingHeight { get; set; } = 100; // 0..100 %: max height it roams to (taskbar=0, screen top=100)
+    public double RoamingLevel { get; set; } = 50;   // 0..100: how restless it is — the chance it wanders
+                                                     // to a new spot when idle (0 = stay put, 100 = always roam)
+    public bool ShowOverlay { get; set; } = false;   // draw the debug window-edge / path overlay
     public int TargetFps { get; set; } = 60;
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
@@ -80,7 +82,7 @@ public sealed class Settings
         ClimbSpeed = Positive(ClimbSpeed, d.ClimbSpeed);
         Gravity = Positive(Gravity, d.Gravity);
         WorldPollHz = Positive(WorldPollHz, d.WorldPollHz);
-        RoamingHeight = double.IsFinite(RoamingHeight) ? Math.Clamp(RoamingHeight, 0, 100) : d.RoamingHeight;
+        RoamingLevel = double.IsFinite(RoamingLevel) ? Math.Clamp(RoamingLevel, 0, 100) : d.RoamingLevel;
         TargetFps = TargetFps is >= 1 and <= 240 ? TargetFps : d.TargetFps;
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
 

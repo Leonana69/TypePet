@@ -13,8 +13,8 @@ public enum PetState
 
 /// <summary>
 /// The pet's brain + physics. It treats the visible platforms/ladders as a navigation map
-/// (<see cref="MapGraph"/>): it picks a random reachable target (no higher than
-/// <c>RoamingHeight</c>% of the screen), plans a path of walk / climb / drop moves, and follows
+/// (<see cref="MapGraph"/>): when idle it rolls <c>RoamingLevel</c> to decide whether to wander —
+/// if so it picks a random reachable target, plans a path of walk / climb / drop moves, and follows
 /// it, idling (STAND) between trips. The world is re-resolved every tick — if a window moves or
 /// closes, the graph is rebuilt and the route is replanned; if the surface it stands on or the
 /// ladder it climbs disappears, it falls and replans on landing.
@@ -171,16 +171,30 @@ public sealed class PetController
         _idleTimer -= dt;
         if (_idleTimer <= 0)
         {
-            if (PickTarget(world)) State = PetState.Walk;
-            else _idleTimer = 0.5; // nothing reachable yet; try again shortly
+            // Decide whether to wander. RoamingLevel is the restlessness knob; the ease-in curve makes
+            // low levels strongly prefer staying put (level 0 never roams, ~10 ≈ 1%, ~25 ≈ 6% per check)
+            // while high levels roam eagerly (100 = every check), which reads more naturally than linear.
+            if (_rng.NextDouble() >= MoveChance())
+                EnterStand();          // decided to stay put; re-idle for a full spell before re-deciding
+            else if (PickTarget(world))
+                State = PetState.Walk; // off it goes
+            else
+                _idleTimer = 0.5;      // wanted to move but nothing reachable yet; retry shortly
         }
+    }
+
+    /// <summary>Probability (0..1) of starting a new wander on a given idle check, from RoamingLevel.</summary>
+    private double MoveChance()
+    {
+        double t = Math.Clamp(_cfg.RoamingLevel, 0, 100) / 100.0;
+        return t * t; // ease-in: 0 never roams, 100 always; low levels stay put far more than linear
     }
 
     // ---------------------------------------------------------------- Target selection
     private bool PickTarget(World world)
     {
         if (_graph is null) return false;
-        var plats = _graph.EligiblePlatforms(_cfg.RoamingHeight);
+        var plats = _graph.RoamablePlatforms();
         if (plats.Count == 0) return false;
 
         for (int attempt = 0; attempt < TargetTries; attempt++)

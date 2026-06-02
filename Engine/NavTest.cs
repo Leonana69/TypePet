@@ -119,6 +119,26 @@ public static class NavTest
             Check("SameGeometry detects a real change", !PetController.SameGeometry(w1, w3), "moved edge != equal");
         }
 
+        // ---- Scenario G: WorldModel clips geometry to the screen (feature 1). A window straddles ----
+        // the left edge; its off-screen part must be removed so the pet can't target/walk there.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var win = new Rect(-50, 200, 200, 300); // spans x:-50..150 (left half off-screen), y:200..500
+            var geo = new WorldGeometry(new[] { win }, new Rect(0, 590, 800, 10), TaskbarEdge.Bottom);
+            var world = WorldModel.Build(geo, screen);
+
+            bool allOnScreen = true;
+            foreach (var p in world.Platforms)
+                if (p.XStart < screen.Left - 0.5 || p.XEnd > screen.Right + 0.5
+                    || p.Y < screen.Top - 0.5 || p.Y > screen.Bottom + 0.5) allOnScreen = false;
+            foreach (var l in world.Ladders)
+                if (l.X < screen.Left - 0.5 || l.X > screen.Right + 0.5
+                    || l.YTop < screen.Top - 0.5 || l.YBottom > screen.Bottom + 0.5) allOnScreen = false;
+
+            Check("world geometry is clipped to the screen", allOnScreen && world.Platforms.Count > 0,
+                $"platforms={world.Platforms.Count} ladders={world.Ladders.Count}");
+        }
+
         sb.AppendLine();
         sb.AppendLine($"SUMMARY: {pass} passed, {fail} failed");
         File.WriteAllText(outFile, sb.ToString());

@@ -3,7 +3,8 @@
   "walkSpeed": 90,
   "climbSpeed": 70,
   "gravity": 900,
-  "roamingHeight": 100,
+  "roamingLevel": 50,
+  "showOverlay": false,
   "targetFps": 60,
   "worldPollHz": 8,
   "spriteSheet": "Assets/pet-spritesheet.png"

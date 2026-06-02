@@ -64,6 +64,7 @@ public partial class PetWindow : Window
         _animator = new CharacterAnimator();
         View.Sprites = _sprites;
         View.Animator = _animator;
+        View.ShowDebug = _cfg.ShowOverlay;
 
         PollWorld(); // prime the world before the first frame
 
@@ -214,7 +215,9 @@ public partial class PetWindow : Window
         {
             var physical = _tracker.Capture();
             var logical = _screen.ToLogical(physical);
-            _world = WorldModel.Build(logical);
+            // The overlay spans the virtual screen at logical (0,0)..(Width,Height); clip the world to
+            // it so off-screen parts of partially-off-screen windows aren't walkable/targetable.
+            _world = WorldModel.Build(logical, new MaplePet.Engine.Rect(0, 0, Width, Height));
             View.Geometry = logical;
             View.World = _world;
         }
@@ -229,6 +232,7 @@ public partial class PetWindow : Window
     private void OnTick(double dt)
     {
         UpdateInput();
+        View.ShowDebug = _cfg.ShowOverlay; // live-toggled from Settings
         if (_pet is not null && _world is not null)
         {
             _pet.Update(_world, dt);

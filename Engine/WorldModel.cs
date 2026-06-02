@@ -30,7 +30,7 @@ public static class WorldModel
     private const double MinSegment = 4.0; // discard slivers shorter than this
     private const double Eps = 0.5;
 
-    public static World Build(WorldGeometry g)
+    public static World Build(WorldGeometry g, Rect screen)
     {
         var platforms = new List<Platform>();
         var ladders = new List<Ladder>();
@@ -84,7 +84,37 @@ public static class WorldModel
                 ladders.Add(new Ladder(w.Right, s, e));
         }
 
-        return new World(platforms, ladders);
+        // Keep only the parts inside the visible screen, so the pet never targets or walks onto a
+        // section of a window that is dragged partially off-screen.
+        return new World(ClipPlatforms(platforms, screen), ClipLadders(ladders, screen));
+    }
+
+    /// <summary>Clamp each platform's x-span to the screen; drop edges above/below it or too short.</summary>
+    private static List<Platform> ClipPlatforms(List<Platform> platforms, Rect screen)
+    {
+        var result = new List<Platform>(platforms.Count);
+        foreach (var p in platforms)
+        {
+            if (p.Y < screen.Top - Eps || p.Y > screen.Bottom + Eps) continue;
+            double xs = Math.Max(p.XStart, screen.Left);
+            double xe = Math.Min(p.XEnd, screen.Right);
+            if (xe - xs >= MinSegment) result.Add(new Platform(p.Y, xs, xe));
+        }
+        return result;
+    }
+
+    /// <summary>Clamp each ladder's y-span to the screen; drop edges left/right of it or too short.</summary>
+    private static List<Ladder> ClipLadders(List<Ladder> ladders, Rect screen)
+    {
+        var result = new List<Ladder>(ladders.Count);
+        foreach (var l in ladders)
+        {
+            if (l.X < screen.Left - Eps || l.X > screen.Right + Eps) continue;
+            double yt = Math.Max(l.YTop, screen.Top);
+            double yb = Math.Min(l.YBottom, screen.Bottom);
+            if (yb - yt >= MinSegment) result.Add(new Ladder(l.X, yt, yb));
+        }
+        return result;
     }
 
     private static bool Covers(double lo, double hi, double v) => v >= lo - Eps && v <= hi + Eps;
