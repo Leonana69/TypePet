@@ -48,6 +48,7 @@ public sealed class PetController
     // Navigation
     private MapGraph? _graph;
     private World? _graphWorld;
+    private double _graphJumpHeight; // JumpHeight the cached graph was built with (rebuild on change)
     private List<PathStep>? _path;
     private int _step;
     private Vec2 _targetPos;
@@ -89,14 +90,18 @@ public sealed class PetController
 
         EnsureSpawn(world);
 
-        // Rebuild the nav graph only when the window geometry actually changed. A fresh World
-        // instance is produced every poll even when nothing moved; rebuilding + replanning every
-        // poll would reset the route to step 0 mid-walk and make the pet stutter / shuttle in place.
+        // Rebuild the nav graph only when the window geometry actually changed (or JumpHeight was
+        // edited live, which changes which gaps are jumpable). A fresh World instance is produced
+        // every poll even when nothing moved; rebuilding + replanning every poll would reset the
+        // route to step 0 mid-walk and make the pet stutter / shuttle in place.
         if (!ReferenceEquals(world, _graphWorld))
         {
-            if (_graph is null || _graphWorld is null || !SameGeometry(_graphWorld, world))
+            if (_graph is null || _graphWorld is null
+                || _cfg.JumpHeight != _graphJumpHeight
+                || !SameGeometry(_graphWorld, world))
             {
                 _graph = MapGraph.Build(world, _cfg.JumpHeight);
+                _graphJumpHeight = _cfg.JumpHeight;
                 _pendingReplan = true;
             }
             _graphWorld = world;

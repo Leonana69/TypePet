@@ -7,15 +7,17 @@ using MaplePet.Engine;
 namespace MaplePet.Views;
 
 /// <summary>
-/// A small dialog (opened from the tray menu) to edit the configurable parameters. Physics
-/// values apply live (the controller reads <see cref="Settings"/> each tick); FPS / poll rate
-/// take effect on the next launch. Changes are persisted to settings.json on Save.
+/// A small dialog (opened from the tray menu) to edit the configurable parameters. Every change
+/// applies immediately — the controller reads <see cref="Settings"/> each tick — and is persisted to
+/// settings.json on the spot, so there is no Save button; just close the window. Target FPS / poll
+/// rate only take effect on the next launch.
 /// </summary>
 public sealed class SettingsWindow : Window
 {
     private readonly Settings _cfg;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll;
     private readonly CheckBox _overlay;
+    private bool _ready; // suppress change handlers while the initial values are being set
 
     public SettingsWindow(Settings cfg)
     {
@@ -34,32 +36,39 @@ public sealed class SettingsWindow : Window
         rows.Children.Add(Row("Walk speed (px/s)", cfg.WalkSpeed, 1, 2000, 5, out _walk));
         rows.Children.Add(Row("Climb speed (px/s)", cfg.ClimbSpeed, 1, 2000, 5, out _climb));
         rows.Children.Add(Row("Gravity (px/s^2)", cfg.Gravity, 1, 10000, 50, out _gravity));
-        rows.Children.Add(Row("Target FPS", cfg.TargetFps, 15, 240, 5, out _fps));
-        rows.Children.Add(Row("World poll (Hz)", cfg.WorldPollHz, 1, 60, 1, out _poll));
+        rows.Children.Add(Row("Target FPS (next launch)", cfg.TargetFps, 15, 240, 5, out _fps));
+        rows.Children.Add(Row("World poll Hz (next launch)", cfg.WorldPollHz, 1, 60, 1, out _poll));
 
         _overlay = new CheckBox { Content = "Show window/path overlay", IsChecked = cfg.ShowOverlay };
         rows.Children.Add(_overlay);
 
-        var save = new Button { Content = "Save", Width = 80, IsDefault = true };
-        save.Click += (_, _) => { Apply(); Close(); };
-        var cancel = new Button { Content = "Cancel", Width = 80, IsCancel = true };
-        cancel.Click += (_, _) => Close();
+        rows.Children.Add(new TextBlock { Text = "Changes apply immediately.", FontSize = 11, Opacity = 0.7 });
 
-        var buttons = new StackPanel
+        var close = new Button
         {
-            Orientation = Orientation.Horizontal,
-            Spacing = 8,
+            Content = "Close",
+            Width = 80,
+            IsDefault = true,
+            IsCancel = true,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        buttons.Children.Add(save);
-        buttons.Children.Add(cancel);
-        rows.Children.Add(buttons);
+        close.Click += (_, _) => Close();
+        rows.Children.Add(close);
 
         Content = new Border { Padding = new Thickness(16), Child = rows };
+
+        // Wire change handlers only now that initial values are in place, so populating the controls
+        // doesn't trigger a (redundant) write.
+        _ready = true;
+        foreach (var n in new[] { _jump, _roam, _walk, _climb, _gravity, _fps, _poll })
+            n.ValueChanged += (_, _) => ApplyLive();
+        _overlay.IsCheckedChanged += (_, _) => ApplyLive();
     }
 
-    private void Apply()
+    /// <summary>Push every control's value into the shared <see cref="Settings"/> and persist it.</summary>
+    private void ApplyLive()
     {
+        if (!_ready) return;
         static double D(NumericUpDown n, double fallback) => n.Value is { } v ? (double)v : fallback;
 
         _cfg.JumpHeight = D(_jump, _cfg.JumpHeight);
