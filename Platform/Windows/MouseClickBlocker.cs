@@ -12,10 +12,11 @@ namespace MaplePet.Platform.Windows;
 /// blacks out) while still "catching" the grab click.
 ///
 /// Only the down (over the pet) and its matching up are eaten — mouse MOVES are always passed
-/// through (blocking them would freeze the cursor, breaking the drag). Dragging itself still runs
-/// off the existing GetAsyncKeyState poll, which reflects the physical button state regardless of
-/// what the hook swallows. The callback must be fast and must never throw (a low-level hook sits in
-/// the path of all system mouse input).
+/// through (blocking them would freeze the cursor, breaking the drag). Because a swallowed button
+/// event is NOT seen by GetAsyncKeyState, the hook also tracks the physical left-button state itself
+/// (it sees every event before deciding to swallow), and the pet's drag loop reads that via
+/// <see cref="LeftButtonDown"/>. The callback must be fast and must never throw (a low-level hook
+/// sits in the path of all system mouse input).
 /// </summary>
 public sealed class MouseClickBlocker : IDisposable
 {
@@ -26,7 +27,12 @@ public sealed class MouseClickBlocker : IDisposable
     // Pet's clickable rect in physical screen px, published from the UI thread each tick.
     private volatile bool _enabled;
     private volatile int _left, _top, _right, _bottom;
-    private bool _swallowedDown; // latch: we ate the down, so eat the matching up (hook-thread only)
+    private volatile bool _leftDown; // physical left-button state seen by the hook (even when swallowed)
+    private bool _swallowedDown;     // latch: we ate the down, so eat the matching up (hook-thread only)
+
+    /// <summary>Left-button state observed by the hook — reliable even when the click is swallowed
+    /// (unlike GetAsyncKeyState, which doesn't see a hook-blocked button event).</summary>
+    public bool LeftButtonDown => _leftDown;
 
     public MouseClickBlocker() => _proc = HookProc;
 
@@ -54,6 +60,7 @@ public sealed class MouseClickBlocker : IDisposable
                 uint msg = (uint)wParam.Value;
                 if (msg == PInvoke.WM_LBUTTONDOWN)
                 {
+                    _leftDown = true;
                     var data = *(MSLLHOOKSTRUCT*)lParam.Value;
                     if ((data.flags & PInvoke.LLMHF_INJECTED) == 0 && _enabled
                         && data.pt.X >= _left && data.pt.X < _right
@@ -63,10 +70,14 @@ public sealed class MouseClickBlocker : IDisposable
                         return (LRESULT)1; // eat the press on the pet so the window behind doesn't get it
                     }
                 }
-                else if (msg == PInvoke.WM_LBUTTONUP && _swallowedDown)
+                else if (msg == PInvoke.WM_LBUTTONUP)
                 {
-                    _swallowedDown = false;
-                    return (LRESULT)1; // eat the matching release wherever it lands
+                    _leftDown = false;
+                    if (_swallowedDown)
+                    {
+                        _swallowedDown = false;
+                        return (LRESULT)1; // eat the matching release wherever it lands
+                    }
                 }
             }
         }

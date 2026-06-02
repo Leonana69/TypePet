@@ -163,7 +163,9 @@ public partial class PetWindow : Window
     {
         if (_hwnd == 0 || _pet is null || !OperatingSystem.IsWindows()) return;
 
-        bool lmb = WindowsInterop.IsLeftButtonDown();
+        // Use the hook's button state: a click swallowed by the hook (over the pet) isn't seen by
+        // GetAsyncKeyState, so the poll would miss the press and never start a drag.
+        bool lmb = _clickBlocker?.LeftButtonDown ?? WindowsInterop.IsLeftButtonDown();
         bool overPet = TryCursorLogical(out var cursor) && OverPet(cursor);
 
         if (!_pet.IsDragging && lmb && !_lmbPrev && overPet)
