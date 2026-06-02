@@ -11,13 +11,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 5,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -37,13 +37,13 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -68,13 +68,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 5,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -94,13 +94,13 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -125,13 +125,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 5,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -151,13 +151,13 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -187,14 +187,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 18,
-              "canvasY": 5,
+              "canvasX": 6,
+              "canvasY": 12,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -219,8 +219,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -244,14 +244,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 18,
-              "canvasY": 5,
+              "canvasX": 6,
+              "canvasY": 12,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -276,8 +276,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -301,14 +301,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -43,
-              "canvasX": 18,
-              "canvasY": 5,
+              "canvasX": 6,
+              "canvasY": 12,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -333,8 +333,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -363,13 +363,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 4,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -389,13 +389,13 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 4,
               "z": 136,
               "zSlot": "hair",
@@ -420,13 +420,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -43,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 5,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -446,13 +446,13 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -43,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -477,13 +477,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 4,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -503,13 +503,13 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 4,
               "z": 136,
               "zSlot": "hair",
@@ -534,13 +534,13 @@
           "layers": [
             {
               "frame": 3,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -45,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 3,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -560,13 +560,13 @@
             },
             {
               "frame": 3,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -45,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 3,
               "z": 136,
               "zSlot": "hair",
@@ -596,7 +596,7 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
@@ -653,7 +653,7 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
@@ -710,7 +710,7 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
@@ -767,7 +767,7 @@
           "layers": [
             {
               "frame": 3,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
@@ -829,14 +829,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
-              "canvasX": 16,
-              "canvasY": 5,
+              "canvasX": 44,
+              "canvasY": 6,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -855,14 +855,14 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -886,14 +886,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
-              "canvasX": 16,
-              "canvasY": 5,
+              "canvasX": 44,
+              "canvasY": 6,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -912,14 +912,14 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -943,14 +943,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
-              "canvasX": 16,
-              "canvasY": 5,
+              "canvasX": 44,
+              "canvasY": 6,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -969,14 +969,14 @@
             },
             {
               "frame": 2,
-              "order": 10,
+              "order": 11,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1005,14 +1005,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -44,
-              "canvasX": 5,
-              "canvasY": 5,
+              "canvasX": 110,
+              "canvasY": 88,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1031,14 +1031,14 @@
             },
             {
               "frame": 0,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 111,
+              "canvasY": 88,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1067,13 +1067,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__prone_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -33,
-              "canvasX": 18,
+              "canvasX": 54,
               "canvasY": 5,
               "z": 79,
               "zSlot": "hairBelowBody",
@@ -1093,13 +1093,13 @@
             },
             {
               "frame": 0,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 19,
+              "canvasX": 55,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -1129,14 +1129,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__prone_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -33,
-              "canvasX": 30,
-              "canvasY": 5,
+              "canvasX": 111,
+              "canvasY": 89,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 45,
@@ -1155,14 +1155,14 @@
             },
             {
               "frame": 0,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 31,
-              "canvasY": 5,
+              "canvasX": 112,
+              "canvasY": 89,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1186,14 +1186,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__prone_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -33,
-              "canvasX": 30,
-              "canvasY": 5,
+              "canvasX": 111,
+              "canvasY": 89,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 45,
@@ -1212,13 +1212,75 @@
             },
             {
               "frame": 1,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 31,
+              "canvasX": 112,
+              "canvasY": 89,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "sit": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -43,
+              "canvasX": 21,
+              "canvasY": 5,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 12,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -43,
+              "canvasX": 22,
               "canvasY": 5,
               "z": 136,
               "zSlot": "hair",
@@ -1248,14 +1310,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -45,
-              "canvasX": 5,
-              "canvasY": 5,
+              "canvasX": 15,
+              "canvasY": 15,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1274,14 +1336,14 @@
             },
             {
               "frame": 0,
-              "order": 12,
+              "order": 13,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -45,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 16,
+              "canvasY": 15,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1305,14 +1367,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -45,
-              "canvasX": 5,
-              "canvasY": 5,
+              "canvasX": 15,
+              "canvasY": 15,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1331,14 +1393,14 @@
             },
             {
               "frame": 1,
-              "order": 12,
+              "order": 13,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -45,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 16,
+              "canvasY": 15,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1367,74 +1429,7 @@
           "layers": [
             {
               "frame": 0,
-              "order": 7,
-              "layer": "backHairBelowCap",
-              "image": "backHairBelowCap__ladder_f00.png",
-              "isEffect": false,
-              "x": -18,
-              "y": -41,
-              "canvasX": 4,
-              "canvasY": 6,
-              "z": 252,
-              "zSlot": "backHairBelowCap",
-              "width": 35,
-              "height": 44,
-              "origin": {
-                "x": 13,
-                "y": 7
-              },
-              "mapAnchors": [
-                {
-                  "name": "brow",
-                  "x": 0,
-                  "y": 5
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "frame": 1,
-          "layers": [
-            {
-              "frame": 1,
-              "order": 7,
-              "layer": "backHairBelowCap",
-              "image": "backHairBelowCap__ladder_f00.png",
-              "isEffect": false,
-              "x": -17,
-              "y": -41,
-              "canvasX": 5,
-              "canvasY": 6,
-              "z": 252,
-              "zSlot": "backHairBelowCap",
-              "width": 35,
-              "height": 44,
-              "origin": {
-                "x": 13,
-                "y": 7
-              },
-              "mapAnchors": [
-                {
-                  "name": "brow",
-                  "x": 0,
-                  "y": 5
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "rope": {
-      "frameCount": 2,
-      "frames": [
-        {
-          "frame": 0,
-          "layers": [
-            {
-              "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "backHairBelowCap",
               "image": "backHairBelowCap__ladder_f00.png",
               "isEffect": false,
@@ -1465,14 +1460,81 @@
           "layers": [
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
+              "layer": "backHairBelowCap",
+              "image": "backHairBelowCap__ladder_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -41,
+              "canvasX": 5,
+              "canvasY": 7,
+              "z": 252,
+              "zSlot": "backHairBelowCap",
+              "width": 35,
+              "height": 44,
+              "origin": {
+                "x": 13,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "rope": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "backHairBelowCap",
+              "image": "backHairBelowCap__ladder_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -41,
+              "canvasX": 4,
+              "canvasY": 8,
+              "z": 252,
+              "zSlot": "backHairBelowCap",
+              "width": 35,
+              "height": 44,
+              "origin": {
+                "x": 13,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 8,
               "layer": "backHairBelowCap",
               "image": "backHairBelowCap__ladder_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -42,
               "canvasX": 5,
-              "canvasY": 6,
+              "canvasY": 7,
               "z": 252,
               "zSlot": "backHairBelowCap",
               "width": 35,
@@ -1501,14 +1563,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
-              "canvasX": 16,
-              "canvasY": 6,
+              "canvasX": 44,
+              "canvasY": 39,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1527,14 +1589,14 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 6,
+              "canvasX": 45,
+              "canvasY": 39,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1558,14 +1620,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -44,
-              "canvasX": 12,
-              "canvasY": 5,
+              "canvasX": 40,
+              "canvasY": 38,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1584,14 +1646,14 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -23,
               "y": -44,
-              "canvasX": 13,
-              "canvasY": 5,
+              "canvasX": 41,
+              "canvasY": 38,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1615,14 +1677,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 47,
+              "canvasY": 38,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1641,14 +1703,14 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 20,
-              "canvasY": 5,
+              "canvasX": 48,
+              "canvasY": 38,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1677,14 +1739,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -42,
               "canvasX": 4,
-              "canvasY": 9,
+              "canvasY": 89,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1703,14 +1765,14 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -42,
               "canvasX": 5,
-              "canvasY": 9,
+              "canvasY": 89,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1734,14 +1796,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -21,
               "y": -43,
               "canvasX": 10,
-              "canvasY": 8,
+              "canvasY": 88,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1760,14 +1822,14 @@
             },
             {
               "frame": 1,
-              "order": 12,
+              "order": 13,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
               "canvasX": 11,
-              "canvasY": 8,
+              "canvasY": 88,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1791,14 +1853,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -40,
               "canvasX": 4,
-              "canvasY": 11,
+              "canvasY": 91,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1817,14 +1879,14 @@
             },
             {
               "frame": 2,
-              "order": 12,
+              "order": 13,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -40,
               "canvasX": 5,
-              "canvasY": 11,
+              "canvasY": 91,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1853,14 +1915,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 16,
-              "canvasY": 5,
+              "canvasX": 47,
+              "canvasY": 38,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1879,14 +1941,14 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 48,
+              "canvasY": 38,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1910,14 +1972,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 1,
+              "order": 2,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -44,
-              "canvasX": 9,
-              "canvasY": 5,
+              "canvasX": 40,
+              "canvasY": 38,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1936,14 +1998,14 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -23,
               "y": -44,
-              "canvasX": 10,
-              "canvasY": 5,
+              "canvasX": 41,
+              "canvasY": 38,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -1967,14 +2029,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -43,
-              "canvasX": 8,
-              "canvasY": 6,
+              "canvasX": 39,
+              "canvasY": 39,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -1993,14 +2055,14 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -43,
-              "canvasX": 9,
-              "canvasY": 6,
+              "canvasX": 40,
+              "canvasY": 39,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2029,14 +2091,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -22,
               "y": -43,
-              "canvasX": 39,
-              "canvasY": 5,
+              "canvasX": 78,
+              "canvasY": 91,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2055,14 +2117,14 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -21,
               "y": -43,
-              "canvasX": 40,
-              "canvasY": 5,
+              "canvasX": 79,
+              "canvasY": 91,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2086,14 +2148,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -43,
-              "canvasX": 35,
-              "canvasY": 5,
+              "canvasX": 74,
+              "canvasY": 91,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2112,14 +2174,366 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -43,
-              "canvasX": 36,
-              "canvasY": 5,
+              "canvasX": 75,
+              "canvasY": 91,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 2,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -42,
+              "canvasX": 77,
+              "canvasY": 92,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -42,
+              "canvasX": 78,
+              "canvasY": 92,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -43,
+              "canvasX": 108,
+              "canvasY": 52,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -14,
+              "y": -43,
+              "canvasX": 109,
+              "canvasY": 52,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -44,
+              "canvasX": 98,
+              "canvasY": 51,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -44,
+              "canvasX": 99,
+              "canvasY": 51,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 2,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -40,
+              "canvasX": 94,
+              "canvasY": 55,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -40,
+              "canvasX": 95,
+              "canvasY": 55,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 2,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -44,
+              "canvasX": 109,
+              "canvasY": 31,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 12,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -14,
+              "y": -44,
+              "canvasX": 110,
+              "canvasY": 31,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -44,
+              "canvasX": 104,
+              "canvasY": 31,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -44,
+              "canvasX": 105,
+              "canvasY": 31,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2147,10 +2561,186 @@
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
-              "x": -23,
+              "x": -31,
+              "y": -40,
+              "canvasX": 93,
+              "canvasY": 35,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -30,
+              "y": -40,
+              "canvasX": 94,
+              "canvasY": 35,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -44,
+              "canvasX": 102,
+              "canvasY": 89,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -44,
+              "canvasX": 103,
+              "canvasY": 89,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -40,
+              "canvasX": 99,
+              "canvasY": 93,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -40,
+              "canvasX": 100,
+              "canvasY": 93,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 2,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -26,
               "y": -42,
-              "canvasX": 38,
-              "canvasY": 6,
+              "canvasX": 98,
+              "canvasY": 91,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2173,10 +2763,10 @@
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
-              "x": -22,
+              "x": -25,
               "y": -42,
-              "canvasX": 39,
-              "canvasY": 6,
+              "canvasX": 99,
+              "canvasY": 91,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2205,14 +2795,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -44,
-              "canvasX": 49,
-              "canvasY": 5,
+              "canvasX": 121,
+              "canvasY": 65,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2231,14 +2821,14 @@
             },
             {
               "frame": 0,
-              "order": 12,
+              "order": 13,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 50,
-              "canvasY": 5,
+              "canvasX": 122,
+              "canvasY": 65,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2262,14 +2852,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -28,
               "y": -43,
-              "canvasX": 39,
-              "canvasY": 6,
+              "canvasX": 111,
+              "canvasY": 66,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2288,14 +2878,14 @@
             },
             {
               "frame": 1,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -43,
-              "canvasX": 40,
-              "canvasY": 6,
+              "canvasX": 112,
+              "canvasY": 66,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2324,14 +2914,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -44,
-              "canvasX": 45,
-              "canvasY": 5,
+              "canvasX": 121,
+              "canvasY": 56,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2350,14 +2940,14 @@
             },
             {
               "frame": 0,
-              "order": 11,
+              "order": 12,
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 46,
-              "canvasY": 5,
+              "canvasX": 122,
+              "canvasY": 56,
               "z": 136,
               "zSlot": "hair",
               "width": 35,
@@ -2381,14 +2971,485 @@
           "layers": [
             {
               "frame": 1,
-              "order": 0,
+              "order": 1,
               "layer": "hairBelowBody",
               "image": "hairBelowBody__stand1_f00.png",
               "isEffect": false,
               "x": -29,
               "y": -41,
-              "canvasX": 34,
-              "canvasY": 8,
+              "canvasX": 110,
+              "canvasY": 59,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 12,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 59,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -41,
+              "canvasX": 107,
+              "canvasY": 55,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -41,
+              "canvasX": 108,
+              "canvasY": 55,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -26,
+              "y": -38,
+              "canvasX": 109,
+              "canvasY": 58,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -38,
+              "canvasX": 110,
+              "canvasY": 58,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -41,
+              "canvasX": 110,
+              "canvasY": 55,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 55,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -26,
+              "y": -43,
+              "canvasX": 112,
+              "canvasY": 81,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -43,
+              "canvasX": 113,
+              "canvasY": 81,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -34,
+              "y": -38,
+              "canvasX": 104,
+              "canvasY": 86,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -33,
+              "y": -38,
+              "canvasX": 105,
+              "canvasY": 86,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -41,
+              "canvasX": 110,
+              "canvasY": 83,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 13,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 83,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 86,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 86,
               "z": 79,
               "zSlot": "hairBelowBody",
               "width": 39,
@@ -2411,10 +3472,533 @@
               "layer": "hair",
               "image": "hair__stand1_f00.png",
               "isEffect": false,
-              "x": -28,
-              "y": -41,
-              "canvasX": 35,
-              "canvasY": 8,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 86,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot2": {
+      "frameCount": 5,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 116,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 116,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 116,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 116,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 3,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 4,
+          "layers": [
+            {
+              "frame": 4,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 4,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shootF": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 120,
+              "canvasY": 87,
+              "z": 136,
+              "zSlot": "hair",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 17,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": -3,
+                  "y": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 1,
+              "layer": "hairBelowBody",
+              "image": "hairBelowBody__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 87,
+              "z": 79,
+              "zSlot": "hairBelowBody",
+              "width": 39,
+              "height": 46,
+              "origin": {
+                "x": 15,
+                "y": 11
+              },
+              "mapAnchors": [
+                {
+                  "name": "brow",
+                  "x": 0,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 11,
+              "layer": "hair",
+              "image": "hair__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 120,
+              "canvasY": 87,
               "z": 136,
               "zSlot": "hair",
               "width": 35,

@@ -11,13 +11,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 17,
+              "canvasX": 54,
               "canvasY": 61,
               "z": 94,
               "zSlot": "shoesTop",
@@ -42,13 +42,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 17,
+              "canvasX": 54,
               "canvasY": 61,
               "z": 94,
               "zSlot": "shoesTop",
@@ -73,13 +73,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 17,
+              "canvasX": 54,
               "canvasY": 61,
               "z": 94,
               "zSlot": "shoesTop",
@@ -109,14 +109,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 24,
-              "canvasY": 61,
+              "canvasX": 12,
+              "canvasY": 68,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 24,
@@ -140,14 +140,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 24,
-              "canvasY": 61,
+              "canvasX": 12,
+              "canvasY": 68,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 24,
@@ -171,14 +171,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__stand1_f00.png",
               "isEffect": false,
               "x": -9,
               "y": 13,
-              "canvasX": 24,
-              "canvasY": 61,
+              "canvasX": 12,
+              "canvasY": 68,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 24,
@@ -207,13 +207,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f00.png",
               "isEffect": false,
               "x": 3,
               "y": 8,
-              "canvasX": 37,
+              "canvasX": 53,
               "canvasY": 56,
               "z": 94,
               "zSlot": "shoesTop",
@@ -238,13 +238,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f01.png",
               "isEffect": false,
               "x": -13,
               "y": 8,
-              "canvasX": 21,
+              "canvasX": 37,
               "canvasY": 56,
               "z": 94,
               "zSlot": "shoesTop",
@@ -269,13 +269,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f02.png",
               "isEffect": false,
               "x": -4,
               "y": 10,
-              "canvasX": 30,
+              "canvasX": 46,
               "canvasY": 58,
               "z": 94,
               "zSlot": "shoesTop",
@@ -300,13 +300,13 @@
           "layers": [
             {
               "frame": 3,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f03.png",
               "isEffect": false,
               "x": -11,
               "y": 5,
-              "canvasX": 23,
+              "canvasX": 39,
               "canvasY": 53,
               "z": 94,
               "zSlot": "shoesTop",
@@ -336,7 +336,7 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f00.png",
               "isEffect": false,
@@ -367,7 +367,7 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f01.png",
               "isEffect": false,
@@ -398,7 +398,7 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f02.png",
               "isEffect": false,
@@ -429,7 +429,7 @@
           "layers": [
             {
               "frame": 3,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__walk1_f03.png",
               "isEffect": false,
@@ -465,14 +465,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": 10,
-              "canvasX": 21,
-              "canvasY": 58,
+              "canvasX": 49,
+              "canvasY": 59,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 29,
@@ -496,14 +496,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": 11,
-              "canvasX": 21,
-              "canvasY": 59,
+              "canvasX": 49,
+              "canvasY": 60,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 29,
@@ -527,14 +527,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": 12,
-              "canvasX": 21,
-              "canvasY": 60,
+              "canvasX": 49,
+              "canvasY": 61,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 29,
@@ -563,14 +563,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__jump_f00.png",
               "isEffect": false,
               "x": -17,
               "y": 4,
-              "canvasX": 6,
-              "canvasY": 53,
+              "canvasX": 111,
+              "canvasY": 136,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 36,
@@ -599,13 +599,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__prone_f00.png",
               "isEffect": false,
               "x": 10,
               "y": -4,
-              "canvasX": 63,
+              "canvasX": 99,
               "canvasY": 34,
               "z": 94,
               "zSlot": "shoesTop",
@@ -635,14 +635,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__prone_f00.png",
               "isEffect": false,
               "x": 10,
               "y": -4,
-              "canvasX": 75,
-              "canvasY": 34,
+              "canvasX": 156,
+              "canvasY": 118,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 13,
@@ -666,14 +666,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__prone_f00.png",
               "isEffect": false,
               "x": 10,
               "y": -4,
-              "canvasX": 75,
-              "canvasY": 34,
+              "canvasX": 156,
+              "canvasY": 118,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 13,
@@ -694,8 +694,8 @@
         }
       ]
     },
-    "fly": {
-      "frameCount": 2,
+    "sit": {
+      "frameCount": 1,
       "frames": [
         {
           "frame": 0,
@@ -704,12 +704,48 @@
               "frame": 0,
               "order": 5,
               "layer": "shoes",
+              "image": "shoes__sit_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": 6,
+              "canvasX": 20,
+              "canvasY": 54,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 25,
+              "height": 8,
+              "origin": {
+                "x": 17,
+                "y": 6
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fly": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "shoes",
               "image": "shoes__fly_f00.png",
               "isEffect": false,
               "x": 2,
               "y": 3,
-              "canvasX": 26,
-              "canvasY": 53,
+              "canvasX": 36,
+              "canvasY": 63,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 14,
@@ -733,14 +769,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__fly_f01.png",
               "isEffect": false,
               "x": 5,
               "y": 7,
-              "canvasX": 29,
-              "canvasY": 57,
+              "canvasX": 39,
+              "canvasY": 67,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 8,
@@ -769,14 +805,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__ladder_f00.png",
               "isEffect": false,
               "x": -8,
               "y": 11,
               "canvasX": 14,
-              "canvasY": 58,
+              "canvasY": 59,
               "z": 52,
               "zSlot": "backShoes",
               "width": 18,
@@ -800,14 +836,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__ladder_f01.png",
               "isEffect": false,
               "x": -10,
               "y": 11,
               "canvasX": 12,
-              "canvasY": 58,
+              "canvasY": 59,
               "z": 52,
               "zSlot": "backShoes",
               "width": 18,
@@ -836,14 +872,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__rope_f00.png",
               "isEffect": false,
               "x": -8,
               "y": 13,
               "canvasX": 14,
-              "canvasY": 61,
+              "canvasY": 62,
               "z": 52,
               "zSlot": "backShoes",
               "width": 15,
@@ -867,14 +903,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__rope_f01.png",
               "isEffect": false,
               "x": -7,
               "y": 7,
               "canvasX": 15,
-              "canvasY": 55,
+              "canvasY": 56,
               "z": 52,
               "zSlot": "backShoes",
               "width": 15,
@@ -903,14 +939,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": 11,
-              "canvasX": 21,
-              "canvasY": 60,
+              "canvasX": 49,
+              "canvasY": 93,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 29,
@@ -934,14 +970,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__heal_f01.png",
               "isEffect": false,
               "x": -15,
               "y": 10,
-              "canvasX": 21,
-              "canvasY": 59,
+              "canvasX": 49,
+              "canvasY": 92,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 32,
@@ -965,14 +1001,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__heal_f02.png",
               "isEffect": false,
               "x": -12,
               "y": 12,
-              "canvasX": 24,
-              "canvasY": 61,
+              "canvasX": 52,
+              "canvasY": 94,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 27,
@@ -1001,14 +1037,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__swingO1_f00.png",
               "isEffect": false,
               "x": -13,
               "y": 8,
               "canvasX": 18,
-              "canvasY": 59,
+              "canvasY": 139,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 34,
@@ -1032,14 +1068,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__swingO1_f01.png",
               "isEffect": false,
               "x": -6,
               "y": 11,
               "canvasX": 25,
-              "canvasY": 62,
+              "canvasY": 142,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 20,
@@ -1063,14 +1099,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__swingO1_f02.png",
               "isEffect": false,
               "x": -9,
               "y": 9,
               "canvasX": 22,
-              "canvasY": 60,
+              "canvasY": 140,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 39,
@@ -1099,14 +1135,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__heal_f02.png",
               "isEffect": false,
               "x": -12,
               "y": 12,
-              "canvasX": 21,
-              "canvasY": 61,
+              "canvasX": 52,
+              "canvasY": 94,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 27,
@@ -1130,14 +1166,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__heal_f01.png",
               "isEffect": false,
               "x": -15,
               "y": 10,
-              "canvasX": 18,
-              "canvasY": 59,
+              "canvasX": 49,
+              "canvasY": 92,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 32,
@@ -1161,14 +1197,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__swingO2_f02.png",
               "isEffect": false,
               "x": -13,
               "y": 8,
-              "canvasX": 20,
-              "canvasY": 57,
+              "canvasX": 51,
+              "canvasY": 90,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 32,
@@ -1197,14 +1233,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "shoes",
               "image": "shoes__swingO3_f00.png",
               "isEffect": false,
               "x": -10,
               "y": 8,
-              "canvasX": 51,
-              "canvasY": 56,
+              "canvasX": 90,
+              "canvasY": 142,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 31,
@@ -1228,14 +1264,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__swingO3_f01.png",
               "isEffect": false,
               "x": -4,
               "y": 9,
-              "canvasX": 57,
-              "canvasY": 57,
+              "canvasX": 96,
+              "canvasY": 143,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 23,
@@ -1259,14 +1295,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 6,
+              "order": 7,
               "layer": "shoes",
               "image": "shoes__swingO1_f00.png",
               "isEffect": false,
               "x": -8,
               "y": 8,
-              "canvasX": 53,
-              "canvasY": 56,
+              "canvasX": 92,
+              "canvasY": 142,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 34,
@@ -1287,8 +1323,8 @@
         }
       ]
     },
-    "stabO1": {
-      "frameCount": 2,
+    "swingT1": {
+      "frameCount": 3,
       "frames": [
         {
           "frame": 0,
@@ -1297,12 +1333,306 @@
               "frame": 0,
               "order": 5,
               "layer": "shoes",
+              "image": "shoes__swingT1_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": 13,
+              "canvasX": 111,
+              "canvasY": 108,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 25,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 1,
+                  "y": -18
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__swingT1_f01.png",
+              "isEffect": false,
+              "x": -14,
+              "y": 10,
+              "canvasX": 109,
+              "canvasY": 105,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 33,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 3,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 6,
+              "layer": "shoes",
+              "image": "shoes__swingT1_f02.png",
+              "isEffect": false,
+              "x": -12,
+              "y": 9,
+              "canvasX": 111,
+              "canvasY": 104,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 42,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 1,
+                  "y": -14
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "shoes",
+              "image": "shoes__swingT2_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": 5,
+              "canvasX": 107,
+              "canvasY": 80,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 31,
+              "height": 13,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 6,
+                  "y": -10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__swingT2_f01.png",
+              "isEffect": false,
+              "x": -12,
+              "y": 10,
+              "canvasX": 112,
+              "canvasY": 85,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 33,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 1,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__swingT2_f02.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 8,
+              "canvasX": 111,
+              "canvasY": 83,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 41,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__swingT3_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": 10,
+              "canvasX": 109,
+              "canvasY": 143,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 34,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 4,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__swingT3_f01.png",
+              "isEffect": false,
+              "x": -7,
+              "y": 8,
+              "canvasX": 117,
+              "canvasY": 141,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 30,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -4,
+                  "y": -13
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 6,
+              "layer": "shoes",
+              "image": "shoes__swingT3_f02.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 9,
+              "canvasX": 111,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 42,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -14
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO1": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "shoes",
               "image": "shoes__stabO1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": 9,
-              "canvasX": 47,
-              "canvasY": 58,
+              "canvasX": 119,
+              "canvasY": 118,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 37,
@@ -1326,14 +1656,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stabO1_f01.png",
               "isEffect": false,
               "x": -13,
               "y": 7,
-              "canvasX": 54,
-              "canvasY": 56,
+              "canvasX": 126,
+              "canvasY": 116,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 39,
@@ -1362,14 +1692,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stabO2_f00.png",
               "isEffect": false,
               "x": -14,
               "y": 12,
-              "canvasX": 49,
-              "canvasY": 61,
+              "canvasX": 125,
+              "canvasY": 112,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 30,
@@ -1393,14 +1723,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "shoes",
               "image": "shoes__stabO2_f01.png",
               "isEffect": false,
               "x": -12,
               "y": 4,
-              "canvasX": 51,
-              "canvasY": 53,
+              "canvasX": 127,
+              "canvasY": 104,
               "z": 94,
               "zSlot": "shoesTop",
               "width": 38,
@@ -1414,6 +1744,558 @@
                   "name": "navel",
                   "x": 1,
                   "y": -9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": 11,
+              "canvasX": 118,
+              "canvasY": 107,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 32,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 6,
+                  "y": -16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT1_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": 6,
+              "canvasX": 127,
+              "canvasY": 102,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 35,
+              "height": 12,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": -11
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT1_f02.png",
+              "isEffect": false,
+              "x": -14,
+              "y": 6,
+              "canvasX": 121,
+              "canvasY": 102,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 45,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 3,
+                  "y": -11
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 9,
+              "canvasX": 125,
+              "canvasY": 133,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 9,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -14
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT2_f01.png",
+              "isEffect": false,
+              "x": -12,
+              "y": 4,
+              "canvasX": 126,
+              "canvasY": 128,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 35,
+              "height": 12,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 1,
+                  "y": -9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__stabT2_f02.png",
+              "isEffect": false,
+              "x": -16,
+              "y": 6,
+              "canvasX": 122,
+              "canvasY": 130,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 46,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 5,
+                  "y": -11
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": 11,
+              "canvasX": 122,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 27,
+              "height": 8,
+              "origin": {
+                "x": 13,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": 11,
+              "canvasX": 122,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 27,
+              "height": 8,
+              "origin": {
+                "x": 13,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": 11,
+              "canvasX": 122,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 27,
+              "height": 8,
+              "origin": {
+                "x": 13,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -16
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot2": {
+      "frameCount": 5,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 10,
+              "canvasX": 121,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 10,
+              "canvasX": 121,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 10,
+              "canvasX": 121,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 10,
+              "canvasX": 121,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 4,
+          "layers": [
+            {
+              "frame": 4,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shoot2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": 10,
+              "canvasX": 121,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shootF": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shootF_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": 11,
+              "canvasX": 120,
+              "canvasY": 143,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 29,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 7,
+                  "y": -16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shootF_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": 10,
+              "canvasX": 119,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 32,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 8,
+                  "y": -15
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 5,
+              "layer": "shoes",
+              "image": "shoes__shootF_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": 10,
+              "canvasX": 119,
+              "canvasY": 142,
+              "z": 94,
+              "zSlot": "shoesTop",
+              "width": 32,
+              "height": 8,
+              "origin": {
+                "x": 11,
+                "y": 5
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 8,
+                  "y": -15
                 }
               ]
             }

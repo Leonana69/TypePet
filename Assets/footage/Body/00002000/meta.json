@@ -11,13 +11,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stand1_f00.png",
               "isEffect": false,
               "x": -8,
               "y": -10,
-              "canvasX": 18,
+              "canvasX": 55,
               "canvasY": 38,
               "z": 85,
               "zSlot": "body",
@@ -42,13 +42,13 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__stand1_f00.png",
               "isEffect": false,
               "x": 8,
               "y": -8,
-              "canvasX": 34,
+              "canvasX": 71,
               "canvasY": 40,
               "z": 117,
               "zSlot": "arm",
@@ -78,13 +78,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stand1_f01.png",
               "isEffect": false,
               "x": -9,
               "y": -10,
-              "canvasX": 17,
+              "canvasX": 54,
               "canvasY": 38,
               "z": 85,
               "zSlot": "body",
@@ -109,13 +109,13 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__stand1_f01.png",
               "isEffect": false,
               "x": 9,
               "y": -8,
-              "canvasX": 35,
+              "canvasX": 72,
               "canvasY": 40,
               "z": 117,
               "zSlot": "arm",
@@ -145,13 +145,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stand1_f02.png",
               "isEffect": false,
               "x": -10,
               "y": -10,
-              "canvasX": 16,
+              "canvasX": 53,
               "canvasY": 38,
               "z": 85,
               "zSlot": "body",
@@ -176,13 +176,13 @@
             },
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__stand1_f02.png",
               "isEffect": false,
               "x": 9,
               "y": -8,
-              "canvasX": 35,
+              "canvasX": 72,
               "canvasY": 40,
               "z": 117,
               "zSlot": "arm",
@@ -217,14 +217,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__stand2_f00.png",
               "isEffect": false,
               "x": -7,
               "y": -10,
-              "canvasX": 26,
-              "canvasY": 38,
+              "canvasX": 14,
+              "canvasY": 45,
               "z": 85,
               "zSlot": "body",
               "width": 20,
@@ -254,8 +254,8 @@
               "isEffect": false,
               "x": 4,
               "y": -8,
-              "canvasX": 37,
-              "canvasY": 40,
+              "canvasX": 25,
+              "canvasY": 47,
               "z": 117,
               "zSlot": "arm",
               "width": 9,
@@ -279,14 +279,14 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__stand2_f00.png",
               "isEffect": false,
               "x": -10,
               "y": -5,
-              "canvasX": 23,
-              "canvasY": 43,
+              "canvasX": 11,
+              "canvasY": 50,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 19,
@@ -310,14 +310,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__stand2_f01.png",
               "isEffect": false,
               "x": -7,
               "y": -10,
-              "canvasX": 26,
-              "canvasY": 38,
+              "canvasX": 14,
+              "canvasY": 45,
               "z": 85,
               "zSlot": "body",
               "width": 20,
@@ -347,8 +347,8 @@
               "isEffect": false,
               "x": 5,
               "y": -8,
-              "canvasX": 38,
-              "canvasY": 40,
+              "canvasX": 26,
+              "canvasY": 47,
               "z": 117,
               "zSlot": "arm",
               "width": 9,
@@ -372,14 +372,14 @@
             },
             {
               "frame": 1,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__stand2_f01.png",
               "isEffect": false,
               "x": -9,
               "y": -5,
-              "canvasX": 24,
-              "canvasY": 43,
+              "canvasX": 12,
+              "canvasY": 50,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 19,
@@ -403,14 +403,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__stand2_f02.png",
               "isEffect": false,
               "x": -7,
               "y": -10,
-              "canvasX": 26,
-              "canvasY": 38,
+              "canvasX": 14,
+              "canvasY": 45,
               "z": 85,
               "zSlot": "body",
               "width": 20,
@@ -440,8 +440,8 @@
               "isEffect": false,
               "x": 6,
               "y": -8,
-              "canvasX": 39,
-              "canvasY": 40,
+              "canvasX": 27,
+              "canvasY": 47,
               "z": 117,
               "zSlot": "arm",
               "width": 9,
@@ -465,14 +465,14 @@
             },
             {
               "frame": 2,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__stand2_f01.png",
               "isEffect": false,
               "x": -8,
               "y": -5,
-              "canvasX": 25,
-              "canvasY": 43,
+              "canvasX": 13,
+              "canvasY": 50,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 19,
@@ -501,13 +501,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk1_f00.png",
               "isEffect": false,
               "x": -13,
               "y": -12,
-              "canvasX": 21,
+              "canvasX": 37,
               "canvasY": 36,
               "z": 85,
               "zSlot": "body",
@@ -532,13 +532,13 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__walk1_f00.png",
               "isEffect": false,
               "x": 6,
               "y": -10,
-              "canvasX": 40,
+              "canvasX": 56,
               "canvasY": 38,
               "z": 117,
               "zSlot": "arm",
@@ -568,13 +568,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk1_f01.png",
               "isEffect": false,
               "x": -10,
               "y": -12,
-              "canvasX": 24,
+              "canvasX": 40,
               "canvasY": 36,
               "z": 85,
               "zSlot": "body",
@@ -599,13 +599,13 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__walk1_f01.png",
               "isEffect": false,
               "x": 0,
               "y": -8,
-              "canvasX": 34,
+              "canvasX": 50,
               "canvasY": 40,
               "z": 117,
               "zSlot": "arm",
@@ -635,13 +635,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk1_f02.png",
               "isEffect": false,
               "x": -13,
               "y": -12,
-              "canvasX": 21,
+              "canvasX": 37,
               "canvasY": 36,
               "z": 85,
               "zSlot": "body",
@@ -666,13 +666,13 @@
             },
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__walk1_f00.png",
               "isEffect": false,
               "x": 6,
               "y": -10,
-              "canvasX": 40,
+              "canvasX": 56,
               "canvasY": 38,
               "z": 117,
               "zSlot": "arm",
@@ -702,13 +702,13 @@
           "layers": [
             {
               "frame": 3,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk1_f03.png",
               "isEffect": false,
               "x": -15,
               "y": -13,
-              "canvasX": 19,
+              "canvasX": 35,
               "canvasY": 35,
               "z": 85,
               "zSlot": "body",
@@ -733,13 +733,13 @@
             },
             {
               "frame": 3,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__walk1_f03.png",
               "isEffect": false,
               "x": 6,
               "y": -11,
-              "canvasX": 40,
+              "canvasX": 56,
               "canvasY": 37,
               "z": 117,
               "zSlot": "arm",
@@ -774,7 +774,7 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk2_f00.png",
               "isEffect": false,
@@ -836,7 +836,7 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__walk2_f00.png",
               "isEffect": false,
@@ -867,7 +867,7 @@
           "layers": [
             {
               "frame": 1,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk2_f01.png",
               "isEffect": false,
@@ -929,7 +929,7 @@
             },
             {
               "frame": 1,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__walk2_f01.png",
               "isEffect": false,
@@ -960,7 +960,7 @@
           "layers": [
             {
               "frame": 2,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk2_f02.png",
               "isEffect": false,
@@ -1022,7 +1022,7 @@
             },
             {
               "frame": 2,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__walk2_f02.png",
               "isEffect": false,
@@ -1053,7 +1053,7 @@
           "layers": [
             {
               "frame": 3,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__walk2_f03.png",
               "isEffect": false,
@@ -1115,7 +1115,7 @@
             },
             {
               "frame": 3,
-              "order": 15,
+              "order": 16,
               "layer": "hand",
               "image": "hand__walk2_f03.png",
               "isEffect": false,
@@ -1151,14 +1151,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__alert_f00.png",
               "isEffect": false,
               "x": -13,
               "y": -11,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 51,
+              "canvasY": 38,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -1182,14 +1182,14 @@
             },
             {
               "frame": 0,
-              "order": 12,
+              "order": 13,
               "layer": "arm",
               "image": "arm__alert_f00.png",
               "isEffect": false,
               "x": 5,
               "y": -9,
-              "canvasX": 41,
-              "canvasY": 39,
+              "canvasX": 69,
+              "canvasY": 40,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 8,
@@ -1213,14 +1213,14 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 16,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 21,
-              "canvasY": 24,
+              "canvasX": 49,
+              "canvasY": 25,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -1239,14 +1239,14 @@
             },
             {
               "frame": 0,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__alert_f00.png",
               "isEffect": false,
               "x": 0,
               "y": -2,
-              "canvasX": 36,
-              "canvasY": 46,
+              "canvasX": 64,
+              "canvasY": 47,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 8,
@@ -1270,14 +1270,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__alert_f01.png",
               "isEffect": false,
               "x": -13,
               "y": -11,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 51,
+              "canvasY": 38,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -1301,14 +1301,14 @@
             },
             {
               "frame": 1,
-              "order": 12,
+              "order": 13,
               "layer": "arm",
               "image": "arm__alert_f01.png",
               "isEffect": false,
               "x": 4,
               "y": -9,
-              "canvasX": 40,
-              "canvasY": 39,
+              "canvasX": 68,
+              "canvasY": 40,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 8,
@@ -1332,14 +1332,14 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 16,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -23,
-              "canvasX": 21,
-              "canvasY": 25,
+              "canvasX": 49,
+              "canvasY": 26,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -1358,14 +1358,14 @@
             },
             {
               "frame": 1,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__alert_f00.png",
               "isEffect": false,
               "x": 0,
               "y": 0,
-              "canvasX": 36,
-              "canvasY": 48,
+              "canvasX": 64,
+              "canvasY": 49,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 8,
@@ -1389,14 +1389,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__alert_f02.png",
               "isEffect": false,
               "x": -13,
               "y": -11,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 51,
+              "canvasY": 38,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -1420,14 +1420,14 @@
             },
             {
               "frame": 2,
-              "order": 12,
+              "order": 13,
               "layer": "arm",
               "image": "arm__alert_f02.png",
               "isEffect": false,
               "x": 5,
               "y": -9,
-              "canvasX": 41,
-              "canvasY": 39,
+              "canvasX": 69,
+              "canvasY": 40,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 7,
@@ -1451,14 +1451,14 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 16,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -22,
-              "canvasX": 21,
-              "canvasY": 26,
+              "canvasX": 49,
+              "canvasY": 27,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -1477,14 +1477,14 @@
             },
             {
               "frame": 2,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__alert_f00.png",
               "isEffect": false,
               "x": 0,
               "y": 2,
-              "canvasX": 36,
-              "canvasY": 50,
+              "canvasX": 64,
+              "canvasY": 51,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 8,
@@ -1513,14 +1513,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__jump_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -12,
-              "canvasX": 6,
-              "canvasY": 37,
+              "canvasX": 111,
+              "canvasY": 120,
               "z": 85,
               "zSlot": "body",
               "width": 35,
@@ -1544,14 +1544,14 @@
             },
             {
               "frame": 0,
-              "order": 13,
+              "order": 14,
               "layer": "arm",
               "image": "arm__jump_f00.png",
               "isEffect": false,
               "x": 0,
               "y": -12,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 128,
+              "canvasY": 120,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 13,
@@ -1575,14 +1575,14 @@
             },
             {
               "frame": 0,
-              "order": 16,
+              "order": 17,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -11,
               "y": -7,
-              "canvasX": 12,
-              "canvasY": 42,
+              "canvasX": 117,
+              "canvasY": 125,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -1601,14 +1601,14 @@
             },
             {
               "frame": 0,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__jump_f00.png",
               "isEffect": false,
               "x": 0,
               "y": -12,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 128,
+              "canvasY": 120,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 9,
@@ -1637,13 +1637,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__prone_f00.png",
               "isEffect": false,
               "x": -40,
               "y": -12,
-              "canvasX": 13,
+              "canvasX": 49,
               "canvasY": 26,
               "z": 85,
               "zSlot": "body",
@@ -1668,13 +1668,13 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__prone_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -7,
-              "canvasX": 39,
+              "canvasX": 75,
               "canvasY": 31,
               "z": 163,
               "zSlot": "armOverHair",
@@ -1709,14 +1709,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__prone_f00.png",
               "isEffect": false,
               "x": -40,
               "y": -12,
-              "canvasX": 25,
-              "canvasY": 26,
+              "canvasX": 106,
+              "canvasY": 110,
               "z": 85,
               "zSlot": "body",
               "width": 63,
@@ -1740,14 +1740,14 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__prone_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -7,
-              "canvasX": 51,
-              "canvasY": 31,
+              "canvasX": 132,
+              "canvasY": 115,
               "z": 163,
               "zSlot": "armOverHair",
               "width": 20,
@@ -1776,14 +1776,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__prone_f00.png",
               "isEffect": false,
               "x": -40,
               "y": -12,
-              "canvasX": 25,
-              "canvasY": 26,
+              "canvasX": 106,
+              "canvasY": 110,
               "z": 85,
               "zSlot": "body",
               "width": 63,
@@ -1807,14 +1807,14 @@
             },
             {
               "frame": 1,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__proneStab_f01.png",
               "isEffect": false,
               "x": -29,
               "y": -6,
-              "canvasX": 36,
-              "canvasY": 32,
+              "canvasX": 117,
+              "canvasY": 116,
               "z": 163,
               "zSlot": "armOverHair",
               "width": 28,
@@ -1840,8 +1840,8 @@
         }
       ]
     },
-    "fly": {
-      "frameCount": 2,
+    "sit": {
+      "frameCount": 1,
       "frames": [
         {
           "frame": 0,
@@ -1850,12 +1850,84 @@
               "frame": 0,
               "order": 3,
               "layer": "body",
+              "image": "body__sit_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -11,
+              "canvasX": 22,
+              "canvasY": 37,
+              "z": 85,
+              "zSlot": "body",
+              "width": 25,
+              "height": 25,
+              "origin": {
+                "x": 19,
+                "y": 28
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -1,
+                  "y": -28
+                },
+                {
+                  "name": "navel",
+                  "x": -2,
+                  "y": -17
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "arm",
+              "image": "arm__sit_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -9,
+              "canvasX": 38,
+              "canvasY": 39,
+              "z": 117,
+              "zSlot": "arm",
+              "width": 11,
+              "height": 15,
+              "origin": {
+                "x": 5,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -4,
+                  "y": 2
+                },
+                {
+                  "name": "hand",
+                  "x": -1,
+                  "y": -7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "fly": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "body",
               "image": "body__fly_f00.png",
               "isEffect": false,
               "x": -8,
               "y": -13,
-              "canvasX": 16,
-              "canvasY": 37,
+              "canvasX": 26,
+              "canvasY": 47,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -1879,14 +1951,14 @@
             },
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "arm",
               "image": "arm__jump_f00.png",
               "isEffect": false,
               "x": -1,
               "y": -13,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 33,
+              "canvasY": 47,
               "z": 117,
               "zSlot": "arm",
               "width": 13,
@@ -1910,14 +1982,14 @@
             },
             {
               "frame": 0,
-              "order": 16,
+              "order": 17,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -12,
               "y": -8,
-              "canvasX": 12,
-              "canvasY": 42,
+              "canvasX": 22,
+              "canvasY": 52,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -1936,14 +2008,14 @@
             },
             {
               "frame": 0,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__jump_f00.png",
               "isEffect": false,
               "x": -1,
               "y": -13,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 33,
+              "canvasY": 47,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 9,
@@ -1967,14 +2039,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__fly_f01.png",
               "isEffect": false,
               "x": -8,
               "y": -13,
-              "canvasX": 16,
-              "canvasY": 37,
+              "canvasX": 26,
+              "canvasY": 47,
               "z": 85,
               "zSlot": "body",
               "width": 20,
@@ -1998,14 +2070,14 @@
             },
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "arm",
               "image": "arm__jump_f00.png",
               "isEffect": false,
               "x": -1,
               "y": -13,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 33,
+              "canvasY": 47,
               "z": 117,
               "zSlot": "arm",
               "width": 13,
@@ -2029,14 +2101,14 @@
             },
             {
               "frame": 1,
-              "order": 16,
+              "order": 17,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -12,
               "y": -8,
-              "canvasX": 12,
-              "canvasY": 42,
+              "canvasX": 22,
+              "canvasY": 52,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -2055,14 +2127,14 @@
             },
             {
               "frame": 1,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__jump_f00.png",
               "isEffect": false,
               "x": -1,
               "y": -13,
-              "canvasX": 23,
-              "canvasY": 37,
+              "canvasX": 33,
+              "canvasY": 47,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 9,
@@ -2091,14 +2163,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__ladder_f00.png",
               "isEffect": false,
               "x": -11,
               "y": -22,
               "canvasX": 11,
-              "canvasY": 25,
+              "canvasY": 26,
               "z": 42,
               "zSlot": "backBody",
               "width": 23,
@@ -2132,14 +2204,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__ladder_f01.png",
               "isEffect": false,
               "x": -12,
               "y": -22,
               "canvasX": 10,
-              "canvasY": 25,
+              "canvasY": 26,
               "z": 42,
               "zSlot": "backBody",
               "width": 23,
@@ -2178,14 +2250,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__rope_f00.png",
               "isEffect": false,
               "x": -10,
               "y": -19,
               "canvasX": 12,
-              "canvasY": 29,
+              "canvasY": 30,
               "z": 42,
               "zSlot": "backBody",
               "width": 19,
@@ -2219,14 +2291,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__rope_f01.png",
               "isEffect": false,
               "x": -9,
               "y": -12,
               "canvasX": 13,
-              "canvasY": 36,
+              "canvasY": 37,
               "z": 42,
               "zSlot": "backBody",
               "width": 19,
@@ -2265,14 +2337,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__alert_f01.png",
               "isEffect": false,
               "x": -13,
               "y": -11,
-              "canvasX": 23,
-              "canvasY": 38,
+              "canvasX": 51,
+              "canvasY": 71,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -2296,14 +2368,14 @@
             },
             {
               "frame": 0,
-              "order": 12,
+              "order": 13,
               "layer": "arm",
               "image": "arm__alert_f01.png",
               "isEffect": false,
               "x": 4,
               "y": -9,
-              "canvasX": 40,
-              "canvasY": 40,
+              "canvasX": 68,
+              "canvasY": 73,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 8,
@@ -2327,14 +2399,14 @@
             },
             {
               "frame": 0,
-              "order": 14,
+              "order": 16,
               "layer": "lHand",
               "image": "lHand__alert_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -23,
-              "canvasX": 21,
-              "canvasY": 26,
+              "canvasX": 49,
+              "canvasY": 59,
               "z": 156,
               "zSlot": "handBelowWeapon",
               "width": 8,
@@ -2353,14 +2425,14 @@
             },
             {
               "frame": 0,
-              "order": 17,
+              "order": 18,
               "layer": "rHand",
               "image": "rHand__alert_f00.png",
               "isEffect": false,
               "x": 0,
               "y": 0,
-              "canvasX": 36,
-              "canvasY": 49,
+              "canvasX": 64,
+              "canvasY": 82,
               "z": 163,
               "zSlot": "handOverHair",
               "width": 8,
@@ -2384,14 +2456,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__heal_f01.png",
               "isEffect": false,
               "x": -13,
               "y": -13,
-              "canvasX": 23,
-              "canvasY": 36,
+              "canvasX": 51,
+              "canvasY": 69,
               "z": 85,
               "zSlot": "body",
               "width": 28,
@@ -2415,14 +2487,14 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__heal_f01.png",
               "isEffect": false,
               "x": -25,
               "y": -15,
-              "canvasX": 11,
-              "canvasY": 34,
+              "canvasX": 39,
+              "canvasY": 67,
               "z": 104,
               "zSlot": "armBelowHead",
               "width": 23,
@@ -2451,14 +2523,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__heal_f02.png",
               "isEffect": false,
               "x": -12,
               "y": -11,
-              "canvasX": 24,
-              "canvasY": 38,
+              "canvasX": 52,
+              "canvasY": 71,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -2482,14 +2554,14 @@
             },
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__heal_f02.png",
               "isEffect": false,
               "x": -22,
               "y": -19,
-              "canvasX": 14,
-              "canvasY": 30,
+              "canvasX": 42,
+              "canvasY": 63,
               "z": 104,
               "zSlot": "armBelowHead",
               "width": 23,
@@ -2523,14 +2595,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__swingO1_f00.png",
               "isEffect": false,
               "x": -10,
               "y": -11,
               "canvasX": 21,
-              "canvasY": 40,
+              "canvasY": 120,
               "z": 85,
               "zSlot": "body",
               "width": 28,
@@ -2554,14 +2626,14 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__swingO1_f00.png",
               "isEffect": false,
               "x": -12,
               "y": -9,
               "canvasX": 19,
-              "canvasY": 42,
+              "canvasY": 122,
               "z": 117,
               "zSlot": "arm",
               "width": 8,
@@ -2590,14 +2662,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__swingO1_f01.png",
               "isEffect": false,
               "x": -3,
               "y": -11,
               "canvasX": 28,
-              "canvasY": 40,
+              "canvasY": 120,
               "z": 85,
               "zSlot": "body",
               "width": 19,
@@ -2621,14 +2693,14 @@
             },
             {
               "frame": 1,
-              "order": 14,
+              "order": 15,
               "layer": "arm",
               "image": "arm__swingO1_f01.png",
               "isEffect": false,
               "x": -12,
               "y": -11,
               "canvasX": 19,
-              "canvasY": 40,
+              "canvasY": 120,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 13,
@@ -2657,14 +2729,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__swingO1_f02.png",
               "isEffect": false,
               "x": -9,
               "y": -10,
               "canvasX": 22,
-              "canvasY": 41,
+              "canvasY": 121,
               "z": 85,
               "zSlot": "body",
               "width": 38,
@@ -2688,14 +2760,14 @@
             },
             {
               "frame": 2,
-              "order": 14,
+              "order": 15,
               "layer": "arm",
               "image": "arm__swingO1_f02.png",
               "isEffect": false,
               "x": 2,
               "y": -25,
               "canvasX": 33,
-              "canvasY": 26,
+              "canvasY": 106,
               "z": 149,
               "zSlot": "armOverHair",
               "width": 22,
@@ -2729,14 +2801,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__heal_f02.png",
               "isEffect": false,
               "x": -12,
               "y": -11,
-              "canvasX": 21,
-              "canvasY": 38,
+              "canvasX": 52,
+              "canvasY": 71,
               "z": 85,
               "zSlot": "body",
               "width": 24,
@@ -2760,14 +2832,14 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__heal_f02.png",
               "isEffect": false,
               "x": -22,
               "y": -19,
-              "canvasX": 11,
-              "canvasY": 30,
+              "canvasX": 42,
+              "canvasY": 63,
               "z": 104,
               "zSlot": "armBelowHead",
               "width": 23,
@@ -2796,14 +2868,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__heal_f01.png",
               "isEffect": false,
               "x": -13,
               "y": -13,
-              "canvasX": 20,
-              "canvasY": 36,
+              "canvasX": 51,
+              "canvasY": 69,
               "z": 85,
               "zSlot": "body",
               "width": 28,
@@ -2827,14 +2899,14 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__heal_f01.png",
               "isEffect": false,
               "x": -25,
               "y": -15,
-              "canvasX": 8,
-              "canvasY": 34,
+              "canvasX": 39,
+              "canvasY": 67,
               "z": 104,
               "zSlot": "armBelowHead",
               "width": 23,
@@ -2863,14 +2935,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__swingO2_f02.png",
               "isEffect": false,
               "x": -19,
               "y": -13,
-              "canvasX": 14,
-              "canvasY": 36,
+              "canvasX": 45,
+              "canvasY": 69,
               "z": 85,
               "zSlot": "body",
               "width": 36,
@@ -2894,14 +2966,14 @@
             },
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__swingO2_f02.png",
               "isEffect": false,
               "x": 4,
               "y": -11,
-              "canvasX": 37,
-              "canvasY": 38,
+              "canvasX": 68,
+              "canvasY": 71,
               "z": 117,
               "zSlot": "arm",
               "width": 19,
@@ -2935,14 +3007,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 2,
+              "order": 3,
               "layer": "body",
               "image": "body__swingO3_f00.png",
               "isEffect": false,
               "x": -28,
               "y": -11,
-              "canvasX": 33,
-              "canvasY": 37,
+              "canvasX": 72,
+              "canvasY": 123,
               "z": 85,
               "zSlot": "body",
               "width": 47,
@@ -2966,14 +3038,14 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__swingO3_f00.png",
               "isEffect": false,
               "x": 3,
               "y": -17,
-              "canvasX": 64,
-              "canvasY": 31,
+              "canvasX": 103,
+              "canvasY": 117,
               "z": 117,
               "zSlot": "arm",
               "width": 21,
@@ -3002,14 +3074,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__swingO3_f01.png",
               "isEffect": false,
               "x": -4,
               "y": -13,
-              "canvasX": 57,
-              "canvasY": 35,
+              "canvasX": 96,
+              "canvasY": 121,
               "z": 85,
               "zSlot": "body",
               "width": 20,
@@ -3033,14 +3105,14 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__swingO3_f01.png",
               "isEffect": false,
               "x": -23,
               "y": -11,
-              "canvasX": 38,
-              "canvasY": 37,
+              "canvasX": 77,
+              "canvasY": 123,
               "z": 104,
               "zSlot": "armBelowHead",
               "width": 22,
@@ -3069,14 +3141,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 4,
+              "order": 5,
               "layer": "body",
               "image": "body__swingO1_f00.png",
               "isEffect": false,
               "x": -6,
               "y": -11,
-              "canvasX": 55,
-              "canvasY": 37,
+              "canvasX": 94,
+              "canvasY": 123,
               "z": 85,
               "zSlot": "body",
               "width": 28,
@@ -3100,14 +3172,14 @@
             },
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "arm",
               "image": "arm__swingO1_f00.png",
               "isEffect": false,
               "x": -8,
               "y": -9,
-              "canvasX": 53,
-              "canvasY": 39,
+              "canvasX": 92,
+              "canvasY": 125,
               "z": 117,
               "zSlot": "arm",
               "width": 8,
@@ -3133,8 +3205,8 @@
         }
       ]
     },
-    "stabO1": {
-      "frameCount": 2,
+    "swingT1": {
+      "frameCount": 3,
       "frames": [
         {
           "frame": 0,
@@ -3143,12 +3215,656 @@
               "frame": 0,
               "order": 3,
               "layer": "body",
+              "image": "body__swingT1_f00.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -10,
+              "canvasX": 112,
+              "canvasY": 85,
+              "z": 85,
+              "zSlot": "body",
+              "width": 22,
+              "height": 31,
+              "origin": {
+                "x": 19,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -32
+                },
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": -21
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 13,
+              "layer": "arm",
+              "image": "arm__swingT1_f00.png",
+              "isEffect": false,
+              "x": -2,
+              "y": -27,
+              "canvasX": 121,
+              "canvasY": 68,
+              "z": 147,
+              "zSlot": "armOverHairBelowWeapon",
+              "width": 16,
+              "height": 20,
+              "origin": {
+                "x": 5,
+                "y": 9
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": 18
+                },
+                {
+                  "name": "hand",
+                  "x": 6,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 17,
+              "layer": "armOverHair",
+              "image": "armOverHair__swingT1_f00.png",
+              "isEffect": false,
+              "x": 6,
+              "y": -30,
+              "canvasX": 129,
+              "canvasY": 65,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 18,
+              "height": 24,
+              "origin": {
+                "x": 9,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -15,
+                  "y": 17
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__swingT1_f01.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -13,
+              "canvasX": 111,
+              "canvasY": 82,
+              "z": 85,
+              "zSlot": "body",
+              "width": 28,
+              "height": 31,
+              "origin": {
+                "x": 25,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -19,
+                  "y": -30
+                },
+                {
+                  "name": "navel",
+                  "x": -13,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 13,
+              "layer": "arm",
+              "image": "arm__swingT1_f01.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -16,
+              "canvasX": 100,
+              "canvasY": 79,
+              "z": 147,
+              "zSlot": "armOverHairBelowWeapon",
+              "width": 18,
+              "height": 15,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 13,
+                  "y": 6
+                },
+                {
+                  "name": "hand",
+                  "x": -6,
+                  "y": -6
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 17,
+              "layer": "armOverHair",
+              "image": "armOverHair__swingT1_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -25,
+              "canvasX": 104,
+              "canvasY": 70,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 20,
+              "height": 19,
+              "origin": {
+                "x": 9,
+                "y": 13
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 10,
+                  "y": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 4,
+              "layer": "body",
+              "image": "body__swingT1_f02.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -11,
+              "canvasX": 111,
+              "canvasY": 84,
+              "z": 85,
+              "zSlot": "body",
+              "width": 39,
+              "height": 28,
+              "origin": {
+                "x": 35,
+                "y": 28
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -33,
+                  "y": -25
+                },
+                {
+                  "name": "navel",
+                  "x": -23,
+                  "y": -17
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__swingT1_f02.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -6,
+              "canvasX": 103,
+              "canvasY": 89,
+              "z": 163,
+              "zSlot": "arm",
+              "width": 17,
+              "height": 22,
+              "origin": {
+                "x": 10,
+                "y": 8
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 10,
+                  "y": -2
+                },
+                {
+                  "name": "hand",
+                  "x": -6,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "body",
+              "image": "body__swingT2_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -19,
+              "canvasX": 109,
+              "canvasY": 56,
+              "z": 85,
+              "zSlot": "body",
+              "width": 30,
+              "height": 37,
+              "origin": {
+                "x": 23,
+                "y": 37
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -30
+                },
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": -18
+                },
+                {
+                  "name": "hand",
+                  "x": -9,
+                  "y": -32
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__swingT2_f01.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -13,
+              "canvasX": 103,
+              "canvasY": 62,
+              "z": 85,
+              "zSlot": "body",
+              "width": 38,
+              "height": 31,
+              "origin": {
+                "x": 33,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -13,
+                  "y": -30
+                },
+                {
+                  "name": "navel",
+                  "x": -12,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__swingT2_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -9,
+              "canvasX": 105,
+              "canvasY": 66,
+              "z": 163,
+              "zSlot": "arm",
+              "width": 24,
+              "height": 9,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 9,
+                  "y": -1
+                },
+                {
+                  "name": "hand",
+                  "x": -6,
+                  "y": -6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__swingT2_f02.png",
+              "isEffect": false,
+              "x": -11,
+              "y": -12,
+              "canvasX": 113,
+              "canvasY": 63,
+              "z": 85,
+              "zSlot": "body",
+              "width": 37,
+              "height": 28,
+              "origin": {
+                "x": 32,
+                "y": 28
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -33,
+                  "y": -24
+                },
+                {
+                  "name": "navel",
+                  "x": -21,
+                  "y": -16
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__swingT2_f02.png",
+              "isEffect": false,
+              "x": -9,
+              "y": -12,
+              "canvasX": 115,
+              "canvasY": 63,
+              "z": 163,
+              "zSlot": "armBelowHeadOverMailChest",
+              "width": 25,
+              "height": 23,
+              "origin": {
+                "x": 10,
+                "y": 8
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -1,
+                  "y": 4
+                },
+                {
+                  "name": "hand",
+                  "x": 4,
+                  "y": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__swingT3_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": -13,
+              "canvasX": 111,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 30,
+              "height": 31,
+              "origin": {
+                "x": 14,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -30
+                },
+                {
+                  "name": "navel",
+                  "x": -1,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__swingT3_f00.png",
+              "isEffect": false,
+              "x": -5,
+              "y": -8,
+              "canvasX": 119,
+              "canvasY": 125,
+              "z": 163,
+              "zSlot": "arm",
+              "width": 18,
+              "height": 15,
+              "origin": {
+                "x": 10,
+                "y": 8
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -5,
+                  "y": 0
+                },
+                {
+                  "name": "hand",
+                  "x": 3,
+                  "y": 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__swingT3_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -9,
+              "canvasX": 116,
+              "canvasY": 124,
+              "z": 85,
+              "zSlot": "body",
+              "width": 28,
+              "height": 25,
+              "origin": {
+                "x": 18,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -16,
+                  "y": -24
+                },
+                {
+                  "name": "navel",
+                  "x": -10,
+                  "y": -16
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__swingT3_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -8,
+              "canvasX": 116,
+              "canvasY": 125,
+              "z": 163,
+              "zSlot": "armBelowHeadOverMailChest",
+              "width": 24,
+              "height": 16,
+              "origin": {
+                "x": 10,
+                "y": 10
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -2,
+                  "y": -2
+                },
+                {
+                  "name": "hand",
+                  "x": 10,
+                  "y": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 4,
+              "layer": "body",
+              "image": "body__swingT3_f02.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -23,
+              "canvasX": 112,
+              "canvasY": 110,
+              "z": 85,
+              "zSlot": "body",
+              "width": 38,
+              "height": 40,
+              "origin": {
+                "x": 25,
+                "y": 40
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -20,
+                  "y": -27
+                },
+                {
+                  "name": "navel",
+                  "x": -13,
+                  "y": -17
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "arm",
+              "image": "arm__swingT3_f02.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -20,
+              "canvasX": 105,
+              "canvasY": 113,
+              "z": 104,
+              "zSlot": "armBelowHead",
+              "width": 14,
+              "height": 17,
+              "origin": {
+                "x": 10,
+                "y": 8
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 9,
+                  "y": 12
+                },
+                {
+                  "name": "hand",
+                  "x": -2,
+                  "y": -4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabO1": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 4,
+              "layer": "body",
               "image": "body__stabO1_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -12,
-              "canvasX": 42,
-              "canvasY": 37,
+              "canvasX": 114,
+              "canvasY": 97,
               "z": 85,
               "zSlot": "body",
               "width": 39,
@@ -3172,14 +3888,14 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__stabO1_f00.png",
               "isEffect": false,
               "x": 5,
               "y": -11,
-              "canvasX": 72,
-              "canvasY": 38,
+              "canvasX": 144,
+              "canvasY": 98,
               "z": 163,
               "zSlot": "arm",
               "width": 14,
@@ -3208,14 +3924,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stabO1_f01.png",
               "isEffect": false,
               "x": -11,
               "y": -12,
-              "canvasX": 56,
-              "canvasY": 37,
+              "canvasX": 128,
+              "canvasY": 97,
               "z": 85,
               "zSlot": "body",
               "width": 34,
@@ -3239,14 +3955,14 @@
             },
             {
               "frame": 1,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__stabO1_f01.png",
               "isEffect": false,
               "x": -30,
               "y": -12,
-              "canvasX": 37,
-              "canvasY": 37,
+              "canvasX": 109,
+              "canvasY": 97,
               "z": 163,
               "zSlot": "armOverHair",
               "width": 26,
@@ -3280,14 +3996,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stabO2_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -13,
-              "canvasX": 38,
-              "canvasY": 36,
+              "canvasX": 114,
+              "canvasY": 87,
               "z": 85,
               "zSlot": "body",
               "width": 38,
@@ -3311,14 +4027,14 @@
             },
             {
               "frame": 0,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__stabO2_f00.png",
               "isEffect": false,
               "x": 6,
               "y": -16,
-              "canvasX": 69,
-              "canvasY": 33,
+              "canvasX": 145,
+              "canvasY": 84,
               "z": 163,
               "zSlot": "armOverHair",
               "width": 12,
@@ -3347,14 +4063,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 3,
+              "order": 4,
               "layer": "body",
               "image": "body__stabO2_f01.png",
               "isEffect": false,
               "x": -10,
               "y": -11,
-              "canvasX": 53,
-              "canvasY": 38,
+              "canvasX": 129,
+              "canvasY": 89,
               "z": 85,
               "zSlot": "body",
               "width": 36,
@@ -3378,14 +4094,14 @@
             },
             {
               "frame": 1,
-              "order": 15,
+              "order": 16,
               "layer": "arm",
               "image": "arm__stabO2_f01.png",
               "isEffect": false,
               "x": -27,
               "y": -11,
-              "canvasX": 36,
-              "canvasY": 38,
+              "canvasX": 112,
+              "canvasY": 89,
               "z": 163,
               "zSlot": "armOverHair",
               "width": 25,
@@ -3403,6 +4119,1326 @@
                 {
                   "name": "hand",
                   "x": -3,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -13,
+              "canvasX": 119,
+              "canvasY": 83,
+              "z": 85,
+              "zSlot": "body",
+              "width": 27,
+              "height": 32,
+              "origin": {
+                "x": 25,
+                "y": 32
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -18,
+                  "y": -28
+                },
+                {
+                  "name": "navel",
+                  "x": -9,
+                  "y": -19
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT1_f00.png",
+              "isEffect": false,
+              "x": 0,
+              "y": -13,
+              "canvasX": 135,
+              "canvasY": 83,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 25,
+              "height": 15,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -7,
+                  "y": 6
+                },
+                {
+                  "name": "hand",
+                  "x": 13,
+                  "y": 4
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT1_f00.png",
+              "isEffect": false,
+              "x": -6,
+              "y": -1,
+              "canvasX": 129,
+              "canvasY": 95,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 10,
+              "height": 8,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 2,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT1_f01.png",
+              "isEffect": false,
+              "x": -8,
+              "y": -11,
+              "canvasX": 127,
+              "canvasY": 85,
+              "z": 85,
+              "zSlot": "body",
+              "width": 32,
+              "height": 29,
+              "origin": {
+                "x": 32,
+                "y": 29
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -31,
+                  "y": -24
+                },
+                {
+                  "name": "navel",
+                  "x": -24,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT1_f01.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -13,
+              "canvasX": 137,
+              "canvasY": 83,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 20,
+              "height": 16,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -9,
+                  "y": 6
+                },
+                {
+                  "name": "hand",
+                  "x": 8,
+                  "y": 5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT1_f01.png",
+              "isEffect": false,
+              "x": -9,
+              "y": 0,
+              "canvasX": 126,
+              "canvasY": 96,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 10,
+              "height": 8,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 5,
+                  "y": -4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT1_f02.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -11,
+              "canvasX": 106,
+              "canvasY": 85,
+              "z": 85,
+              "zSlot": "body",
+              "width": 57,
+              "height": 25,
+              "origin": {
+                "x": 58,
+                "y": 25
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -35,
+                  "y": -23
+                },
+                {
+                  "name": "navel",
+                  "x": -29,
+                  "y": -14
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT1_f02.png",
+              "isEffect": false,
+              "x": -7,
+              "y": -11,
+              "canvasX": 128,
+              "canvasY": 85,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 21,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 0,
+                  "y": 4
+                },
+                {
+                  "name": "hand",
+                  "x": -3,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT1_f02.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -8,
+              "canvasX": 106,
+              "canvasY": 88,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 10,
+              "height": 9,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 25,
+                  "y": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT2_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": -14,
+              "canvasX": 125,
+              "canvasY": 110,
+              "z": 85,
+              "zSlot": "body",
+              "width": 26,
+              "height": 32,
+              "origin": {
+                "x": 15,
+                "y": 32
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -9,
+                  "y": -29
+                },
+                {
+                  "name": "navel",
+                  "x": -2,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT2_f00.png",
+              "isEffect": false,
+              "x": 3,
+              "y": -15,
+              "canvasX": 141,
+              "canvasY": 109,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 15,
+              "height": 17,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -10,
+                  "y": 8
+                },
+                {
+                  "name": "hand",
+                  "x": 3,
+                  "y": 8
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT2_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -1,
+              "canvasX": 122,
+              "canvasY": 123,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 10,
+              "height": 9,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 12,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT2_f01.png",
+              "isEffect": false,
+              "x": -13,
+              "y": -13,
+              "canvasX": 125,
+              "canvasY": 111,
+              "z": 85,
+              "zSlot": "body",
+              "width": 33,
+              "height": 29,
+              "origin": {
+                "x": 23,
+                "y": 29
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -25,
+                  "y": -22
+                },
+                {
+                  "name": "navel",
+                  "x": -10,
+                  "y": -16
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT2_f01.png",
+              "isEffect": false,
+              "x": -4,
+              "y": -16,
+              "canvasX": 134,
+              "canvasY": 108,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 21,
+              "height": 17,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": 9
+                },
+                {
+                  "name": "hand",
+                  "x": 9,
+                  "y": 6
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT2_f01.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -2,
+              "canvasX": 119,
+              "canvasY": 122,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 9,
+              "height": 10,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 15,
+                  "y": -2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__stabT2_f02.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -12,
+              "canvasX": 114,
+              "canvasY": 112,
+              "z": 85,
+              "zSlot": "body",
+              "width": 52,
+              "height": 26,
+              "origin": {
+                "x": 43,
+                "y": 26
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -28,
+                  "y": -23
+                },
+                {
+                  "name": "navel",
+                  "x": -19,
+                  "y": -14
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__stabT2_f02.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -12,
+              "canvasX": 139,
+              "canvasY": 112,
+              "z": 163,
+              "zSlot": "armBelowHead",
+              "width": 13,
+              "height": 20,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": 5
+                },
+                {
+                  "name": "hand",
+                  "x": -2,
+                  "y": 9
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 16,
+              "layer": "hand",
+              "image": "hand__stabT2_f02.png",
+              "isEffect": false,
+              "x": -30,
+              "y": -8,
+              "canvasX": 108,
+              "canvasY": 116,
+              "z": 163,
+              "zSlot": "handOverHair",
+              "width": 11,
+              "height": 10,
+              "origin": {
+                "x": 4,
+                "y": 4
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 26,
+                  "y": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -12,
+              "canvasX": 110,
+              "canvasY": 119,
+              "z": 85,
+              "zSlot": "body",
+              "width": 37,
+              "height": 31,
+              "origin": {
+                "x": 31,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -32
+                },
+                {
+                  "name": "navel",
+                  "x": -4,
+                  "y": -19
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot1_f00.png",
+              "isEffect": false,
+              "x": -13,
+              "y": -16,
+              "canvasX": 124,
+              "canvasY": 115,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 23,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 6,
+                  "y": 9
+                },
+                {
+                  "name": "hand",
+                  "x": -3,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -12,
+              "canvasX": 110,
+              "canvasY": 119,
+              "z": 85,
+              "zSlot": "body",
+              "width": 37,
+              "height": 31,
+              "origin": {
+                "x": 31,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -32
+                },
+                {
+                  "name": "navel",
+                  "x": -4,
+                  "y": -19
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot1_f01.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -16,
+              "canvasX": 138,
+              "canvasY": 115,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": 9
+                },
+                {
+                  "name": "hand",
+                  "x": -3,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -12,
+              "canvasX": 110,
+              "canvasY": 119,
+              "z": 85,
+              "zSlot": "body",
+              "width": 37,
+              "height": 31,
+              "origin": {
+                "x": 31,
+                "y": 31
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -32
+                },
+                {
+                  "name": "navel",
+                  "x": -4,
+                  "y": -19
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot1_f01.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -16,
+              "canvasX": 138,
+              "canvasY": 115,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": 9
+                },
+                {
+                  "name": "hand",
+                  "x": -3,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot2": {
+      "frameCount": 5,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot2_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -12,
+              "canvasX": 116,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 31,
+              "height": 30,
+              "origin": {
+                "x": 24,
+                "y": 30
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -5,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot2_f00.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -12,
+              "canvasX": 133,
+              "canvasY": 120,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": 5
+                },
+                {
+                  "name": "hand",
+                  "x": -2,
+                  "y": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot2_f01.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -12,
+              "canvasX": 116,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 31,
+              "height": 30,
+              "origin": {
+                "x": 24,
+                "y": 30
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -5,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot2_f01.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -17,
+              "canvasX": 119,
+              "canvasY": 115,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 23,
+              "height": 9,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 8,
+                  "y": 10
+                },
+                {
+                  "name": "hand",
+                  "x": 11,
+                  "y": 5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot2_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -12,
+              "canvasX": 116,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 31,
+              "height": 30,
+              "origin": {
+                "x": 24,
+                "y": 30
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -5,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot2_f02.png",
+              "isEffect": false,
+              "x": -2,
+              "y": -16,
+              "canvasX": 132,
+              "canvasY": 116,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 9,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -5,
+                  "y": 9
+                },
+                {
+                  "name": "hand",
+                  "x": -17,
+                  "y": -2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot2_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -12,
+              "canvasX": 116,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 31,
+              "height": 30,
+              "origin": {
+                "x": 24,
+                "y": 30
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -5,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 3,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot2_f03.png",
+              "isEffect": false,
+              "x": -1,
+              "y": -11,
+              "canvasX": 133,
+              "canvasY": 121,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 10,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": 4
+                },
+                {
+                  "name": "hand",
+                  "x": -5,
+                  "y": -8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 4,
+          "layers": [
+            {
+              "frame": 4,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shoot2_f04.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -12,
+              "canvasX": 118,
+              "canvasY": 120,
+              "z": 85,
+              "zSlot": "body",
+              "width": 29,
+              "height": 30,
+              "origin": {
+                "x": 22,
+                "y": 30
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -6,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 4,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shoot2_f04.png",
+              "isEffect": false,
+              "x": 1,
+              "y": -12,
+              "canvasX": 135,
+              "canvasY": 120,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 16,
+              "height": 11,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -8,
+                  "y": 5
+                },
+                {
+                  "name": "hand",
+                  "x": -8,
+                  "y": -8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shootF": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shootF_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -17,
+              "canvasX": 109,
+              "canvasY": 115,
+              "z": 85,
+              "zSlot": "body",
+              "width": 38,
+              "height": 36,
+              "origin": {
+                "x": 32,
+                "y": 36
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -4,
+                  "y": -32
+                },
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": -19
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shootF_f00.png",
+              "isEffect": false,
+              "x": -12,
+              "y": -18,
+              "canvasX": 126,
+              "canvasY": 114,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 21,
+              "height": 12,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": 5,
+                  "y": 11
+                },
+                {
+                  "name": "hand",
+                  "x": -3,
+                  "y": -2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shootF_f01.png",
+              "isEffect": false,
+              "x": -31,
+              "y": -17,
+              "canvasX": 107,
+              "canvasY": 115,
+              "z": 85,
+              "zSlot": "body",
+              "width": 43,
+              "height": 35,
+              "origin": {
+                "x": 34,
+                "y": 35
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -3,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shootF_f01.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -15,
+              "canvasX": 140,
+              "canvasY": 117,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 15,
+              "height": 14,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -9,
+                  "y": 8
+                },
+                {
+                  "name": "hand",
+                  "x": -2,
+                  "y": -3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 3,
+              "layer": "body",
+              "image": "body__shootF_f01.png",
+              "isEffect": false,
+              "x": -31,
+              "y": -17,
+              "canvasX": 107,
+              "canvasY": 115,
+              "z": 85,
+              "zSlot": "body",
+              "width": 43,
+              "height": 35,
+              "origin": {
+                "x": 34,
+                "y": 35
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": -3,
+                  "y": -31
+                },
+                {
+                  "name": "navel",
+                  "x": -3,
+                  "y": -18
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 15,
+              "layer": "arm",
+              "image": "arm__shootF_f01.png",
+              "isEffect": false,
+              "x": 2,
+              "y": -15,
+              "canvasX": 140,
+              "canvasY": 117,
+              "z": 163,
+              "zSlot": "armOverHair",
+              "width": 15,
+              "height": 14,
+              "origin": {
+                "x": 7,
+                "y": 7
+              },
+              "mapAnchors": [
+                {
+                  "name": "navel",
+                  "x": -9,
+                  "y": 8
+                },
+                {
+                  "name": "hand",
+                  "x": -2,
                   "y": -3
                 }
               ]

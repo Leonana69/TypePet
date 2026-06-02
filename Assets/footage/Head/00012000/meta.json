@@ -11,13 +11,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 123,
               "zSlot": "head",
@@ -52,13 +52,13 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -98,13 +98,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 123,
               "zSlot": "head",
@@ -139,13 +139,13 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -185,13 +185,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 12,
+              "canvasX": 49,
               "canvasY": 5,
               "z": 123,
               "zSlot": "head",
@@ -226,13 +226,13 @@
             },
             {
               "frame": 2,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 11,
+              "canvasX": 48,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -283,8 +283,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -324,8 +324,8 @@
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 18,
-              "canvasY": 24,
+              "canvasX": 6,
+              "canvasY": 31,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -370,8 +370,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -411,8 +411,8 @@
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 18,
-              "canvasY": 24,
+              "canvasX": 6,
+              "canvasY": 31,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -457,8 +457,8 @@
               "isEffect": false,
               "x": -14,
               "y": -43,
-              "canvasX": 19,
-              "canvasY": 5,
+              "canvasX": 7,
+              "canvasY": 12,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -498,8 +498,8 @@
               "isEffect": false,
               "x": -15,
               "y": -24,
-              "canvasX": 18,
-              "canvasY": 24,
+              "canvasX": 6,
+              "canvasY": 31,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -543,13 +543,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 4,
               "z": 123,
               "zSlot": "head",
@@ -584,13 +584,13 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -25,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 23,
               "z": 124,
               "zSlot": "hairShade",
@@ -630,13 +630,13 @@
           "layers": [
             {
               "frame": 1,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -43,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 5,
               "z": 123,
               "zSlot": "head",
@@ -671,13 +671,13 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -24,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -717,13 +717,13 @@
           "layers": [
             {
               "frame": 2,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 4,
               "z": 123,
               "zSlot": "head",
@@ -758,13 +758,13 @@
             },
             {
               "frame": 2,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -25,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 23,
               "z": 124,
               "zSlot": "hairShade",
@@ -804,13 +804,13 @@
           "layers": [
             {
               "frame": 3,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -45,
-              "canvasX": 18,
+              "canvasX": 34,
               "canvasY": 3,
               "z": 123,
               "zSlot": "head",
@@ -845,13 +845,13 @@
             },
             {
               "frame": 3,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -26,
-              "canvasX": 17,
+              "canvasX": 33,
               "canvasY": 22,
               "z": 124,
               "zSlot": "hairShade",
@@ -1249,14 +1249,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1290,14 +1290,14 @@
             },
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -24,
-              "canvasX": 16,
-              "canvasY": 24,
+              "canvasX": 44,
+              "canvasY": 25,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1336,14 +1336,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 5,
+              "order": 6,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1377,14 +1377,14 @@
             },
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -24,
-              "canvasX": 16,
-              "canvasY": 24,
+              "canvasX": 44,
+              "canvasY": 25,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1423,14 +1423,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 5,
+              "order": 6,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 45,
+              "canvasY": 6,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1464,14 +1464,14 @@
             },
             {
               "frame": 2,
-              "order": 6,
+              "order": 7,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -24,
-              "canvasX": 16,
-              "canvasY": 24,
+              "canvasX": 44,
+              "canvasY": 25,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1515,14 +1515,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 111,
+              "canvasY": 88,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1556,14 +1556,14 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -25,
-              "canvasX": 5,
-              "canvasY": 24,
+              "canvasX": 110,
+              "canvasY": 107,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1607,13 +1607,13 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 19,
+              "canvasX": 55,
               "canvasY": 5,
               "z": 123,
               "zSlot": "head",
@@ -1648,13 +1648,13 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -14,
-              "canvasX": 18,
+              "canvasX": 54,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -1699,14 +1699,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 31,
-              "canvasY": 5,
+              "canvasX": 112,
+              "canvasY": 89,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1740,14 +1740,14 @@
             },
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -14,
-              "canvasX": 30,
-              "canvasY": 24,
+              "canvasX": 111,
+              "canvasY": 108,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1786,14 +1786,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -34,
               "y": -33,
-              "canvasX": 31,
-              "canvasY": 5,
+              "canvasX": 112,
+              "canvasY": 89,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1827,13 +1827,105 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -35,
               "y": -14,
-              "canvasX": 30,
+              "canvasX": 111,
+              "canvasY": 108,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "sit": {
+      "frameCount": 1,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -43,
+              "canvasX": 22,
+              "canvasY": 5,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -24,
+              "canvasX": 21,
               "canvasY": 24,
               "z": 124,
               "zSlot": "hairShade",
@@ -1878,14 +1970,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -45,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 16,
+              "canvasY": 15,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -1919,14 +2011,14 @@
             },
             {
               "frame": 0,
-              "order": 8,
+              "order": 9,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -26,
-              "canvasX": 5,
-              "canvasY": 24,
+              "canvasX": 15,
+              "canvasY": 34,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -1965,14 +2057,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -45,
-              "canvasX": 6,
-              "canvasY": 5,
+              "canvasX": 16,
+              "canvasY": 15,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2006,14 +2098,14 @@
             },
             {
               "frame": 1,
-              "order": 8,
+              "order": 9,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -26,
-              "canvasX": 5,
-              "canvasY": 24,
+              "canvasX": 15,
+              "canvasY": 34,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2057,84 +2149,7 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
-              "layer": "head",
-              "image": "head__ladder_f00.png",
-              "isEffect": false,
-              "x": -21,
-              "y": -41,
-              "canvasX": 1,
-              "canvasY": 6,
-              "z": 57,
-              "zSlot": "backHead",
-              "width": 41,
-              "height": 35,
-              "origin": {
-                "x": 20,
-                "y": 17
-              },
-              "mapAnchors": [
-                {
-                  "name": "neck",
-                  "x": 0,
-                  "y": 15
-                },
-                {
-                  "name": "brow",
-                  "x": -4,
-                  "y": -5
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "frame": 1,
-          "layers": [
-            {
-              "frame": 1,
-              "order": 6,
-              "layer": "head",
-              "image": "head__ladder_f00.png",
-              "isEffect": false,
-              "x": -20,
-              "y": -41,
-              "canvasX": 2,
-              "canvasY": 6,
-              "z": 57,
-              "zSlot": "backHead",
-              "width": 41,
-              "height": 35,
-              "origin": {
-                "x": 20,
-                "y": 17
-              },
-              "mapAnchors": [
-                {
-                  "name": "neck",
-                  "x": 0,
-                  "y": 15
-                },
-                {
-                  "name": "brow",
-                  "x": -4,
-                  "y": -5
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "rope": {
-      "frameCount": 2,
-      "frames": [
-        {
-          "frame": 0,
-          "layers": [
-            {
-              "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__ladder_f00.png",
               "isEffect": false,
@@ -2170,14 +2185,91 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
+              "layer": "head",
+              "image": "head__ladder_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -41,
+              "canvasX": 2,
+              "canvasY": 7,
+              "z": 57,
+              "zSlot": "backHead",
+              "width": 41,
+              "height": 35,
+              "origin": {
+                "x": 20,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "rope": {
+      "frameCount": 2,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "head",
+              "image": "head__ladder_f00.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -41,
+              "canvasX": 1,
+              "canvasY": 8,
+              "z": 57,
+              "zSlot": "backHead",
+              "width": 41,
+              "height": 35,
+              "origin": {
+                "x": 20,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 7,
               "layer": "head",
               "image": "head__ladder_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -42,
               "canvasX": 2,
-              "canvasY": 6,
+              "canvasY": 7,
               "z": 57,
               "zSlot": "backHead",
               "width": 41,
@@ -2211,14 +2303,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 5,
+              "order": 6,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -19,
               "y": -43,
-              "canvasX": 17,
-              "canvasY": 6,
+              "canvasX": 45,
+              "canvasY": 39,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2252,14 +2344,14 @@
             },
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -24,
-              "canvasX": 16,
-              "canvasY": 25,
+              "canvasX": 44,
+              "canvasY": 58,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2298,14 +2390,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -23,
               "y": -44,
-              "canvasX": 13,
-              "canvasY": 5,
+              "canvasX": 41,
+              "canvasY": 38,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2339,14 +2431,14 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -25,
-              "canvasX": 12,
-              "canvasY": 24,
+              "canvasX": 40,
+              "canvasY": 57,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2385,14 +2477,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 20,
-              "canvasY": 5,
+              "canvasX": 48,
+              "canvasY": 38,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2426,14 +2518,14 @@
             },
             {
               "frame": 2,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -25,
-              "canvasX": 19,
-              "canvasY": 24,
+              "canvasX": 47,
+              "canvasY": 57,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2477,14 +2569,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -42,
               "canvasX": 5,
-              "canvasY": 9,
+              "canvasY": 89,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2518,14 +2610,14 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -23,
               "canvasX": 4,
-              "canvasY": 28,
+              "canvasY": 108,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2564,14 +2656,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -20,
               "y": -43,
               "canvasX": 11,
-              "canvasY": 8,
+              "canvasY": 88,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2605,14 +2697,14 @@
             },
             {
               "frame": 1,
-              "order": 8,
+              "order": 9,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -21,
               "y": -24,
               "canvasX": 10,
-              "canvasY": 27,
+              "canvasY": 107,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2651,14 +2743,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 7,
+              "order": 8,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -40,
               "canvasX": 5,
-              "canvasY": 11,
+              "canvasY": 91,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2692,14 +2784,14 @@
             },
             {
               "frame": 2,
-              "order": 8,
+              "order": 9,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -21,
               "canvasX": 4,
-              "canvasY": 30,
+              "canvasY": 110,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2743,14 +2835,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -16,
               "y": -44,
-              "canvasX": 17,
-              "canvasY": 5,
+              "canvasX": 48,
+              "canvasY": 38,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2784,14 +2876,14 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -25,
-              "canvasX": 16,
-              "canvasY": 24,
+              "canvasX": 47,
+              "canvasY": 57,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2830,14 +2922,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -23,
               "y": -44,
-              "canvasX": 10,
-              "canvasY": 5,
+              "canvasX": 41,
+              "canvasY": 38,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2871,14 +2963,14 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -25,
-              "canvasX": 9,
-              "canvasY": 24,
+              "canvasX": 40,
+              "canvasY": 57,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -2917,14 +3009,14 @@
           "layers": [
             {
               "frame": 2,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -24,
               "y": -43,
-              "canvasX": 9,
-              "canvasY": 6,
+              "canvasX": 40,
+              "canvasY": 39,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -2958,14 +3050,14 @@
             },
             {
               "frame": 2,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -24,
-              "canvasX": 8,
-              "canvasY": 25,
+              "canvasX": 39,
+              "canvasY": 58,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3009,14 +3101,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -21,
               "y": -43,
-              "canvasX": 40,
-              "canvasY": 5,
+              "canvasX": 79,
+              "canvasY": 91,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3050,14 +3142,14 @@
             },
             {
               "frame": 0,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -22,
               "y": -24,
-              "canvasX": 39,
-              "canvasY": 24,
+              "canvasX": 78,
+              "canvasY": 110,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3096,14 +3188,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 9,
+              "order": 10,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -25,
               "y": -43,
-              "canvasX": 36,
-              "canvasY": 5,
+              "canvasX": 75,
+              "canvasY": 91,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3137,14 +3229,812 @@
             },
             {
               "frame": 1,
-              "order": 10,
+              "order": 11,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -26,
               "y": -24,
-              "canvasX": 35,
-              "canvasY": 24,
+              "canvasX": 74,
+              "canvasY": 110,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 10,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -42,
+              "canvasX": 78,
+              "canvasY": 92,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 11,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -23,
+              "y": -23,
+              "canvasX": 77,
+              "canvasY": 111,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -14,
+              "y": -43,
+              "canvasX": 109,
+              "canvasY": 52,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -24,
+              "canvasX": 108,
+              "canvasY": 71,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -44,
+              "canvasX": 99,
+              "canvasY": 51,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -25,
+              "canvasX": 98,
+              "canvasY": 70,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -40,
+              "canvasX": 95,
+              "canvasY": 55,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -21,
+              "canvasX": 94,
+              "canvasY": 74,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -14,
+              "y": -44,
+              "canvasX": 110,
+              "canvasY": 31,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -15,
+              "y": -25,
+              "canvasX": 109,
+              "canvasY": 50,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -44,
+              "canvasX": 105,
+              "canvasY": 31,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -25,
+              "canvasX": 104,
+              "canvasY": 50,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -30,
+              "y": -40,
+              "canvasX": 94,
+              "canvasY": 35,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -31,
+              "y": -21,
+              "canvasX": 93,
+              "canvasY": 54,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "swingT3": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -21,
+              "y": -44,
+              "canvasX": 103,
+              "canvasY": 89,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -22,
+              "y": -25,
+              "canvasX": 102,
+              "canvasY": 108,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -40,
+              "canvasX": 100,
+              "canvasY": 93,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -21,
+              "canvasX": 99,
+              "canvasY": 112,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3187,10 +4077,10 @@
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
-              "x": -22,
+              "x": -25,
               "y": -42,
-              "canvasX": 39,
-              "canvasY": 6,
+              "canvasX": 99,
+              "canvasY": 91,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3228,10 +4118,10 @@
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
-              "x": -23,
+              "x": -26,
               "y": -23,
-              "canvasX": 38,
-              "canvasY": 25,
+              "canvasX": 98,
+              "canvasY": 110,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3275,14 +4165,14 @@
           "layers": [
             {
               "frame": 0,
-              "order": 7,
+              "order": 8,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 50,
-              "canvasY": 5,
+              "canvasX": 122,
+              "canvasY": 65,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3316,14 +4206,14 @@
             },
             {
               "frame": 0,
-              "order": 8,
+              "order": 9,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -18,
               "y": -25,
-              "canvasX": 49,
-              "canvasY": 24,
+              "canvasX": 121,
+              "canvasY": 84,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3362,14 +4252,14 @@
           "layers": [
             {
               "frame": 1,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -27,
               "y": -43,
-              "canvasX": 40,
-              "canvasY": 6,
+              "canvasX": 112,
+              "canvasY": 66,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3403,14 +4293,14 @@
             },
             {
               "frame": 1,
-              "order": 7,
+              "order": 8,
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
               "x": -28,
               "y": -24,
-              "canvasX": 39,
-              "canvasY": 25,
+              "canvasX": 111,
+              "canvasY": 85,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3454,14 +4344,725 @@
           "layers": [
             {
               "frame": 0,
-              "order": 6,
+              "order": 7,
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
               "x": -17,
               "y": -44,
-              "canvasX": 46,
-              "canvasY": 5,
+              "canvasX": 122,
+              "canvasY": 56,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -25,
+              "canvasX": 121,
+              "canvasY": 75,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 59,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -29,
+              "y": -22,
+              "canvasX": 110,
+              "canvasY": 78,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -41,
+              "canvasX": 108,
+              "canvasY": 55,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -22,
+              "canvasX": 107,
+              "canvasY": 74,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -38,
+              "canvasX": 110,
+              "canvasY": 58,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -26,
+              "y": -19,
+              "canvasX": 109,
+              "canvasY": 77,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -24,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 55,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -22,
+              "canvasX": 110,
+              "canvasY": 74,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "stabT2": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -25,
+              "y": -43,
+              "canvasX": 113,
+              "canvasY": 81,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -26,
+              "y": -24,
+              "canvasX": 112,
+              "canvasY": 100,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -33,
+              "y": -38,
+              "canvasX": 105,
+              "canvasY": 86,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -34,
+              "y": -19,
+              "canvasX": 104,
+              "canvasY": 105,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 8,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -27,
+              "y": -41,
+              "canvasX": 111,
+              "canvasY": 83,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 9,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -28,
+              "y": -22,
+              "canvasX": 110,
+              "canvasY": 102,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot1": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3499,10 +5100,10 @@
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
-              "x": -18,
-              "y": -25,
-              "canvasX": 45,
-              "canvasY": 24,
+              "x": -19,
+              "y": -26,
+              "canvasX": 118,
+              "canvasY": 105,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
@@ -3545,10 +5146,10 @@
               "layer": "head",
               "image": "head__stand1_f00.png",
               "isEffect": false,
-              "x": -28,
-              "y": -41,
-              "canvasX": 35,
-              "canvasY": 8,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
               "z": 123,
               "zSlot": "head",
               "width": 35,
@@ -3586,10 +5187,803 @@
               "layer": "humanEar",
               "image": "humanEar__stand1_f00.png",
               "isEffect": false,
-              "x": -29,
-              "y": -22,
-              "canvasX": 34,
-              "canvasY": 27,
+              "x": -19,
+              "y": -26,
+              "canvasX": 118,
+              "canvasY": 105,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 86,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -26,
+              "canvasX": 118,
+              "canvasY": 105,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shoot2": {
+      "frameCount": 5,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -26,
+              "canvasX": 116,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -26,
+              "canvasX": 116,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -26,
+              "canvasX": 116,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 3,
+          "layers": [
+            {
+              "frame": 3,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -45,
+              "canvasX": 117,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 3,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -26,
+              "canvasX": 116,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 4,
+          "layers": [
+            {
+              "frame": 4,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -16,
+              "y": -45,
+              "canvasX": 118,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 4,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -17,
+              "y": -26,
+              "canvasX": 117,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "shootF": {
+      "frameCount": 3,
+      "frames": [
+        {
+          "frame": 0,
+          "layers": [
+            {
+              "frame": 0,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -45,
+              "canvasX": 119,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 0,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -20,
+              "y": -26,
+              "canvasX": 118,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 1,
+          "layers": [
+            {
+              "frame": 1,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 120,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 1,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -26,
+              "canvasX": 119,
+              "canvasY": 106,
+              "z": 124,
+              "zSlot": "hairShade",
+              "width": 39,
+              "height": 11,
+              "origin": {
+                "x": 19,
+                "y": -2
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "frame": 2,
+          "layers": [
+            {
+              "frame": 2,
+              "order": 6,
+              "layer": "head",
+              "image": "head__stand1_f00.png",
+              "isEffect": false,
+              "x": -18,
+              "y": -45,
+              "canvasX": 120,
+              "canvasY": 87,
+              "z": 123,
+              "zSlot": "head",
+              "width": 35,
+              "height": 35,
+              "origin": {
+                "x": 18,
+                "y": 17
+              },
+              "mapAnchors": [
+                {
+                  "name": "neck",
+                  "x": 0,
+                  "y": 15
+                },
+                {
+                  "name": "earOverHead",
+                  "x": 15,
+                  "y": 10
+                },
+                {
+                  "name": "earBelowHead",
+                  "x": -17,
+                  "y": 9
+                },
+                {
+                  "name": "brow",
+                  "x": -4,
+                  "y": -5
+                }
+              ]
+            },
+            {
+              "frame": 2,
+              "order": 7,
+              "layer": "humanEar",
+              "image": "humanEar__stand1_f00.png",
+              "isEffect": false,
+              "x": -19,
+              "y": -26,
+              "canvasX": 119,
+              "canvasY": 106,
               "z": 124,
               "zSlot": "hairShade",
               "width": 39,
