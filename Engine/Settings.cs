@@ -10,7 +10,7 @@ namespace MaplePet.Engine;
 /// </summary>
 public sealed class Settings
 {
-    public double JumpHeight { get; set; } = 50;     // max vertical reach to grab a ladder, logical px
+    public double JumpHeight { get; set; } = 150;    // max vertical reach to jump onto a higher platform, logical px
     public double WalkSpeed { get; set; } = 90;      // px / second
     public double ClimbSpeed { get; set; } = 70;     // px / second
     public double Gravity { get; set; } = 900;       // px / second^2

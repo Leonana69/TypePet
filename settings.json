@@ -1,5 +1,5 @@
 {
-  "jumpHeight": 50,
+  "jumpHeight": 150,
   "walkSpeed": 90,
   "climbSpeed": 70,
   "gravity": 900,

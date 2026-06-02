@@ -34,6 +34,8 @@ public sealed class PetController
     private const double TargetEdgeMargin = 18;// keep random targets off the very corners
     private const double JumpClearance = 12;   // apex height above the platform we jump up onto
     private const double DropClearance = 2;    // sink below the source platform before a down-jump
+    private const double LadderJumpRise = 70;  // how high the jump-onto-a-ladder arc rises to grab
+    private const double MinLadderJump = 16;   // below this climb, just step onto the rope (no arc)
 
     public Vec2 Pos;          // top-left, logical px
     public Vec2 Size;         // width/height, logical px
@@ -59,6 +61,11 @@ public sealed class PetController
     private double _ropeX;
     private double _ropeTargetY;
     private int _ropeDir; // -1 up, +1 down
+
+    // Jump-onto-a-ladder execution: while airborne, latch onto the ladder when the arc's apex
+    // (where the pet's x meets the ladder line) is reached.
+    private bool _grabbingLadder;
+    private double _grabLadderX;
 
     public double FeetY => Pos.Y + Size.Y;
     public double CenterX => Pos.X + Size.X / 2;
@@ -118,6 +125,7 @@ public sealed class PetController
         IsDragging = true;
         State = PetState.Jump;
         Vel = default;
+        _grabbingLadder = false;
     }
 
     public void DragTo(Vec2 center)
@@ -132,6 +140,7 @@ public sealed class PetController
         State = PetState.Jump;
         Vel = default;
         _standAfterLanding = true;
+        _grabbingLadder = false;
         _path = null;
         _hasTarget = false;
     }
@@ -143,6 +152,7 @@ public sealed class PetController
         Vel = default;
         _path = null;
         _hasTarget = false;
+        _grabbingLadder = false;
         _idleTimer = seconds >= 0 ? seconds : IdleMinSeconds + _rng.NextDouble() * (IdleMaxSeconds - IdleMinSeconds);
     }
 
@@ -241,6 +251,17 @@ public sealed class PetController
         if (_path is null || _step >= _path.Count) { OnPathDone(); return; }
 
         var step = _path[_step];
+
+        // Approaching a ladder we're about to climb: run up and jump onto it in an arc so the
+        // apex (where horizontal motion is fastest and vertical motion stalls) meets the ladder
+        // line. Only the FIRST entry onto a rope (a Walk immediately before a ClimbUp) does this;
+        // continuing up a multi-stop ladder grabs straight on.
+        if (step.Kind == MoveKind.Walk
+            && _step + 1 < _path.Count
+            && _path[_step + 1].Kind == MoveKind.ClimbUp
+            && ApproachLadderJump(world, dt, _path[_step + 1]))
+            return;
+
         switch (step.Kind)
         {
             case MoveKind.Walk:
@@ -281,6 +302,59 @@ public sealed class PetController
         }
         Pos = new Vec2(Pos.X + dir * advance, Pos.Y);
         return false;
+    }
+
+    /// <summary>
+    /// While walking toward a ladder we intend to climb, run up and — once within the launch
+    /// distance — jump in an arc whose apex lands exactly on the ladder line, then grab on mid-air.
+    /// The horizontal launch speed is the walk speed (so momentum carries through), and the launch
+    /// point sits ahead of the ladder by exactly the horizontal distance covered during the ascent,
+    /// so x reaches the ladder as vertical velocity stalls (the peak). Returns true if it handled
+    /// the tick (walking up or launching); false to let the caller fall back to a plain grab.
+    /// </summary>
+    private bool ApproachLadderJump(World world, double dt, PathStep climb)
+    {
+        if (climb.LadderIndex < 0 || climb.LadderIndex >= world.Ladders.Count) return false;
+
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) { BeginFall(); return true; } // lost the ground
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
+
+        var l = world.Ladders[climb.LadderIndex];
+        double py = FeetY;
+        double g = Math.Max(1.0, _cfg.Gravity);
+
+        // The grab point (the arc's apex) on the ladder: rise LadderJumpRise, but never above the
+        // ladder top and never past the climb target (climb.Y), so we don't overshoot.
+        double topBound = Math.Max(l.YTop, climb.Y);
+        double grabY = Clamp(py - LadderJumpRise, topBound, l.YBottom);
+        double rise = py - grabY;
+        if (rise < MinLadderJump) return false; // climb too short to arc; let the plain grab handle it
+
+        double v0 = Math.Sqrt(2 * g * rise); // upward launch speed (apex after t = v0/g)
+        double tApex = v0 / g;
+        double launchDist = _cfg.WalkSpeed * tApex; // run-up distance: vx == walk speed at the apex
+
+        double dist = l.X - CenterX;
+        int dir = dist >= 0 ? 1 : -1;
+        if (Math.Abs(dist) > launchDist + ArriveTol)
+        {
+            // Still approaching: keep running toward the ladder.
+            Facing = dir;
+            Pos = new Vec2(Pos.X + dir * _cfg.WalkSpeed * dt, Pos.Y);
+            return true;
+        }
+
+        // Within range: launch. vx is sized so x reaches the ladder exactly at the apex.
+        double vx = tApex > 1e-3 ? dist / tApex : 0;
+        Vel = new Vec2(vx, -v0);
+        Facing = vx >= 0 ? 1 : (vx < 0 ? -1 : Facing);
+        State = PetState.Jump;
+        _grabbingLadder = true;
+        _grabLadderX = l.X;
+        _ropeTargetY = climb.Y;
+        _step += 1; // consume the Walk step; the ClimbUp step finishes when the rope reaches the top
+        return true;
     }
 
     // ---------------------------------------------------------------- Rope
@@ -344,6 +418,7 @@ public sealed class PetController
     // ---------------------------------------------------------------- Jump / fall
     private void BeginFall(double vx = 0)
     {
+        _grabbingLadder = false;
         Vel = new Vec2(vx, 0);
         State = PetState.Jump;
     }
@@ -364,6 +439,7 @@ public sealed class PetController
         double disc = Math.Max(0.0, v0 * v0 - 2 * g * (y0 - landY));
         double t = (v0 + Math.Sqrt(disc)) / g;              // time to descend onto landY
         double vx = t > 1e-3 ? (landX - x0) / t : 0;
+        _grabbingLadder = false;
         Vel = new Vec2(vx, -v0);
         State = PetState.Jump;
     }
@@ -381,6 +457,7 @@ public sealed class PetController
         double fall = Math.Max(1.0, landY - FeetY);
         double t = Math.Sqrt(2 * fall / g);                    // free-fall time (vy0 = 0)
         double vx = t > 1e-3 ? (landX - CenterX) / t : 0;
+        _grabbingLadder = false;
         Vel = new Vec2(vx, 0);
         State = PetState.Jump;
     }
@@ -393,6 +470,31 @@ public sealed class PetController
         double newX = Pos.X + vx * dt;
         double newFeet = fromFeet + vy * dt;
         double newCenter = newX + Size.X / 2;
+
+        // Jumping onto a ladder: when the arc's apex reaches the ladder line, latch on.
+        if (_grabbingLadder)
+        {
+            bool reachedX = (vx > 0 && newCenter >= _grabLadderX)
+                         || (vx < 0 && newCenter <= _grabLadderX)
+                         || (Math.Abs(vx) <= 1e-3 && vy >= 0);
+            if (reachedX)
+            {
+                _grabbingLadder = false;
+                var seg = Physics.FindLadderAt(world, _grabLadderX, newFeet, LadderXTol, SupportTol * 2, -1);
+                if (seg is Ladder l)
+                {
+                    double grab = Clamp(newFeet, l.YTop, l.YBottom);
+                    _ropeX = l.X;
+                    _ropeDir = _ropeTargetY < grab ? -1 : 1;
+                    Pos = new Vec2(l.X - Size.X / 2, grab - Size.Y);
+                    Vel = default;
+                    State = PetState.Rope;
+                    return;
+                }
+                // The ladder vanished mid-jump (world changed): fall and replan from where we land.
+                _pendingReplan = true;
+            }
+        }
 
         var landing = Physics.FindLanding(world, newCenter, fromFeet, newFeet);
         if (landing is not null)
