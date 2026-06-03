@@ -14,29 +14,28 @@ using MaplePet.Rendering;
 namespace MaplePet.Views;
 
 /// <summary>
-/// The character picker (opened from the tray menu). Shows one card per available character — the
-/// built-in Default plus every imported one — six per row in a scrolling grid, with a trailing "+"
-/// card to import a new character from a zip. Clicking a card makes the pet wear it (via the
+/// The Characters tab of <see cref="ConfigWindow"/>. Shows one card per available character — the
+/// built-in Default plus every imported one — six per row in a scrolling grid, with a trailing import
+/// card to add a new character from a zip. Clicking a card makes the pet wear it (via the
 /// <c>onSelect</c> callback); clicking a card's name renames it; right-clicking offers Export and
-/// Delete. The currently worn character is highlighted.
+/// Delete. The currently worn character gets an accent ring and a "WORN" badge.
 /// </summary>
-public sealed class CharacterWindow : Window
+public sealed class CharacterView : UserControl
 {
     private const int Columns = 6;
-    private const double CardW = 96, CardH = 128, ThumbSize = 84;
+    private const double CardW = 96, CardH = 132, ThumbSize = 84;
+
+    // Where the user can build/obtain importable MapleStory character footage.
+    private const string MapleSimUrl = "https://maple-sim.net/";
 
     // A thumbnail only ever draws the idle frame, so decode just that one pose (not the whole footage).
     private static readonly IReadOnlyCollection<string> ThumbnailPoses =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1" };
 
-    private static readonly IBrush CardBg = new SolidColorBrush(Color.FromArgb(20, 128, 128, 128));
-    private static readonly IBrush CardBorder = new SolidColorBrush(Color.FromArgb(90, 128, 128, 128));
-    private static readonly IBrush CurrentBg = new SolidColorBrush(Color.FromArgb(48, 45, 125, 245));
-    private static readonly IBrush CurrentBorder = new SolidColorBrush(Color.FromArgb(255, 45, 125, 245));
-
     private readonly CharacterStore _store;
     private readonly Settings _cfg;
     private readonly Action<string> _onSelect;
+    private readonly Action? _onChanged; // store mutated without a re-select (e.g. rename)
 
     private readonly UniformGrid _grid;
     private readonly TextBlock _status;
@@ -45,49 +44,74 @@ public sealed class CharacterWindow : Window
     // select/rename/import/delete). Keyed by character id; disposed on delete and on window close.
     private readonly Dictionary<string, Bitmap?> _thumbs = new();
 
-    public CharacterWindow(CharacterStore store, Settings cfg, Action<string> onSelect)
+    /// <param name="onChanged">Notified when the store is mutated without re-selecting (a rename), so
+    /// callers can refresh anything derived from the worn character's display name (e.g. the tray header).</param>
+    public CharacterView(CharacterStore store, Settings cfg, Action<string> onSelect, Action? onChanged = null)
     {
         _store = store;
         _cfg = cfg;
         _onSelect = onSelect;
-
-        Title = "MaplePet Characters";
-        Width = Columns * (CardW + 8) + 28; // 6 cells + per-card margins + padding/scrollbar
-        Height = 520;
-        MinWidth = Width;
-        MinHeight = 240;
-        WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        ShowInTaskbar = true;
+        _onChanged = onChanged;
 
         _grid = new UniformGrid { Columns = Columns };
         var scroll = new ScrollViewer
         {
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Content = new Border { Padding = new Thickness(8), Child = _grid },
+            Content = new Border { Padding = new Thickness(10, 4, 10, 10), Child = _grid },
         };
+
+        var hint = new TextBlock
+        {
+            Text = "Click a character to wear it · right-click to export or delete",
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        hint.Classes.Add("caption");
+
+        // Link out to maple-sim.net, where the importable character footage is built/exported.
+        var link = new Button { Content = "maple-sim.net ↗", VerticalAlignment = VerticalAlignment.Center };
+        link.Classes.Add("link");
+        ToolTip.SetTip(link, "Open " + MapleSimUrl + " in your browser");
+        link.Click += (_, _) => _ = OpenLinkAsync();
+
+        var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        Grid.SetColumn(hint, 0);
+        Grid.SetColumn(link, 1);
+        headerGrid.Children.Add(hint);
+        headerGrid.Children.Add(link);
+        var header = new Border { Padding = new Thickness(18, 6, 12, 8), Child = headerGrid };
 
         _status = new TextBlock
         {
-            Margin = new Thickness(12, 6),
-            Opacity = 0.75,
+            Foreground = FrostTheme.TextSecondary,
+            VerticalAlignment = VerticalAlignment.Center,
             TextWrapping = TextWrapping.Wrap,
+        };
+        var footer = new Border
+        {
+            BorderBrush = FrostTheme.Hairline,
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            Padding = new Thickness(18, 9),
+            MinHeight = 38,
+            Child = _status,
         };
 
         var dock = new DockPanel();
-        DockPanel.SetDock(_status, Dock.Bottom);
-        dock.Children.Add(_status);
+        DockPanel.SetDock(header, Dock.Top);
+        DockPanel.SetDock(footer, Dock.Bottom);
+        dock.Children.Add(header);
+        dock.Children.Add(footer);
         dock.Children.Add(scroll);
         Content = dock;
 
         Rebuild();
     }
 
-    protected override void OnClosed(EventArgs e)
+    /// <summary>Release the cached thumbnail bitmaps. Called by the host window when it closes.</summary>
+    public void DisposeThumbnails()
     {
         foreach (var bmp in _thumbs.Values) bmp?.Dispose();
         _thumbs.Clear();
-        base.OnClosed(e);
     }
 
     /// <summary>Recreate every card from the current store + selection (after any change).</summary>
@@ -111,12 +135,25 @@ public sealed class CharacterWindow : Window
             Stretch = Stretch.Uniform,
             Source = Thumbnail(entry),
             HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
         };
         RenderOptions.SetBitmapInterpolationMode(thumb, BitmapInterpolationMode.None);
+
+        var thumbWell = new Border
+        {
+            Width = ThumbSize + 14,
+            Height = ThumbSize + 14,
+            CornerRadius = new CornerRadius(10),
+            Background = FrostTheme.ThumbWell,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Child = thumb,
+        };
 
         var nameBlock = new TextBlock
         {
             Text = entry.DisplayName,
+            Foreground = FrostTheme.TextPrimary,
+            FontSize = 12,
             TextAlignment = TextAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxLines = 1,
@@ -126,10 +163,16 @@ public sealed class CharacterWindow : Window
 
         var content = new StackPanel
         {
-            Spacing = 6,
+            Spacing = 7,
             VerticalAlignment = VerticalAlignment.Center,
-            Children = { thumb, namePanel },
+            Children = { thumbWell, namePanel },
         };
+
+        // Overlay host so the worn badge can float over the top-right corner.
+        var inner = new Grid();
+        inner.Children.Add(content);
+        if (isCurrent)
+            inner.Children.Add(WornBadge());
 
         var card = new Border
         {
@@ -137,15 +180,13 @@ public sealed class CharacterWindow : Window
             Height = CardH,
             Margin = new Thickness(4),
             Padding = new Thickness(6),
-            CornerRadius = new CornerRadius(8),
-            Background = isCurrent ? CurrentBg : CardBg,
-            BorderBrush = isCurrent ? CurrentBorder : CardBorder,
-            BorderThickness = new Thickness(isCurrent ? 2 : 1),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Top,
             Cursor = new Cursor(StandardCursorType.Hand),
-            Child = content,
+            Child = inner,
         };
+        card.Classes.Add("charCard");
+        if (isCurrent) card.Classes.Add("selected");
 
         // Left-click anywhere on the card selects it (unless the name handled it for renaming).
         card.PointerPressed += (_, e) =>
@@ -175,24 +216,52 @@ public sealed class CharacterWindow : Window
         return card;
     }
 
+    private static Control WornBadge()
+    {
+        var label = new TextBlock
+        {
+            Text = "WORN",
+            FontSize = 9,
+            FontWeight = FontWeight.Bold,
+            Foreground = FrostTheme.BadgeText,
+        };
+        return new Border
+        {
+            Background = FrostTheme.AccentBrush,
+            CornerRadius = new CornerRadius(7),
+            Padding = new Thickness(7, 2),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 4, 4, 0),
+            Child = label,
+        };
+    }
+
     private Control BuildAddCard()
     {
         var plus = new TextBlock
         {
             Text = "+",
-            FontSize = 38,
-            Foreground = CardBorder,
+            FontSize = 36,
+            Foreground = FrostTheme.AccentBrush,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        var label = new TextBlock
+        {
+            Text = "Import .zip",
+            Foreground = FrostTheme.TextSecondary,
+            FontSize = 12,
+            TextAlignment = TextAlignment.Center,
+        };
         var content = new StackPanel
         {
-            Spacing = 6,
+            Spacing = 7,
             VerticalAlignment = VerticalAlignment.Center,
             Children =
             {
-                new Panel { Height = ThumbSize, Children = { plus } },
-                new TextBlock { Text = "Add", TextAlignment = TextAlignment.Center, Opacity = 0.7 },
+                new Panel { Height = ThumbSize + 14, Children = { plus } },
+                label,
             },
         };
 
@@ -202,15 +271,12 @@ public sealed class CharacterWindow : Window
             Height = CardH,
             Margin = new Thickness(4),
             Padding = new Thickness(6),
-            CornerRadius = new CornerRadius(8),
-            Background = CardBg,
-            BorderBrush = CardBorder,
-            BorderThickness = new Thickness(1),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Top,
             Cursor = new Cursor(StandardCursorType.Hand),
             Child = content,
         };
+        card.Classes.Add("addCard");
         card.PointerPressed += (_, e) =>
         {
             if (e.GetCurrentPoint(card).Properties.IsLeftButtonPressed)
@@ -226,13 +292,28 @@ public sealed class CharacterWindow : Window
         Rebuild();           // refresh the highlight
     }
 
+    /// <summary>Open maple-sim.net in the user's default browser via the platform launcher.</summary>
+    private async Task OpenLinkAsync()
+    {
+        try
+        {
+            var top = TopLevel.GetTopLevel(this);
+            if (top is not null) await top.Launcher.LaunchUriAsync(new Uri(MapleSimUrl));
+        }
+        catch (Exception ex)
+        {
+            Status("Couldn't open the link: " + ex.Message, error: true);
+        }
+    }
+
     private void BeginRename(CharacterEntry entry, Panel namePanel)
     {
         var box = new TextBox
         {
             Text = entry.DisplayName,
             MaxLength = 40,
-            Padding = new Thickness(2, 0),
+            FontSize = 12,
+            Padding = new Thickness(4, 1),
         };
         namePanel.Children.Clear();
         namePanel.Children.Add(box);
@@ -265,6 +346,7 @@ public sealed class CharacterWindow : Window
             _store.Rename(entry.Id, box.Text);
             Status(string.Empty); // clear any prior duplicate warning
             Rebuild();
+            _onChanged?.Invoke(); // refresh anything keyed on the (possibly worn) character's name
         }
 
         box.KeyDown += (_, e) =>
@@ -279,7 +361,10 @@ public sealed class CharacterWindow : Window
     {
         try
         {
-            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
+            if (storage is null) { Status("Couldn't open the file picker.", error: true); return; }
+
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Choose a character .zip",
                 AllowMultiple = false,
@@ -309,7 +394,10 @@ public sealed class CharacterWindow : Window
     {
         try
         {
-            var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
+            if (storage is null) { Status("Couldn't open the save dialog.", error: true); return; }
+
+            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Export character",
                 SuggestedFileName = entry.DisplayName + ".zip",
@@ -394,50 +482,51 @@ public sealed class CharacterWindow : Window
     // ------------------------------------------------------------------ small modal confirm
     private async Task<bool> ConfirmAsync(string message)
     {
+        if (TopLevel.GetTopLevel(this) is not Window owner) return false;
+
         var tcs = new TaskCompletionSource<bool>();
-        var dlg = new Window
+        var dlg = new FrostedWindow("Delete character?")
         {
-            Title = "Confirm",
-            Width = 340,
+            Width = 360,
             SizeToContent = SizeToContent.Height,
-            CanResize = false,
-            ShowInTaskbar = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false,
         };
 
-        var ok = new Button { Content = "Delete", MinWidth = 80 };
-        var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 80 };
+        var ok = new Button { Content = "Delete", MinWidth = 88, IsDefault = true };
+        ok.Classes.Add("danger");
+        var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 88 };
+        cancel.Classes.Add("ghost");
         ok.Click += (_, _) => { tcs.TrySetResult(true); dlg.Close(); };
         cancel.Click += (_, _) => { tcs.TrySetResult(false); dlg.Close(); };
         dlg.Closed += (_, _) => tcs.TrySetResult(false); // X / Esc => no
 
+        var text = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap };
+        text.Classes.Add("rowLabel");
+
         var buttons = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Spacing = 8,
+            Spacing = 10,
             HorizontalAlignment = HorizontalAlignment.Right,
             Children = { cancel, ok },
         };
-        dlg.Content = new Border
-        {
-            Padding = new Thickness(16),
-            Child = new StackPanel
-            {
-                Spacing = 14,
-                Children = { new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap }, buttons },
-            },
-        };
 
-        await dlg.ShowDialog(this);
+        var body = new StackPanel
+        {
+            Margin = new Thickness(20, 6, 20, 18),
+            Spacing = 18,
+            Children = { text, buttons },
+        };
+        dlg.SetDialogBody(body);
+
+        await dlg.ShowDialog(owner);
         return await tcs.Task;
     }
 
     private void Status(string message, bool error = false)
     {
         _status.Text = message;
-        if (error)
-            _status.Foreground = new SolidColorBrush(Color.FromRgb(220, 80, 80));
-        else
-            _status.ClearValue(TextBlock.ForegroundProperty); // revert to the theme default
+        _status.Foreground = error ? FrostTheme.StatusError : FrostTheme.TextSecondary;
     }
 }

@@ -1,8 +1,233 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MaplePet.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
+  <!--
+    The config UI uses a "frosted glass" look: acrylic-blur windows, a dark teal surface, and a
+    bright teal accent. Re-pointing Fluent's SystemAccentColor* makes themed controls (ToggleSwitch,
+    NumericUpDown spinners, focus rings, selection) pick up the same teal automatically. The palette
+    here is mirrored by Views/FrostTheme.cs for the code-behind that draws cards/chrome/icons — keep
+    the two in sync. The pet overlay window is unaffected (it is transparent and custom-drawn).
+  -->
+  <Application.Resources>
+    <Color x:Key="SystemAccentColor">#FF20C9C2</Color>
+    <Color x:Key="SystemAccentColorDark1">#FF1AACA6</Color>
+    <Color x:Key="SystemAccentColorDark2">#FF15918C</Color>
+    <Color x:Key="SystemAccentColorDark3">#FF116E6A</Color>
+    <Color x:Key="SystemAccentColorLight1">#FF45D6D0</Color>
+    <Color x:Key="SystemAccentColorLight2">#FF6FE0DB</Color>
+    <Color x:Key="SystemAccentColorLight3">#FF99EAE6</Color>
+  </Application.Resources>
+
   <Application.Styles>
     <FluentTheme />
+
+    <!-- ============================ custom window chrome ============================ -->
+    <Style Selector="TextBlock.windowTitle">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#EAF2F2" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The titlebar close button: ghostly until hovered, then a Windows-style red. -->
+    <Style Selector="Button.chromeClose">
+      <Setter Property="Width" Value="46" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Foreground" Value="#9FB0B5" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.chromeClose /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.chromeClose:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#E0484A" />
+      <!-- Foreground must be set on the content presenter: Fluent's template sets the hover/pressed
+           foreground there directly, which beats a value inherited from the Button. -->
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.chromeClose:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#C13C3E" />
+    </Style>
+
+    <!-- ============================ section + row typography ============================ -->
+    <Style Selector="TextBlock.sectionHeader">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="#54CFC9" />
+      <Setter Property="Margin" Value="2,0,0,7" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="#8AA0A5" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.rowLabel">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="#EAF2F2" />
+    </Style>
+
+    <!-- a 1px translucent divider between sections -->
+    <Style Selector="Border.hairline">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="#1EFFFFFF" />
+      <Setter Property="Margin" Value="0,12" />
+    </Style>
+
+    <!-- ============================ buttons ============================ -->
+    <Style Selector="Button.accent">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="#04201F" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="16,7" />
+    </Style>
+    <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#20C9C2" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#45D6D0" />
+      <Setter Property="Foreground" Value="#04201F" />
+    </Style>
+    <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#15918C" />
+      <Setter Property="Foreground" Value="#04201F" />
+    </Style>
+
+    <Style Selector="Button.danger">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="16,7" />
+    </Style>
+    <Style Selector="Button.danger /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#E0484A" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#EA5C5E" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#C13C3E" />
+    </Style>
+
+    <Style Selector="Button.ghost">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Foreground" Value="#E7EFEF" />
+      <Setter Property="Padding" Value="16,7" />
+    </Style>
+    <Style Selector="Button.ghost /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1FFFFFFF" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2EFFFFFF" />
+    </Style>
+    <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#16FFFFFF" />
+    </Style>
+
+    <!-- a text-style "open this external link" button -->
+    <Style Selector="Button.link">
+      <Setter Property="Foreground" Value="#45D6D0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="9,5" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Button.link /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1820C9C2" />
+      <Setter Property="Foreground" Value="#6FE0DB" />
+    </Style>
+    <Style Selector="Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#2620C9C2" />
+    </Style>
+
+    <!-- ============================ tab bar (ConfigWindow) ============================ -->
+    <Style Selector="Button.tab">
+      <Setter Property="Foreground" Value="#8AA0A5" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="16,11" />
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Button.tab /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0,0,0,2" />
+    </Style>
+    <Style Selector="Button.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#14FFFFFF" />
+      <Setter Property="Foreground" Value="#EAF2F2" />
+    </Style>
+    <Style Selector="Button.tab.tabActive">
+      <Setter Property="Foreground" Value="#EAF2F2" />
+    </Style>
+    <Style Selector="Button.tab.tabActive /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="#20C9C2" />
+    </Style>
+
+    <!-- ============================ character cards ============================ -->
+    <Style Selector="Border.charCard">
+      <Setter Property="Background" Value="#14FFFFFF" />
+      <Setter Property="BorderBrush" Value="#1FFFFFFF" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.13" />
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.13" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.13" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.charCard:pointerover">
+      <Setter Property="Background" Value="#26FFFFFF" />
+      <Setter Property="BorderBrush" Value="#5520C9C2" />
+      <Setter Property="RenderTransform" Value="scale(1.04)" />
+    </Style>
+    <Style Selector="Border.charCard.selected">
+      <Setter Property="Background" Value="#2620C9C2" />
+      <Setter Property="BorderBrush" Value="#20C9C2" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="Border.charCard.selected:pointerover">
+      <Setter Property="RenderTransform" Value="scale(1.04)" />
+    </Style>
+
+    <!-- the trailing "import a character" card -->
+    <Style Selector="Border.addCard">
+      <Setter Property="Background" Value="#0AFFFFFF" />
+      <Setter Property="BorderBrush" Value="#2820C9C2" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.13" />
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.13" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.13" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.addCard:pointerover">
+      <Setter Property="Background" Value="#1820C9C2" />
+      <Setter Property="BorderBrush" Value="#6620C9C2" />
+      <Setter Property="RenderTransform" Value="scale(1.04)" />
+    </Style>
+
+    <!-- ============================ inputs ============================ -->
+    <Style Selector="NumericUpDown">
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ScrollViewer">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
   </Application.Styles>
 </Application>
