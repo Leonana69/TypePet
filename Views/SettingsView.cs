@@ -18,8 +18,8 @@ namespace MaplePet.Views;
 public sealed class SettingsView : UserControl
 {
     private readonly Settings _cfg;
-    private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll;
-    private readonly ToggleSwitch _overlay, _startup;
+    private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort;
+    private readonly ToggleSwitch _overlay, _startup, _mcp;
     private bool _ready; // suppress change handlers while the initial values are being set
 
     public SettingsView(Settings cfg)
@@ -52,6 +52,15 @@ public sealed class SettingsView : UserControl
             cfg.WorldPollHz, 1, 60, 1, out _poll));
 
         rows.Children.Add(Divider());
+        rows.Children.Add(Section("CONTROL API · TAKES EFFECT NEXT LAUNCH"));
+        _mcp = Toggle();
+        _mcp.IsChecked = cfg.EnableMcpServer;
+        rows.Children.Add(ToggleRow("LLM control server (MCP)",
+            "Expose the pet on a local MCP server so an LLM can drive it", _mcp));
+        rows.Children.Add(NumberRow("Server port", "localhost port the MCP server listens on",
+            cfg.McpPort, 1, 65535, 1, out _mcpPort));
+
+        rows.Children.Add(Divider());
         rows.Children.Add(Section("SYSTEM"));
         _startup = Toggle();
         _startup.IsChecked = StartupRegistration.IsEnabled();
@@ -74,9 +83,11 @@ public sealed class SettingsView : UserControl
         // Wire change handlers only now that initial values are in place, so populating the controls
         // doesn't trigger a (redundant) write.
         _ready = true;
-        foreach (var n in new[] { _jump, _roam, _walk, _climb, _gravity, _fps, _poll })
+        foreach (var n in new[] { _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort })
             n.ValueChanged += (_, _) => ApplyLive();
         _overlay.IsCheckedChanged += (_, _) => ApplyLive();
+        _mcp.IsCheckedChanged += (_, _) => { _mcpPort.IsEnabled = _mcp.IsChecked == true; ApplyLive(); };
+        _mcpPort.IsEnabled = _mcp.IsChecked == true; // the port only matters when the server is on
         _startup.IsCheckedChanged += (_, _) => { if (_ready) ApplyStartup(); };
     }
 
@@ -94,6 +105,8 @@ public sealed class SettingsView : UserControl
         _cfg.TargetFps = (int)D(_fps, _cfg.TargetFps);
         _cfg.WorldPollHz = D(_poll, _cfg.WorldPollHz);
         _cfg.ShowOverlay = _overlay.IsChecked ?? _cfg.ShowOverlay;
+        _cfg.EnableMcpServer = _mcp.IsChecked ?? _cfg.EnableMcpServer;
+        _cfg.McpPort = (int)D(_mcpPort, _cfg.McpPort);
         _cfg.Save();
     }
 

@@ -226,6 +226,22 @@
     <Style Selector="NumericUpDown">
       <Setter Property="CornerRadius" Value="8" />
     </Style>
+    <!-- Round the inner text field's LEFT corners to match the 8px outer radius (the spinner buttons
+         own the right side). The Fluent NumericUpDown template doesn't flow CornerRadius to
+         PART_TextBox, so without this the field's own tighter default radius shows through on
+         :pointerover and the corners appear to change when hovered. -->
+    <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
+      <Setter Property="CornerRadius" Value="8,0,0,8" />
+    </Style>
+    <!-- Round the down (decrease) spinner button's RIGHT corners so its dark background follows the
+         rounded border instead of poking a square corner past it. It's the right-most button; the up
+         button sits to its left, away from the rounded corners, so it needs no rounding. The fill is
+         drawn by the button's PART_ContentPresenter, whose CornerRadius the Fluent spinner-button
+         theme never sets, so it must be rounded directly (rounding the RepeatButton alone does
+         nothing — the content presenter doesn't inherit it). -->
+    <Style Selector="RepeatButton#PART_DecreaseButton /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="CornerRadius" Value="0,8,8,0" />
+    </Style>
     <Style Selector="ScrollViewer">
       <Setter Property="Background" Value="Transparent" />
     </Style>
