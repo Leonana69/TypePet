@@ -37,6 +37,9 @@ public sealed class PetController
     private const double DropClearance = 2;    // sink below the source platform before a down-jump
     private const double LadderJumpRise = 70;  // how high the jump-onto-a-ladder arc rises to grab
     private const double MinLadderJump = 16;   // below this climb, just step onto the rope (no arc)
+    private const double PanicMinSeconds = 0.10; // dragged-in-air panic: shortest hold before the next random turn
+    private const double PanicMaxSeconds = 0.32; // ...and the longest, so the flailing looks erratic, not metronomic
+    private const double PanicFlipChance = 0.75; // odds each turn actually flips facing (vs. re-picking the same way)
 
     public Vec2 Pos;          // top-left, logical px
     public Vec2 Size;         // width/height, logical px
@@ -63,6 +66,7 @@ public sealed class PetController
     private bool _spawned;
     private double _idleTimer;
     private bool _standAfterLanding; // after a drag-release, stand where it lands
+    private double _panicTimer;       // countdown to the next random turn while being dragged ("panic" flailing)
 
     // Rope execution
     private double _ropeX;
@@ -90,8 +94,11 @@ public sealed class PetController
 
     public void Update(World world, double dt)
     {
+        // Held by the cursor: DragTo drives position; here the pet just flails in panic (rapidly
+        // turning left/right). Run this before the empty-world guard so it flails even mid-screen
+        // with no platforms in view, and skip all navigation/physics while held.
+        if (IsDragging) { UpdatePanic(dt); return; }
         if (world.Platforms.Count == 0) return;
-        if (IsDragging) return; // position is driven by the cursor while held
 
         EnsureSpawn(world);
 
@@ -142,6 +149,21 @@ public sealed class PetController
         State = PetState.Jump;
         Vel = default;
         _grabbingLadder = false;
+        _panicTimer = 0; // startle-turn on the very next tick
+    }
+
+    /// <summary>
+    /// While held in the air, the pet flails — turning left/right at random short intervals so it
+    /// looks panicked. Both the timing and whether a turn actually flips are randomized, so the motion
+    /// reads as frantic rather than a mechanical metronome. Only <see cref="Facing"/> changes here; the
+    /// cursor still drives position via <see cref="DragTo"/>.
+    /// </summary>
+    private void UpdatePanic(double dt)
+    {
+        _panicTimer -= dt;
+        if (_panicTimer > 0) return;
+        if (_rng.NextDouble() < PanicFlipChance) Facing = -Facing;
+        _panicTimer = PanicMinSeconds + _rng.NextDouble() * (PanicMaxSeconds - PanicMinSeconds);
     }
 
     public void DragTo(Vec2 center)
