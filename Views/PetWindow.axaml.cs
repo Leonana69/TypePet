@@ -74,9 +74,11 @@ public partial class PetWindow : Window
         ApplyClickThrough();
 
         _pet = new PetController(_cfg, new Vec2(30, 38));
-        // Keep the pet clear of the screen bottom (it's drawn tall, above its feet): don't roam
-        // onto platforms lower than 150px above the bottom edge.
+        // Keep the pet clear of the screen edges (it's drawn tall, above its feet): don't roam
+        // onto platforms within 150px of the bottom edge, nor within 150px of the top (or its
+        // head would be drawn off-screen above).
         _pet.RoamMaxY = Height - 150;
+        _pet.RoamMinY = 150;
 
         // Load the currently selected character (a user import from the store, or the bundled
         // Body+Head default). CharacterLoader falls back to the default if the footage can't be

@@ -62,6 +62,11 @@ public sealed class PetController
     /// +infinity means no limit. The ground stays reachable for spawning/landing regardless.</summary>
     public double RoamMaxY { get; set; } = double.PositiveInfinity;
 
+    /// <summary>The highest feet-Y (logical px) the pet will roam to: targets on platforms above this
+    /// are skipped, keeping the (tall) pet's head clear of the screen top. Set from the overlay;
+    /// -infinity means no limit.</summary>
+    public double RoamMinY { get; set; } = double.NegativeInfinity;
+
     // Navigation
     private MapGraph? _graph;
     private World? _graphWorld;
@@ -318,13 +323,13 @@ public sealed class PetController
     {
         if (_graph is null) return false;
 
-        // Cap the roam range: skip platforms below RoamMaxY so the pet (which is drawn tall, above
-        // its feet) stays clear of the screen bottom. The ground itself stays in the world for
-        // spawning/landing — this only limits where the pet chooses to wander.
+        // Cap the roam range: skip platforms below RoamMaxY or above RoamMinY so the pet (which is
+        // drawn tall, above its feet) stays clear of the screen bottom and top. The ground itself
+        // stays in the world for spawning/landing — this only limits where the pet chooses to wander.
         var all = _graph.RoamablePlatforms();
         var plats = new List<int>(all.Count);
         foreach (int i in all)
-            if (world.Platforms[i].Y <= RoamMaxY) plats.Add(i);
+            if (world.Platforms[i].Y <= RoamMaxY && world.Platforms[i].Y >= RoamMinY) plats.Add(i);
         if (plats.Count == 0) return false;
 
         for (int attempt = 0; attempt < TargetTries; attempt++)
