@@ -221,10 +221,33 @@ public partial class App : Application
 
     private static readonly string[] IconFonts = { "Segoe Fluent Icons", "Segoe MDL2 Assets" };
 
+    // The dark Fluent menu surface the tray popup paints behind each item (measured: solid #2B2B2B).
+    // The app forces RequestedThemeVariant=Dark, so this is stable regardless of the Windows light/dark
+    // setting. Glyph icons are rendered ONTO this exact colour (see RenderGlyph) so the icon tile is
+    // invisible against the menu.
+    private static readonly Color TrayMenuSurface = Color.FromRgb(0x2B, 0x2B, 0x2B);
+
     /// <summary>Rasterize a Segoe Fluent Icons / MDL2 glyph (by codepoint) into a tinted bitmap for a
     /// native menu item. Returns null when no installed icon font actually contains the glyph, so the
     /// menu item shows no icon rather than a ".notdef" tofu box (Avalonia silently substitutes a
     /// fallback font and renders glyph 0 instead of throwing).</summary>
+    /// <remarks>
+    /// The glyph is drawn on an OPAQUE background (<see cref="TrayMenuSurface"/>), NOT a transparent one,
+    /// and at a SMALL size. Both matter, and were verified in the live tray popup:
+    /// <list type="bullet">
+    /// <item>A small TRANSPARENT glyph bitmap renders an opaque BLACK box behind the glyph — the tray
+    /// popup is a transparent per-pixel-alpha window (Avalonia's TrayPopupRoot) and small
+    /// render-target-derived bitmaps lose their alpha when composited into it. A fully OPAQUE bitmap has
+    /// no alpha to lose, so no box; and because its background is the exact menu colour the tile is
+    /// invisible (only faintly visible under the row's hover highlight).</item>
+    /// <item>Rendering small (≈ the ~16–24px display size) keeps the thin 1px strokes crisp. Rendering
+    /// large and letting the menu downscale heavily thins/breaks them (256px → the ring became
+    /// disconnected arcs; even 96px dropped pixels).</item>
+    /// </list>
+    /// Grayscale text AA (not the default subpixel) avoids the coloured LCD fringing that drawing text on
+    /// an opaque background otherwise produces. The result is baked into an immutable decoded bitmap so
+    /// the menu doesn't hold a live (disposable) render target.
+    /// </remarks>
     private static Bitmap? RenderGlyph(int codepoint, Color color, int size = 32)
     {
         try
@@ -240,13 +263,19 @@ public partial class App : Application
                 size * 0.66,
                 new SolidColorBrush(color));
 
-            var rtb = new RenderTargetBitmap(new PixelSize(size, size), new Vector(96, 96));
+            using var rtb = new RenderTargetBitmap(new PixelSize(size, size), new Vector(96, 96));
             using (var ctx = rtb.CreateDrawingContext())
+            using (ctx.PushRenderOptions(new RenderOptions { TextRenderingMode = TextRenderingMode.Antialias }))
             {
+                ctx.DrawRectangle(new SolidColorBrush(TrayMenuSurface), null, new Avalonia.Rect(0, 0, size, size));
                 var origin = new Point((size - text.Width) / 2, (size - text.Height) / 2);
                 ctx.DrawText(text, origin);
             }
-            return rtb;
+
+            using var ms = new MemoryStream();
+            rtb.Save(ms);
+            ms.Position = 0;
+            return new Bitmap(ms);
         }
         catch
         {
