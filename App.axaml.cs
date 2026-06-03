@@ -21,9 +21,8 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
 
-    // Tray-menu items we keep refreshing as state changes elsewhere.
-    private NativeMenuItem? _wearingItem; // "MaplePet — <character>" header
-    private NativeMenuItem? _overlayItem; // live "Show debug overlay" checkbox
+    // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
+    private NativeMenuItem? _wearingItem;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -67,7 +66,6 @@ public partial class App : Application
     // Stored as ints so no Private-Use-Area chars live in the source file.
     private const int GlyphContact = 0xE77B;  // person bust
     private const int GlyphSettings = 0xE713;  // gear
-    private const int GlyphView = 0xE7B3;      // eye
     private const int GlyphPower = 0xE7E8;      // power button
 
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
@@ -87,14 +85,6 @@ public partial class App : Application
         var settingsItem = new NativeMenuItem("Settings…") { Icon = RenderGlyph(GlyphSettings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
-        _overlayItem = new NativeMenuItem("Show debug overlay")
-        {
-            Icon = RenderGlyph(GlyphView, accent),
-            ToggleType = NativeMenuItemToggleType.CheckBox,
-            IsChecked = _settings?.ShowOverlay ?? false,
-        };
-        _overlayItem.Click += (_, _) => ToggleOverlay();
-
         var exitItem = new NativeMenuItem("Exit") { Icon = RenderGlyph(GlyphPower, FrostTheme.Exit) };
         exitItem.Click += (_, _) => desktop.Shutdown();
 
@@ -103,18 +93,14 @@ public partial class App : Application
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(charactersItem);
         menu.Items.Add(settingsItem);
-        menu.Items.Add(_overlayItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
 
-        // Belt-and-suspenders resync when the menu opens. NOTE: the Win32 tray backend never raises
-        // NativeMenu.Opening (only macOS does), so on Windows this is a no-op — the authoritative sync
-        // is the explicit pushes in ToggleOverlay (tray->Settings), the SettingsView overlay callback
-        // (Settings->tray), and ApplyCharacter / the picker's onChanged callback (character->header).
+        // Belt-and-suspenders header refresh when the menu opens (a no-op on Windows: the Win32 tray
+        // backend never raises NativeMenu.Opening — only macOS does). The header is also kept current
+        // by ApplyCharacter and the picker's onChanged callback.
         menu.Opening += (_, _) =>
         {
-            if (_settings is not null && _overlayItem is not null)
-                _overlayItem.IsChecked = _settings.ShowOverlay;
             if (_wearingItem is not null)
                 _wearingItem.Header = WearingLabel();
         };
@@ -128,18 +114,6 @@ public partial class App : Application
         };
 
         TrayIcon.SetIcons(this, new TrayIcons { _trayIcon });
-    }
-
-    /// <summary>Flip the debug overlay from the tray. The pet window re-reads ShowOverlay each poll
-    /// tick, so this takes effect within a frame or two without a restart.</summary>
-    private void ToggleOverlay()
-    {
-        if (_settings is null) return;
-        _settings.ShowOverlay = !_settings.ShowOverlay;
-        if (_overlayItem is not null) _overlayItem.IsChecked = _settings.ShowOverlay;
-        _settings.Save();
-        // Keep an open Settings tab's switch in sync, else its next edit writes the stale value back.
-        _configWindow?.SettingsView.SetOverlay(_settings.ShowOverlay);
     }
 
     private string WearingLabel()
@@ -162,10 +136,7 @@ public partial class App : Application
             return;
         }
 
-        var settingsView = new SettingsView(_settings, b =>
-        {
-            if (_overlayItem is not null) _overlayItem.IsChecked = b; // mirror into the tray checkbox
-        });
+        var settingsView = new SettingsView(_settings);
         var charactersView = new CharacterView(_store, _settings, ApplyCharacter, () =>
         {
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename

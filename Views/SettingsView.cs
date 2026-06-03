@@ -18,17 +18,13 @@ namespace MaplePet.Views;
 public sealed class SettingsView : UserControl
 {
     private readonly Settings _cfg;
-    private readonly Action<bool>? _onOverlayChanged;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll;
     private readonly ToggleSwitch _overlay, _startup;
     private bool _ready; // suppress change handlers while the initial values are being set
 
-    /// <param name="onOverlayChanged">Notified when the overlay toggle changes here, so the tray's
-    /// checkbox can be kept in sync (the two share one <see cref="Settings"/> instance).</param>
-    public SettingsView(Settings cfg, Action<bool>? onOverlayChanged = null)
+    public SettingsView(Settings cfg)
     {
         _cfg = cfg;
-        _onOverlayChanged = onOverlayChanged;
 
         var rows = new StackPanel
         {
@@ -76,23 +72,8 @@ public sealed class SettingsView : UserControl
         _ready = true;
         foreach (var n in new[] { _jump, _roam, _walk, _climb, _gravity, _fps, _poll })
             n.ValueChanged += (_, _) => ApplyLive();
-        _overlay.IsCheckedChanged += (_, _) =>
-        {
-            ApplyLive();
-            if (_ready) _onOverlayChanged?.Invoke(_overlay.IsChecked ?? false);
-        };
+        _overlay.IsCheckedChanged += (_, _) => ApplyLive();
         _startup.IsCheckedChanged += (_, _) => { if (_ready) ApplyStartup(); };
-    }
-
-    /// <summary>Push an externally-changed overlay value (e.g. toggled from the tray) into the switch
-    /// without triggering a write-back, so an open Settings tab doesn't show — or persist — a stale
-    /// position the next time any field is edited.</summary>
-    public void SetOverlay(bool value)
-    {
-        bool prev = _ready;
-        _ready = false; // suppress ApplyLive / the change notification
-        _overlay.IsChecked = value;
-        _ready = prev;
     }
 
     /// <summary>Push every control's value into the shared <see cref="Settings"/> and persist it.</summary>

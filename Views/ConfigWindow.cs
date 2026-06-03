@@ -56,9 +56,6 @@ public sealed class ConfigWindow : FrostedWindow
         Select(ConfigTab.Characters);
     }
 
-    /// <summary>The Settings tab — exposed so the app can push tray-driven overlay changes into it.</summary>
-    public SettingsView SettingsView => _settingsView;
-
     /// <summary>Show the given tab.</summary>
     public void Select(ConfigTab tab)
     {
