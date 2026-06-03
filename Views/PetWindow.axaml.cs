@@ -20,6 +20,7 @@ public partial class PetWindow : Window
     private readonly CharacterStore _store;
     private readonly GameLoop _loop;
     private DispatcherTimer? _pollTimer;
+    private DispatcherTimer? _topmostTimer; // re-asserts the overlay's topmost z-order (see ApplyClickThrough)
 
     private IWindowTracker? _tracker;
     private WindowsWindowTracker? _winTracker;
@@ -88,6 +89,7 @@ public partial class PetWindow : Window
     {
         _loop.Stop();
         _pollTimer?.Stop();
+        _topmostTimer?.Stop();
         _clickBlocker?.Dispose();
         _sprites?.Dispose();
         base.OnClosed(e);
@@ -169,6 +171,15 @@ public partial class PetWindow : Window
             // also click the window behind it.
             _clickBlocker = new MouseClickBlocker();
             _clickBlocker.Install();
+
+            // Keep the pet above other topmost windows. Avalonia sets WS_EX_TOPMOST once, but
+            // activating a topmost app (e.g. a borderless-fullscreen game) raises it above us within
+            // the topmost band, and this overlay never takes focus to recover. Re-assert a couple of
+            // times a second; it's invisible (no move/size/activate) and a no-op under true exclusive
+            // fullscreen, where DWM isn't compositing the desktop to that display anyway.
+            _topmostTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            _topmostTimer.Tick += (_, _) => WindowsInterop.RaiseToTop(_hwnd);
+            _topmostTimer.Start();
         }
     }
 

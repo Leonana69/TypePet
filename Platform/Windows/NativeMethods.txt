@@ -5,6 +5,7 @@ GetWindowRect
 GetWindowTextLength
 GetWindowLongPtr
 SetWindowLongPtr
+SetWindowPos
 FindWindow
 GetCursorPos
 GetAsyncKeyState
