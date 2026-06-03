@@ -60,6 +60,10 @@ public sealed class SettingsView : UserControl
         _overlay.IsChecked = cfg.ShowOverlay;
         rows.Children.Add(ToggleRow("Debug overlay", "Draw window edges, platforms & the pet's path", _overlay));
 
+        rows.Children.Add(Divider());
+        rows.Children.Add(Section("ABOUT"));
+        rows.Children.Add(Row(AppInfo.Name, "A desktop pet that walks along your taskbar", VersionValue()));
+
         Content = new ScrollViewer
         {
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -144,6 +148,14 @@ public sealed class SettingsView : UserControl
 
     private static Control ToggleRow(string label, string caption, ToggleSwitch toggle) =>
         Row(label, caption, toggle);
+
+    /// <summary>The right-hand "v1.0.0" value for the About row (version comes from <see cref="AppInfo"/>).</summary>
+    private static Control VersionValue()
+    {
+        var t = new TextBlock { Text = $"v{AppInfo.Version}", VerticalAlignment = VerticalAlignment.Center };
+        t.Classes.Add("rowLabel");
+        return t;
+    }
 
     private static Control Row(string label, string caption, Control control)
     {

@@ -19,6 +19,19 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <!-- App version — the single source of truth. Bump these on release (keep the three in step) and
+       add a CHANGELOG.md entry. <Version> drives InformationalVersion, which AppInfo reads at runtime
+       to show "v1.0.0" in the Settings "About" row and the tray tooltip; AssemblyVersion/FileVersion
+       and the metadata below feed the exe's Win32 file-properties (Details tab). -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>MaplePet</Product>
+    <Description>A desktop pet that walks along your taskbar.</Description>
+    <Copyright>Copyright © 2026</Copyright>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Bundle the built-in footage (DefaultCharacter, footage), but NOT the user character store
          (read from disk at runtime) or loose import/export zips — embedding those would bloat the

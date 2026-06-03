@@ -108,7 +108,7 @@ public partial class App : Application
         _trayIcon = new TrayIcon
         {
             Icon = AppIcon.WindowIcon(),
-            ToolTipText = "MaplePet",
+            ToolTipText = AppInfo.NameAndVersion,
             Menu = menu,
             IsVisible = true,
         };

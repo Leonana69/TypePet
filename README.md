@@ -1,5 +1,7 @@
 # MaplePet
 
+**Version 1.0.0** · see [`CHANGELOG.md`](CHANGELOG.md)
+
 A desktop pet for Windows that lives on a transparent, click-through, always-on-top
 overlay and walks along your taskbar. The "level geometry" (platforms + ladders) is
 derived in real time from the windows currently open on your desktop.
