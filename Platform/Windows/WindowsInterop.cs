@@ -8,6 +8,14 @@ namespace MaplePet.Platform.Windows;
 public static class WindowsInterop
 {
     private const int VK_LBUTTON = 0x01;
+    private const int VK_SHIFT = 0x10;
+    private const int VK_CONTROL = 0x11;
+    private const int VK_MENU = 0x12; // Alt
+    private const int VK_LWIN = 0x5B;
+    private const int VK_RWIN = 0x5C;
+    private const int VK_RCONTROL = 0xA3;
+    private const int VK_LMENU = 0xA4; // left Alt
+    private const int VK_RMENU = 0xA5; // right Alt (AltGr on layouts that have it)
 
     // The special "insert above all non-topmost, at the top of the topmost band" HWND value
     // (#define HWND_TOPMOST ((HWND)-1)). Constructed the same way the rest of this file casts
@@ -58,4 +66,25 @@ public static class WindowsInterop
 
     /// <summary>True while the left mouse button is physically down (polled globally).</summary>
     public static bool IsLeftButtonDown() => (PInvoke.GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+
+    // Physical modifier-key state, polled globally — used by the hotkey hook to confirm the chord's
+    // modifiers. Same high-bit test as IsLeftButtonDown.
+    public static bool IsCtrlDown() => Down(VK_CONTROL);
+    public static bool IsAltDown() => Down(VK_MENU);
+    public static bool IsShiftDown() => Down(VK_SHIFT);
+    public static bool IsWinDown() => Down(VK_LWIN) || Down(VK_RWIN);
+    private static bool Down(int vk) => (PInvoke.GetAsyncKeyState(vk) & 0x8000) != 0;
+
+    /// <summary>True when the down modifiers look like AltGr (delivered as LeftCtrl + RightAlt on
+    /// international layouts) rather than a deliberate Ctrl+Alt: RightAlt is down with no LeftAlt and
+    /// no RightCtrl. A Ctrl+Alt hotkey checks this so it doesn't fire on — and eat — AltGr characters.</summary>
+    public static bool LooksLikeAltGr() => Down(VK_RMENU) && !Down(VK_LMENU) && !Down(VK_RCONTROL);
+
+    /// <summary>The system double-click interval in milliseconds (GetDoubleClickTime), used to
+    /// synthesize a double-click from the global mouse poll. Falls back to 500ms.</summary>
+    public static int DoubleClickTimeMs()
+    {
+        uint t = PInvoke.GetDoubleClickTime();
+        return t > 0 ? (int)t : 500;
+    }
 }

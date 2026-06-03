@@ -20,6 +20,7 @@ public partial class App : Application
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
+    private SayBarWindow? _sayBar;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
     // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
@@ -58,6 +59,9 @@ public partial class App : Application
             _petWindow = new PetWindow(_settings, _store);
             desktop.MainWindow = _petWindow;
             SetupTrayIcon(desktop);
+
+            // Pop up the floating say-input bar when the pet is double-clicked or the global hotkey fires.
+            _petWindow.SayInputRequested += ShowSayInput;
 
             // Optionally expose the pet over a local MCP tool server so an LLM/agent can drive it.
             // Started once the control facade is live (end of PetWindow.OnOpened); off by default.
@@ -150,7 +154,13 @@ public partial class App : Application
             return;
         }
 
-        var settingsView = new SettingsView(_settings);
+        // (true) while the user is capturing a hotkey -> suspend the live hook so it doesn't swallow the
+        // very chord being captured; (false) when done -> re-arm with the (possibly new) saved gesture.
+        var settingsView = new SettingsView(_settings, capturing =>
+        {
+            if (capturing) _petWindow?.SuspendSayHotkey();
+            else _petWindow?.SetSayHotkey(_settings.SayInputHotkey);
+        });
         var charactersView = new CharacterView(_store, _settings, ApplyCharacter, () =>
         {
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename
@@ -160,6 +170,37 @@ public partial class App : Application
         _configWindow.Closed += (_, _) => _configWindow = null;
         _configWindow.Show();
         _configWindow.Activate();
+    }
+
+    /// <summary>Open (or re-focus) the floating say-input bar; what the user types is spoken by the
+    /// pet via the control API. Invoked by a pet double-click or the global hotkey.</summary>
+    private void ShowSayInput()
+    {
+        if (_petWindow is null) return;
+        if (_sayBar is not null)
+        {
+            _sayBar.Activate();
+            _sayBar.FocusInput();
+            return;
+        }
+
+        _petWindow.SuppressOverlayTopmost = true; // keep the bar above the (topmost) pet overlay while open
+        _sayBar = new SayBarWindow(text => _petWindow?.Control?.Say(text));
+        _sayBar.Closed += (_, _) =>
+        {
+            _sayBar = null;
+            if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
+        };
+        _sayBar.Show();
+        _sayBar.Activate();
+
+        // The double-click that summons the bar is swallowed by the mouse hook, so Windows can refuse
+        // the initial foreground activation; re-assert focus once the window exists.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _sayBar?.Activate();
+            _sayBar?.FocusInput();
+        }, Avalonia.Threading.DispatcherPriority.Input);
     }
 
     /// <summary>Make the pet wear the given character and remember the choice. Invoked by the

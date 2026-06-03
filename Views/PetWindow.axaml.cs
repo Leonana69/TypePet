@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using MaplePet.Api;
 using MaplePet.Engine;
@@ -49,6 +50,25 @@ public partial class PetWindow : Window
     private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
     private readonly Random _rng = new(); // picks the per-drag face expression
     private MouseClickBlocker? _clickBlocker; // eats the grab click so it doesn't hit the window behind
+    private HotkeyListener? _hotkey;          // global keyboard hook that opens the say-input bar
+
+    // Click/double-click synthesis on the (click-through) pet — derived from the polled drag edges,
+    // since the overlay never receives Avalonia pointer events.
+    private long _downTickMs;     // when the current press on the pet began
+    private Vec2 _downCursor;     // cursor at that press, to tell an in-place click from a drag
+    private bool _movedThisPress; // the pointer ever moved past the click threshold during this press
+    private long _lastClickUpMs;  // when the previous in-place click released (for double-click pairing)
+    private Vec2 _lastClickPos;
+    private const double ClickMaxMoveLogicalPx = 6; // a press+release that moves less than this is a "click"
+    private const long ClickMaxHoldMs = 600;        // ...and is released within this long (else it's a hold)
+
+    /// <summary>Raised (on the UI thread) when the user asks to open the say-input bar — by
+    /// double-clicking the pet or pressing the configured global hotkey.</summary>
+    public event Action? SayInputRequested;
+
+    /// <summary>While true, the overlay stops re-asserting its topmost z-order, so a focusable window
+    /// opened above it (the say-input bar) isn't pushed behind the pet. Set by the app.</summary>
+    public bool SuppressOverlayTopmost { get; set; }
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
     // app always constructs it via the overload below (with the shared instances).
@@ -125,6 +145,7 @@ public partial class PetWindow : Window
         _pollTimer?.Stop();
         _topmostTimer?.Stop();
         _clickBlocker?.Dispose();
+        _hotkey?.Dispose();
         _sprites?.Dispose();
         base.OnClosed(e);
     }
@@ -207,13 +228,21 @@ public partial class PetWindow : Window
             _clickBlocker = new MouseClickBlocker();
             _clickBlocker.Install();
 
+            // Global hotkey that pops up the say-input bar from anywhere. Installed on the UI thread
+            // next to the mouse hook so its callback is delivered here too; the configured chord comes
+            // from settings (and is re-applied live via SetSayHotkey).
+            _hotkey = new HotkeyListener();
+            _hotkey.Triggered += RequestSayInput;
+            _hotkey.Install();
+            SetSayHotkey(_cfg.SayInputHotkey);
+
             // Keep the pet above other topmost windows. Avalonia sets WS_EX_TOPMOST once, but
             // activating a topmost app (e.g. a borderless-fullscreen game) raises it above us within
             // the topmost band, and this overlay never takes focus to recover. Re-assert a couple of
             // times a second; it's invisible (no move/size/activate) and a no-op under true exclusive
             // fullscreen, where DWM isn't compositing the desktop to that display anyway.
             _topmostTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-            _topmostTimer.Tick += (_, _) => WindowsInterop.RaiseToTop(_hwnd);
+            _topmostTimer.Tick += (_, _) => { if (!SuppressOverlayTopmost) WindowsInterop.RaiseToTop(_hwnd); };
             _topmostTimer.Start();
         }
     }
@@ -235,21 +264,101 @@ public partial class PetWindow : Window
         bool overPet = TryCursorLogical(out var cursor) && OverPet(cursor);
 
         if (!_pet.IsDragging && lmb && !_lmbPrev && overPet)
+        {
+            _downTickMs = Environment.TickCount64; // press time + point, to tell an in-place click from a drag
+            _downCursor = cursor;
+            _movedThisPress = false;
             _pet.BeginDrag();
+        }
 
         if (_pet.IsDragging)
         {
             if (lmb)
             {
-                if (TryCursorLogical(out var c)) _pet.DragTo(c);
+                if (TryCursorLogical(out var c))
+                {
+                    if (Dist(c, _downCursor) > ClickMaxMoveLogicalPx) _movedThisPress = true;
+                    _pet.DragTo(c);
+                }
             }
             else
             {
+                if (TryCursorLogical(out var up)) DetectDoubleClick(up);
                 _pet.EndDrag();
             }
         }
         _lmbPrev = lmb;
     }
+
+    /// <summary>
+    /// On releasing the pet, decide whether it was an in-place click (barely moved) and, if a second
+    /// such click lands within the OS double-click window, fire <see cref="SayInputRequested"/>. The
+    /// overlay is click-through so this is the only signal we have — a drag (moved past the threshold)
+    /// resets the pairing so it never counts as a click.
+    /// </summary>
+    private void DetectDoubleClick(Vec2 up)
+    {
+        long now = Environment.TickCount64;
+        // A click is a press+release that never moved past the threshold and wasn't a long hold;
+        // a drag (moved, e.g. one that loops back near its start) or a deliberate hold is not.
+        bool isClick = !_movedThisPress
+            && Dist(up, _downCursor) <= ClickMaxMoveLogicalPx
+            && now - _downTickMs <= ClickMaxHoldMs;
+        if (!isClick)
+        {
+            _lastClickUpMs = 0;
+            return;
+        }
+
+        if (_lastClickUpMs != 0
+            && now - _lastClickUpMs <= WindowsInterop.DoubleClickTimeMs()
+            && Dist(up, _lastClickPos) <= ClickMaxMoveLogicalPx * 2)
+        {
+            _lastClickUpMs = 0; // consume the pair
+            RequestSayInput();
+        }
+        else
+        {
+            _lastClickUpMs = now; // first click of a potential pair
+            _lastClickPos = up;
+        }
+    }
+
+    private static double Dist(Vec2 a, Vec2 b)
+    {
+        double dx = a.X - b.X, dy = a.Y - b.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    /// <summary>Apply a hotkey gesture (e.g. "Ctrl+Alt+Space") to the global listener. Called on
+    /// startup and whenever the user edits it in Settings. A malformed or modifier-less gesture
+    /// disables the hotkey rather than binding a bare key system-wide.</summary>
+    public void SetSayHotkey(string gesture)
+    {
+        if (_hotkey is null) return; // not on Windows, or the hook isn't installed
+        if (HotkeyGesture.IsBindable(gesture)
+            && HotkeyGesture.TryParse(gesture, out var mods, out var key)
+            && HotkeyGesture.KeyToVirtualKey(key) is int vk)
+        {
+            _hotkey.SetHotkey(vk,
+                mods.HasFlag(KeyModifiers.Control), mods.HasFlag(KeyModifiers.Alt),
+                mods.HasFlag(KeyModifiers.Shift), mods.HasFlag(KeyModifiers.Meta));
+        }
+        else
+        {
+            _hotkey.Disable(); // malformed or modifier-less — don't hijack a bare key globally
+        }
+    }
+
+    /// <summary>Temporarily disable the global hotkey (used while the user is capturing a new chord in
+    /// Settings, so the live hook doesn't swallow the very keys being captured). Re-armed by a
+    /// subsequent <see cref="SetSayHotkey"/>.</summary>
+    public void SuspendSayHotkey() => _hotkey?.Disable();
+
+    /// <summary>Ask the app to open the say-input bar. Posted to the dispatcher so it never runs inline
+    /// on the keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
+    private void RequestSayInput()
+        => Dispatcher.UIThread.Post(() => SayInputRequested?.Invoke());
 
     private bool TryCursorLogical(out Vec2 logical)
     {

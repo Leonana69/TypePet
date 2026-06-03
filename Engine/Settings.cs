@@ -25,6 +25,10 @@ public sealed class Settings
     public bool EnableMcpServer { get; set; } = false; // expose the pet over a local MCP tool server (LLM control)
     public int McpPort { get; set; } = 8765;           // localhost port the MCP server listens on when enabled
 
+    // Global shortcut that pops up the floating "say" input box (you can also double-click the pet).
+    // A compact gesture string like "Ctrl+Alt+Space"; parsed at the registration site, not here.
+    public string SayInputHotkey { get; set; } = "Ctrl+Alt+Space";
+
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
 
@@ -91,6 +95,7 @@ public sealed class Settings
         McpPort = McpPort is >= 1 and <= 65535 ? McpPort : d.McpPort;
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
+        if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
 
         static double Positive(double value, double fallback) =>
             double.IsFinite(value) && value > 0 ? value : fallback;

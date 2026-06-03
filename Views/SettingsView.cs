@@ -2,6 +2,8 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using MaplePet.Engine;
 using MaplePet.Platform;
@@ -18,13 +20,20 @@ namespace MaplePet.Views;
 public sealed class SettingsView : UserControl
 {
     private readonly Settings _cfg;
+    // (true)=suspend the live global hotkey while a capture is in progress; (false)=re-arm it afterwards.
+    private readonly Action<bool>? _onHotkeyCapture;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort;
     private readonly ToggleSwitch _overlay, _startup, _mcp;
+    private readonly Button _hotkeyBtn;
+    private string _hotkeyText = "";    // the persisted gesture, mirrored into _cfg by ApplyLive
+    private string _hotkeyBefore = "";  // button text to restore if a capture is cancelled
+    private bool _capturing;            // a key-capture is in progress
     private bool _ready; // suppress change handlers while the initial values are being set
 
-    public SettingsView(Settings cfg)
+    public SettingsView(Settings cfg, Action<bool>? onHotkeyCapture = null)
     {
         _cfg = cfg;
+        _onHotkeyCapture = onHotkeyCapture;
 
         var rows = new StackPanel
         {
@@ -44,6 +53,14 @@ public sealed class SettingsView : UserControl
         rows.Children.Add(NumberRow("Roaming level", "0–100 · how often it wanders when idle",
             cfg.RoamingLevel, 0, 100, 5, out _roam));
         rows.Children.Add(NumberRow("Gravity", "px / second²", cfg.Gravity, 1, 10000, 50, out _gravity));
+
+        rows.Children.Add(Divider());
+        rows.Children.Add(Section("SAY INPUT"));
+        // Show a hand-edited/invalid persisted gesture as unset rather than as a fake-active binding.
+        _hotkeyText = HotkeyGesture.IsBindable(cfg.SayInputHotkey) ? cfg.SayInputHotkey : "";
+        _hotkeyBtn = HotkeyButton(_hotkeyText);
+        rows.Children.Add(Row("Open hotkey",
+            "Global shortcut to pop up the say box · you can also double-click the pet", _hotkeyBtn));
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("ADVANCED · TAKES EFFECT NEXT LAUNCH"));
@@ -107,7 +124,66 @@ public sealed class SettingsView : UserControl
         _cfg.ShowOverlay = _overlay.IsChecked ?? _cfg.ShowOverlay;
         _cfg.EnableMcpServer = _mcp.IsChecked ?? _cfg.EnableMcpServer;
         _cfg.McpPort = (int)D(_mcpPort, _cfg.McpPort);
+        _cfg.SayInputHotkey = _hotkeyText;
         _cfg.Save();
+    }
+
+    // ------------------------------------------------------------------ hotkey capture
+    private Button HotkeyButton(string gesture)
+    {
+        var b = new Button
+        {
+            Content = string.IsNullOrEmpty(gesture) ? "Click to set" : gesture,
+            Width = 124,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        b.Classes.Add("ghost");
+        b.Click += (_, _) => BeginCapture();
+        // Intercept keys (tunnel = preview) while capturing, before the focused button turns
+        // Space/Enter into a click; handledEventsToo so we still see keys others marked handled.
+        b.AddHandler(InputElement.KeyDownEvent, OnCaptureKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
+        b.LostFocus += (_, _) => { if (_capturing) CancelCapture(); };
+        // Detaching (tab switch / window close) mid-capture must also re-arm the suspended hotkey.
+        b.DetachedFromVisualTree += (_, _) => { if (_capturing) CancelCapture(); };
+        return b;
+    }
+
+    private void BeginCapture()
+    {
+        if (_capturing) return;
+        _capturing = true;
+        _onHotkeyCapture?.Invoke(true); // suspend the live hotkey so the chord reaches this capture, not the hook
+        _hotkeyBefore = _hotkeyBtn.Content as string ?? "";
+        _hotkeyBtn.Content = "Press keys…";
+    }
+
+    private void CancelCapture()
+    {
+        _capturing = false;
+        _hotkeyBtn.Content = _hotkeyBefore;
+        _onHotkeyCapture?.Invoke(false); // re-arm the (unchanged) hotkey
+    }
+
+    private void OnCaptureKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (!_capturing) return;
+        e.Handled = true; // swallow everything while capturing so focus/clicks can't escape
+
+        if (e.Key == Key.Escape) { CancelCapture(); return; }
+        if (HotkeyGesture.IsModifierKey(e.Key)) return; // wait for a non-modifier key
+
+        var mods = e.KeyModifiers & (KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Shift | KeyModifiers.Meta);
+        // Require a strong modifier + a mappable key, so we never bind a bare key (which would swallow
+        // that key everywhere) as a global hotkey.
+        bool strong = mods.HasFlag(KeyModifiers.Control) || mods.HasFlag(KeyModifiers.Alt) || mods.HasFlag(KeyModifiers.Meta);
+        if (!strong || HotkeyGesture.KeyToVirtualKey(e.Key) is null) return; // keep listening
+
+        _hotkeyText = HotkeyGesture.Format(mods, e.Key);
+        _hotkeyBtn.Content = _hotkeyText;
+        _capturing = false;
+        ApplyLive();                     // persists _hotkeyText into settings.json
+        _onHotkeyCapture?.Invoke(false); // re-arm the live hotkey with the new chord
     }
 
     /// <summary>Apply the "Start with Windows" toggle to the registry, then re-read so the switch
