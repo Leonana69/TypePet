@@ -1,6 +1,0 @@
-1. Add a character config in the right click menu.
-2. In the character config window, there should be multiple cards showing the currently available characters. Each character should be a subfolder in the @Assets/, for example, @Assets/char_06fe12ab. In side that subfoler, there are `Body`, `Cap`, etc, just like the current footage folder.
-3. The last card in character config window should be the `+`, which allow user to open a zip file (I placed a test one in @Assets/character_footage_all.zip). Then it should load it as a new charcter with a default name `char_xxxxxxx`, user can click in the name to rename it. But the subfolder's name stay as `char_xxxxxxx`, you just save the user custom name in some file inside the subfolder.
-4. When user click different character card, the pet should just change its visual.
-5. User should be able to right click a character card, and there should be `delete` and `export`. Delete is straghtforward. The `export` will create a zip file just like the one we load. The zip file name should be the user custom name or just the default name if user didn't change it. If a user delete the current effective charactger, the pet visual should be restored to the default (only head and body without any equipment).
-6. The character config window should show 6 character cards per line and show a scroll bar if there are many cards.
