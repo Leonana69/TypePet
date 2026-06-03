@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
@@ -45,6 +46,7 @@ public class FrostedWindow : Window
         };
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         ShowInTaskbar = true;
+        Icon = AppIcon.WindowIcon(); // taskbar button
 
         _titleBar = BuildTitleBar(title);
 
@@ -87,15 +89,32 @@ public class FrostedWindow : Window
 
     private Control BuildTitleBar(string title)
     {
-        // A small teal rounded-square "logo" matching the tray icon.
-        var logo = new Border
+        // The app's mushroom icon as the title-bar logo (falls back to a teal square if it won't load).
+        Control logo;
+        if (AppIcon.Bitmap is { } iconBmp)
         {
-            Width = 16,
-            Height = 16,
-            CornerRadius = new CornerRadius(4),
-            Background = FrostTheme.AccentBrush,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+            var img = new Image
+            {
+                Width = 24,
+                Height = 24,
+                Source = iconBmp,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            // High-quality downscale from the 512px source so the small logo stays crisp.
+            RenderOptions.SetBitmapInterpolationMode(img, BitmapInterpolationMode.HighQuality);
+            logo = img;
+        }
+        else
+        {
+            logo = new Border
+            {
+                Width = 16,
+                Height = 16,
+                CornerRadius = new CornerRadius(4),
+                Background = FrostTheme.AccentBrush,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+        }
 
         var titleText = new TextBlock { Text = title };
         titleText.Classes.Add("windowTitle");

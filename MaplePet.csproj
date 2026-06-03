@@ -14,6 +14,7 @@
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/Program/icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -22,6 +23,9 @@
     <!-- Bundle the built-in footage (DefaultCharacter, footage), but NOT the user character store
          (read from disk at runtime) or loose import/export zips — embedding those would bloat the
          assembly with data the code never reads via avares://. -->
+    <!-- icon.ico is both embedded in the exe (<ApplicationIcon>) AND bundled as an Avalonia resource:
+         the window/tray icons load it via avares:// so Win32 can pick a purpose-authored frame per
+         size. The user character store / loose zips stay out of the bundle (read from disk). -->
     <AvaloniaResource Include="Assets/**" Exclude="Assets/Characters/**;Assets/*.zip" />
   </ItemGroup>
 

@@ -77,7 +77,7 @@ public partial class App : Application
         // A non-clickable header that names the app and the worn character.
         _wearingItem = new NativeMenuItem(WearingLabel())
         {
-            Icon = CreateAppGlyph(),
+            Icon = AppIcon.Bitmap,
             IsEnabled = false,
         };
 
@@ -121,7 +121,7 @@ public partial class App : Application
 
         _trayIcon = new TrayIcon
         {
-            Icon = CreateTrayIcon(),
+            Icon = AppIcon.WindowIcon(),
             ToolTipText = "MaplePet",
             Menu = menu,
             IsVisible = true,
@@ -190,49 +190,6 @@ public partial class App : Application
 
         // Keep the tray header's "wearing" line current.
         if (_wearingItem is not null) _wearingItem.Header = WearingLabel();
-    }
-
-    /// <summary>Render a small rounded teal square (matching the pet's accent) for the tray icon.</summary>
-    private static WindowIcon? CreateTrayIcon()
-    {
-        try
-        {
-            var rtb = new RenderTargetBitmap(new PixelSize(64, 64), new Vector(96, 96));
-            using (var ctx = rtb.CreateDrawingContext())
-            {
-                ctx.DrawRectangle(
-                    new SolidColorBrush(FrostTheme.Accent),
-                    new Pen(new SolidColorBrush(FrostTheme.AccentDim), 4),
-                    new Avalonia.Rect(8, 8, 48, 48), 14, 14);
-                ctx.DrawRectangle(Brushes.White, null, new Avalonia.Rect(40, 22, 9, 9));
-            }
-            return new WindowIcon(rtb);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>The small teal rounded-square app glyph used as the tray-menu header icon.</summary>
-    private static Bitmap? CreateAppGlyph()
-    {
-        try
-        {
-            var rtb = new RenderTargetBitmap(new PixelSize(32, 32), new Vector(96, 96));
-            using (var ctx = rtb.CreateDrawingContext())
-            {
-                ctx.DrawRectangle(
-                    new SolidColorBrush(FrostTheme.Accent), null,
-                    new Avalonia.Rect(5, 5, 22, 22), 7, 7);
-                ctx.DrawRectangle(Brushes.White, null, new Avalonia.Rect(19, 11, 5, 5));
-            }
-            return rtb;
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     private static readonly string[] IconFonts = { "Segoe Fluent Icons", "Segoe MDL2 Assets" };
