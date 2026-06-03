@@ -21,17 +21,30 @@ public static class CharacterLoader
 {
     public static CharacterSprites? Load(CharacterStore store, string? id,
         IReadOnlyCollection<string>? poses, bool loadExpressions = false)
+        => Load(store, id, hitTestPoses: poses, posesToLoad: poses, loadExpressions: loadExpressions);
+
+    /// <summary>
+    /// As <see cref="Load(CharacterStore, string?, IReadOnlyCollection{string}?, bool)"/>, but with the
+    /// decode set (<paramref name="posesToLoad"/>) separate from the hit-test set
+    /// (<paramref name="hitTestPoses"/>). The live pet decodes its action poses too
+    /// (<see cref="CharacterAnimator.LivePoses"/>) while sizing the grab box to only the played
+    /// locomotion poses (<see cref="CharacterAnimator.ActivePoses"/>), so wide attack sprites don't
+    /// inflate where the pet is grabbable.
+    /// </summary>
+    public static CharacterSprites? Load(CharacterStore store, string? id,
+        IReadOnlyCollection<string>? hitTestPoses, IReadOnlyCollection<string>? posesToLoad,
+        bool loadExpressions = false)
     {
         var entry = store.Get(id);
         if (entry is { IsBuiltIn: false, Directory: { } dir })
         {
-            var sprites = CharacterSprites.LoadFromDirectory(dir, hitTestPoses: poses, posesToLoad: poses,
+            var sprites = CharacterSprites.LoadFromDirectory(dir, hitTestPoses: hitTestPoses, posesToLoad: posesToLoad,
                 loadExpressions: loadExpressions);
             if (sprites is not null) return sprites;
             // Footage went missing/corrupt — fall through to the bundled default rather than blanking.
         }
 
-        return CharacterSprites.Load(footageDir: "Assets/DefaultCharacter", hitTestPoses: poses, posesToLoad: poses,
-            loadExpressions: loadExpressions);
+        return CharacterSprites.Load(footageDir: "Assets/DefaultCharacter", hitTestPoses: hitTestPoses,
+            posesToLoad: posesToLoad, loadExpressions: loadExpressions);
     }
 }

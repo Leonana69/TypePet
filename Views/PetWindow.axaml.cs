@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using MaplePet.Api;
 using MaplePet.Engine;
 using MaplePet.Platform;
 using MaplePet.Platform.Windows;
@@ -30,6 +31,18 @@ public partial class PetWindow : Window
     private PetController? _pet;
     private CharacterSprites? _sprites;
     private CharacterAnimator? _animator;
+    private PetControlService? _control;
+
+    private string? _speechText;        // active speech bubble (control API's Say), drawn over the pet
+    private double _speechRemainingMs;  // countdown until the bubble clears
+
+    /// <summary>The programmatic control surface for this pet (LLM / MCP). Available after
+    /// <see cref="ControlReady"/> fires.</summary>
+    public IPetControl? Control => _control;
+
+    /// <summary>Raised once the pet and its <see cref="Control"/> facade are constructed (end of
+    /// <see cref="OnOpened"/>), so the app can start the control transport against a live facade.</summary>
+    public event Action? ControlReady;
 
     private nint _hwnd;
     private bool _lmbPrev;     // left button state on the previous tick
@@ -67,12 +80,26 @@ public partial class PetWindow : Window
 
         // Load the currently selected character (a user import from the store, or the bundled
         // Body+Head default). CharacterLoader falls back to the default if the footage can't be
-        // decoded; if even that fails, the renderer draws the placeholder shape.
-        _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId, CharacterAnimator.ActivePoses, loadExpressions: true);
+        // decoded; if even that fails, the renderer draws the placeholder shape. The live pet decodes
+        // its action poses too (LivePoses) while the grab box stays sized to the played poses.
+        _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId,
+            hitTestPoses: CharacterAnimator.ActivePoses, posesToLoad: CharacterAnimator.LivePoses, loadExpressions: true);
         _animator = new CharacterAnimator();
         View.Sprites = _sprites;
         View.Animator = _animator;
         View.ShowDebug = _cfg.ShowOverlay;
+
+        // The programmatic control facade reads the pet through accessors so it always sees the live
+        // (swappable) instances. All its calls marshal onto this UI thread.
+        _control = new PetControlService(
+            () => _pet, () => _animator, () => _sprites, () => _world,
+            () => new MaplePet.Engine.Rect(0, 0, Width, Height),
+            () =>
+            {
+                var entry = _store.Get(_cfg.CurrentCharacterId);
+                return (_cfg.CurrentCharacterId, entry?.DisplayName ?? "Default");
+            },
+            SetSpeech);
 
         PollWorld(); // prime the world before the first frame
 
@@ -83,6 +110,8 @@ public partial class PetWindow : Window
         _pollTimer.Tick += (_, _) => PollWorld();
         _pollTimer.Start();
         _loop.Start();
+
+        ControlReady?.Invoke(); // the control facade is live; the app can start the MCP transport now
 
         if (AppState.SmokeSeconds > 0)
             ScheduleSmokeExit(AppState.SmokeSeconds);
@@ -111,6 +140,7 @@ public partial class PetWindow : Window
         _sprites = sprites;
         View.Sprites = sprites;
         old?.Dispose(); // free the previous character's bitmaps (each load owns its own instances)
+        _control?.NotifyCapabilitiesChanged(); // available actions/expressions are character-specific
     }
 
     /// <summary>Size and position the overlay to span the whole virtual screen.</summary>
@@ -307,10 +337,38 @@ public partial class PetWindow : Window
             UpdateDragExpression(_pet.IsDragging); // react to the grab with a (held) random face
             _pet.Update(_world, dt);
             _animator?.Update(_sprites, _pet.State, dt);
+
+            // Arbitration between commanded actions and autonomy (precedence: drag > action > autonomy):
+            if (_pet.IsDragging)
+            {
+                // A grab interrupts any commanded action; let the pet flail and re-roam after release.
+                if (_animator?.Action is not null) { _animator.SetAction(null); _pet.ResumeRoaming(); }
+            }
+            else if (_animator?.ActionJustCompleted() == true)
+            {
+                _pet.ResumeRoaming(); // a one-shot action finished — autonomy may resume
+            }
+
             View.Pet = _pet;
         }
+
+        // Speech bubble lifetime.
+        if (_speechRemainingMs > 0)
+        {
+            _speechRemainingMs -= dt * 1000.0;
+            if (_speechRemainingMs <= 0) _speechText = null;
+        }
+        View.Speech = _speechText;
+
         PublishPetHitBox(); // keep the click hook's pet rect current
         View.InvalidateVisual();
+    }
+
+    /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).</summary>
+    private void SetSpeech(string? text, double? seconds)
+    {
+        _speechText = string.IsNullOrWhiteSpace(text) ? null : text;
+        _speechRemainingMs = _speechText is null ? 0 : (seconds is double s && s > 0 ? s * 1000.0 : 4000);
     }
 
     /// <summary>
@@ -322,7 +380,9 @@ public partial class PetWindow : Window
     {
         if (dragging == _wasDragging) return;
         _wasDragging = dragging;
-        _animator?.SetExpression(dragging ? PickRandomExpression() : null);
+        // Use the transient channel so the grab face overlays — and on release reverts to — any
+        // base expression set via the control API, instead of wiping it to neutral.
+        _animator?.SetTransientExpression(dragging ? PickRandomExpression() : null);
     }
 
     /// <summary>A random expression name from the worn character, excluding the neutral "default" (so the

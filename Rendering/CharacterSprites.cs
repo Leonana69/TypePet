@@ -78,6 +78,10 @@ public sealed class CharacterSprites : IDisposable
 
     public Pose? GetPose(string name) => _poses.TryGetValue(name, out var p) ? p : null;
 
+    /// <summary>The names of every loaded footage pose (e.g. "stand1", "walk1", "prone", "alert").
+    /// Used by the control API to advertise only the actions this character actually supports.</summary>
+    public IReadOnlyCollection<string> PoseNames => _poses.Keys;
+
     /// <summary>The named face expression, or null if this character doesn't define it (or expressions
     /// weren't loaded).</summary>
     public Expression? GetExpression(string name) => _expressions.TryGetValue(name, out var e) ? e : null;

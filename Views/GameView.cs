@@ -17,6 +17,7 @@ public sealed class GameView : Control
     public PetController? Pet { get; set; }
     public CharacterSprites? Sprites { get; set; }
     public CharacterAnimator? Animator { get; set; }
+    public string? Speech { get; set; }          // active speech-bubble text (control API's Say), or null
     public bool ShowDebug { get; set; } = false; // driven by Settings.ShowOverlay via PetWindow
 
     public GameView()
@@ -36,6 +37,15 @@ public sealed class GameView : Control
         {
             if (ShowDebug) DebugOverlay.DrawPath(context, pet);
             PetRenderer.Draw(context, pet, Sprites, Animator);
+
+            if (!string.IsNullOrEmpty(Speech))
+            {
+                // Anchor the bubble at the top-center of the drawn pet (falls back to the physics box
+                // when footage didn't load).
+                double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
+                SpeechBubble.Draw(context, Speech!, pet.CenterX, topY,
+                    new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
+            }
         }
     }
 }

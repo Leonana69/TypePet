@@ -21,6 +21,13 @@ public readonly record struct Rect(double X, double Y, double Width, double Heig
 public enum TaskbarEdge { Bottom, Top, Left, Right }
 
 /// <summary>
+/// Who is driving the pet. <see cref="Autonomous"/> is the default — the pet roams on its own.
+/// <see cref="Manual"/> means an external controller (e.g. an LLM via the control API) has taken
+/// over: autonomous roaming is frozen until control is released.
+/// </summary>
+public enum ControlMode { Autonomous, Manual }
+
+/// <summary>
 /// The raw geometry captured from the OS: the visible window rectangles plus the
 /// taskbar and the edge it is docked to. Produced by an <c>IWindowTracker</c>.
 /// </summary>

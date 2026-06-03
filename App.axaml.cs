@@ -20,6 +20,7 @@ public partial class App : Application
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
+    private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
     // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
     private NativeMenuItem? _wearingItem;
@@ -57,6 +58,19 @@ public partial class App : Application
             _petWindow = new PetWindow(_settings, _store);
             desktop.MainWindow = _petWindow;
             SetupTrayIcon(desktop);
+
+            // Optionally expose the pet over a local MCP tool server so an LLM/agent can drive it.
+            // Started once the control facade is live (end of PetWindow.OnOpened); off by default.
+            if (_settings.EnableMcpServer)
+            {
+                int port = _settings.McpPort;
+                _petWindow.ControlReady += () =>
+                {
+                    if (_petWindow?.Control is { } control)
+                        _mcpServer = MaplePet.Api.Mcp.PetMcpServer.Start(control, port);
+                };
+                desktop.Exit += (_, _) => _mcpServer?.Stop();
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -154,7 +168,8 @@ public partial class App : Application
     {
         if (_settings is null || _store is null || _petWindow is null) return;
 
-        var sprites = CharacterLoader.Load(_store, id, CharacterAnimator.ActivePoses, loadExpressions: true);
+        var sprites = CharacterLoader.Load(_store, id,
+            hitTestPoses: CharacterAnimator.ActivePoses, posesToLoad: CharacterAnimator.LivePoses, loadExpressions: true);
         _petWindow.SetCharacter(sprites);
         _settings.CurrentCharacterId = id;
         _settings.Save();

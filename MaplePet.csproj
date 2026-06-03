@@ -50,6 +50,14 @@
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.275">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Local MCP tool server (LLM control of the pet). The .AspNetCore package hosts it over
+         Streamable HTTP and pulls in the ASP.NET Core shared framework referenced below. -->
+    <PackageReference Include="ModelContextProtocol" Version="1.3.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>

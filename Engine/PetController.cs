@@ -48,6 +48,15 @@ public sealed class PetController
     public int Facing { get; private set; } = 1; // +1 = right, -1 = left
     public bool IsDragging { get; private set; }
 
+    /// <summary>Who is driving. In <see cref="ControlMode.Manual"/> (an external controller has
+    /// acquired the pet) the pet never auto-roams until control is released.</summary>
+    public ControlMode Mode { get; private set; } = ControlMode.Autonomous;
+
+    /// <summary>When true, autonomous roaming is paused even in <see cref="ControlMode.Autonomous"/>
+    /// — set by the control API while an action animation is playing so the pet doesn't wander off
+    /// mid-pose; cleared when the action ends, after which roaming resumes on the next idle.</summary>
+    public bool RoamingSuspended { get; private set; }
+
     /// <summary>The lowest feet-Y (logical px) the pet will roam to: targets on platforms below this
     /// are skipped, keeping the (tall) pet clear of the screen bottom. Set from the overlay;
     /// +infinity means no limit. The ground stays reachable for spawning/landing regardless.</summary>
@@ -183,6 +192,79 @@ public sealed class PetController
         _hasTarget = false;
     }
 
+    // ------------------------------------------------- External control (LLM / control API)
+    // These are intents called from the control facade (which marshals onto the UI thread, so they
+    // run on the same thread as Update — no locking needed). They steer the same physics/navigation
+    // the autonomous loop uses; only the *decision* to roam is gated (see UpdateStand).
+
+    /// <summary>Pause autonomous roaming (used while an action pose is held). No effect on physics.</summary>
+    public void SuspendRoaming() => RoamingSuspended = true;
+
+    /// <summary>Resume autonomous roaming (it kicks back in on the next idle, in Autonomous mode).</summary>
+    public void ResumeRoaming() => RoamingSuspended = false;
+
+    /// <summary>Take exclusive control: freeze autonomy, drop any in-flight route, and idle in place
+    /// (a mid-air/rope pet stands once it lands).</summary>
+    public void AcquireControl()
+    {
+        Mode = ControlMode.Manual;
+        _path = null;
+        _hasTarget = false;
+        _pendingReplan = false;
+        RoamingSuspended = false;
+        if (State is PetState.Walk or PetState.Rope) EnterStand();
+        else if (State == PetState.Jump) _standAfterLanding = true; // land, then stand (don't roam)
+    }
+
+    /// <summary>Hand control back to the autonomous loop; roaming resumes on the next idle.</summary>
+    public void ReleaseControl()
+    {
+        Mode = ControlMode.Autonomous;
+        RoamingSuspended = false;
+    }
+
+    /// <summary>Stop any motion and stand idle where the pet currently is.</summary>
+    public void StopAndIdle() => EnterStand();
+
+    /// <summary>Face left (-1) or right (+1). Ignored for 0.</summary>
+    public void SetFacing(int dir)
+    {
+        if (dir != 0) Facing = dir > 0 ? 1 : -1;
+    }
+
+    /// <summary>Plan and start a route to <paramref name="target"/> (feet-point in logical px).
+    /// Returns false if no route exists. Reuses the autonomous A* navigation.</summary>
+    public bool RequestMoveTo(World world, Vec2 target)
+    {
+        EnsureGraph(world);
+        var path = PlanTo(target);
+        if (path is not { Count: > 0 }) return false;
+        SetRoute(path, target);
+        State = PetState.Walk;
+        return true;
+    }
+
+    /// <summary>Walk to horizontal position <paramref name="x"/> at the pet's current height.
+    /// Returns false if the pet isn't on a surface (use <see cref="RequestMoveTo"/> instead).</summary>
+    public bool RequestWalkTo(World world, double x)
+    {
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) return false;
+        return RequestMoveTo(world, new Vec2(x, support.Value.Y));
+    }
+
+    /// <summary>Build the nav graph if it doesn't exist yet (the live loop normally keeps it fresh;
+    /// this guards control-API calls that could arrive before the first geometry-driven build).</summary>
+    private void EnsureGraph(World world)
+    {
+        if (_graph is null)
+        {
+            _graph = MapGraph.Build(world, _cfg.JumpHeight);
+            _graphJumpHeight = _cfg.JumpHeight;
+            _graphWorld = world;
+        }
+    }
+
     // ---------------------------------------------------------------- Stand (idle)
     private void EnterStand(double seconds = -1)
     {
@@ -203,6 +285,15 @@ public sealed class PetController
         _idleTimer -= dt;
         if (_idleTimer <= 0)
         {
+            // Under external control, or while an action pose is held, never auto-roam: just re-idle
+            // in place. Physics above (support/fall) still ran, so a window closing under the pet
+            // still drops it — only the *decision to wander* is suppressed.
+            if (Mode == ControlMode.Manual || RoamingSuspended)
+            {
+                EnterStand();
+                return;
+            }
+
             // Decide whether to wander. RoamingLevel is the restlessness knob; the ease-in curve makes
             // low levels strongly prefer staying put (level 0 never roams, ~10 ≈ 1%, ~25 ≈ 6% per check)
             // while high levels roam eagerly (100 = every check), which reads more naturally than linear.
@@ -254,15 +345,22 @@ public sealed class PetController
             var path = PlanTo(target);
             if (path is { Count: > 0 })
             {
-                _path = path;
-                _step = 0;
-                _targetPos = target;
-                _hasTarget = true;
-                _pendingReplan = false;
+                SetRoute(path, target);
                 return true;
             }
         }
         return false;
+    }
+
+    /// <summary>Commit a planned route as the active target (shared by autonomous picking and the
+    /// control API's <see cref="RequestMoveTo"/>).</summary>
+    private void SetRoute(List<PathStep> path, Vec2 target)
+    {
+        _path = path;
+        _step = 0;
+        _targetPos = target;
+        _hasTarget = true;
+        _pendingReplan = false;
     }
 
     /// <summary>

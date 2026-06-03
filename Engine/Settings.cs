@@ -22,6 +22,9 @@ public sealed class Settings
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
     public string CurrentCharacterId { get; set; } = "default"; // selected character (CharacterStore id), or "default"
 
+    public bool EnableMcpServer { get; set; } = false; // expose the pet over a local MCP tool server (LLM control)
+    public int McpPort { get; set; } = 8765;           // localhost port the MCP server listens on when enabled
+
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
 
@@ -85,6 +88,7 @@ public sealed class Settings
         WorldPollHz = Positive(WorldPollHz, d.WorldPollHz);
         RoamingLevel = double.IsFinite(RoamingLevel) ? Math.Clamp(RoamingLevel, 0, 100) : d.RoamingLevel;
         TargetFps = TargetFps is >= 1 and <= 240 ? TargetFps : d.TargetFps;
+        McpPort = McpPort is >= 1 and <= 65535 ? McpPort : d.McpPort;
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
 
