@@ -25,16 +25,20 @@ public sealed class CharacterSprites : IDisposable
 {
     /// <summary>One bitmap of one pose-frame, positioned by its top-left offset from the navel.
     /// <paramref name="IsEffect"/> marks item-effect auras/glows, which render but are excluded from
-    /// the drag hit-test (they can be far larger than the character).</summary>
-    public sealed record Layer(Bitmap Image, double OffsetX, double OffsetY, double Width, double Height, bool IsEffect);
+    /// the drag hit-test (they can be far larger than the character). <paramref name="IsFace"/> marks
+    /// the neutral Face layer, so the renderer can substitute a chosen <see cref="Expression"/> in its
+    /// place (at the frame's <see cref="Frame.FaceAnchor"/>) without disturbing the layer order.</summary>
+    public sealed record Layer(Bitmap Image, double OffsetX, double OffsetY, double Width, double Height, bool IsEffect, bool IsFace);
 
     /// <summary>
-    /// The layers of a single animation frame (back-to-front), how long to hold it, and
+    /// The layers of a single animation frame (back-to-front), how long to hold it,
     /// <see cref="FootOffset"/> = the navel-to-foot distance for THIS frame (lowest Body/Head pixel
-    /// below the navel). Anchoring the navel at <c>feetY - FootOffset</c> keeps the feet planted on
-    /// the ground while the body bobs through the cycle, exactly as in the game.
+    /// below the navel), and <see cref="FaceAnchor"/> = the navel-relative "brow" point this frame
+    /// pins the face to (null when the export predates face anchors). Anchoring the navel at
+    /// <c>feetY - FootOffset</c> keeps the feet planted on the ground while the body bobs through the
+    /// cycle, exactly as in the game.
     /// </summary>
-    public sealed record Frame(IReadOnlyList<Layer> Layers, double DelayMs, double FootOffset);
+    public sealed record Frame(IReadOnlyList<Layer> Layers, double DelayMs, double FootOffset, (double X, double Y)? FaceAnchor);
 
     /// <summary>An animation: its frames plus the order they play in (frame indices).</summary>
     public sealed class Pose
@@ -43,7 +47,25 @@ public sealed class CharacterSprites : IDisposable
         public required IReadOnlyList<int> Cycle { get; init; }
     }
 
+    /// <summary>One frame of a face expression: the bitmap, its size, the
+    /// <see cref="AnchorOffsetX"/>/<see cref="AnchorOffsetY"/> point within the image that sits on the
+    /// pose's "brow" anchor (so faces of different sizes/decorations all line up), plus how long to hold
+    /// it. This is the exporter's brow-aligned <c>anchorOffset</c>, NOT the raw image <c>origin</c> —
+    /// expressions padded above the eyes (hearts, sweat, sparkles) have an origin that points into the
+    /// padding and would render the face too high.</summary>
+    public sealed record ExpressionFrame(Bitmap Image, double AnchorOffsetX, double AnchorOffsetY, double Width, double Height, double DelayMs);
+
+    /// <summary>A swappable face expression (e.g. "smile", "blink", "love") — a list of frames played
+    /// in order, looping, by their authored delays. Drawn in place of the neutral Face layer, anchored
+    /// to each pose-frame's brow point.</summary>
+    public sealed class Expression
+    {
+        public required string Name { get; init; }
+        public required IReadOnlyList<ExpressionFrame> Frames { get; init; }
+    }
+
     private readonly Dictionary<string, Pose> _poses;
+    private readonly Dictionary<string, Expression> _expressions;
     private readonly Bitmap[] _ownedBitmaps; // distinct decoded bitmaps, disposed together
 
     /// <summary>Half the character's drawn width (logical px), measured about the navel/center across
@@ -56,21 +78,33 @@ public sealed class CharacterSprites : IDisposable
 
     public Pose? GetPose(string name) => _poses.TryGetValue(name, out var p) ? p : null;
 
-    private CharacterSprites(Dictionary<string, Pose> poses, double halfWidth, double heightAboveFeet)
+    /// <summary>The named face expression, or null if this character doesn't define it (or expressions
+    /// weren't loaded).</summary>
+    public Expression? GetExpression(string name) => _expressions.TryGetValue(name, out var e) ? e : null;
+
+    /// <summary>The names of every loaded face expression (includes "default"). Empty when the
+    /// character has no Face item with expression footage, or expressions weren't requested.</summary>
+    public IReadOnlyCollection<string> ExpressionNames => _expressions.Keys;
+
+    /// <summary>True when at least one swappable face expression was loaded.</summary>
+    public bool HasExpressions => _expressions.Count > 0;
+
+    private CharacterSprites(Dictionary<string, Pose> poses, Dictionary<string, Expression> expressions,
+        ICollection<Bitmap> decodedBitmaps, double halfWidth, double heightAboveFeet)
     {
         _poses = poses;
+        _expressions = expressions;
         HalfWidth = halfWidth;
         HeightAboveFeet = heightAboveFeet;
 
-        // The same bitmap recurs across many layers/frames/poses (the loader decodes each PNG once),
-        // so collect the DISTINCT instances by reference for disposal.
-        var owned = new HashSet<Bitmap>(ReferenceEqualityComparer.Instance);
-        foreach (var pose in poses.Values)
-            foreach (var frame in pose.Frames)
-                foreach (var layer in frame.Layers)
-                    owned.Add(layer.Image);
-        _ownedBitmaps = new Bitmap[owned.Count];
-        owned.CopyTo(_ownedBitmaps);
+        // Own EVERY bitmap the loader decoded this load — its cache is the authoritative set — rather
+        // than re-deriving the list by walking the committed poses/expressions. A pose or expression
+        // that threw partway through parsing is discarded, yet the PNGs it had already decoded still
+        // sit in that cache; sweeping it guarantees those orphans are disposed too (nothing else can
+        // reach them). Each distinct PNG path decodes to exactly one instance, so the values are
+        // already distinct — no de-duplication needed.
+        _ownedBitmaps = new Bitmap[decodedBitmaps.Count];
+        decodedBitmaps.CopyTo(_ownedBitmaps, 0);
     }
 
     /// <summary>Release the decoded bitmaps (native/GPU-backed; Avalonia <see cref="Bitmap"/> has no
@@ -94,9 +128,12 @@ public sealed class CharacterSprites : IDisposable
     /// measures every pose. <paramref name="posesToLoad"/> restricts which poses are decoded at all
     /// (null = decode every pose) — a big saving when only a few poses are shown (the live pet plays a
     /// handful; a card thumbnail needs just one), since each pose decodes its own PNGs.
+    /// <paramref name="loadExpressions"/> additionally loads the Face item's swappable expressions
+    /// (only the live pet needs them — thumbnails skip the extra decode).
     /// </summary>
     public static CharacterSprites? Load(string assemblyName = "MaplePet", string footageDir = "Assets/footage",
-        IReadOnlyCollection<string>? hitTestPoses = null, IReadOnlyCollection<string>? posesToLoad = null)
+        IReadOnlyCollection<string>? hitTestPoses = null, IReadOnlyCollection<string>? posesToLoad = null,
+        bool loadExpressions = false)
     {
         try
         {
@@ -127,7 +164,15 @@ public sealed class CharacterSprites : IDisposable
                 return bmp;
             }
 
-            return Build(doc, LoadBitmap, hitTestPoses, posesToLoad);
+            JsonDocument? TryLoadJson(string relativePath)
+            {
+                var uri = new Uri($"{baseUri}/{relativePath}");
+                if (!AssetLoader.Exists(uri)) return null;
+                using var s = AssetLoader.Open(uri);
+                return JsonDocument.Parse(s);
+            }
+
+            return Build(doc, LoadBitmap, TryLoadJson, bitmaps, hitTestPoses, posesToLoad, loadExpressions);
         }
         catch (Exception ex)
         {
@@ -143,7 +188,8 @@ public sealed class CharacterSprites : IDisposable
     /// <c>image</c> paths are slash-separated and resolved relative to <paramref name="directory"/>.
     /// </summary>
     public static CharacterSprites? LoadFromDirectory(string directory,
-        IReadOnlyCollection<string>? hitTestPoses = null, IReadOnlyCollection<string>? posesToLoad = null)
+        IReadOnlyCollection<string>? hitTestPoses = null, IReadOnlyCollection<string>? posesToLoad = null,
+        bool loadExpressions = false)
     {
         try
         {
@@ -170,7 +216,15 @@ public sealed class CharacterSprites : IDisposable
                 return bmp;
             }
 
-            return Build(doc, LoadBitmap, hitTestPoses, posesToLoad);
+            JsonDocument? TryLoadJson(string relativePath)
+            {
+                string full = Path.Combine(directory, relativePath.Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(full)) return null;
+                using var s = File.OpenRead(full);
+                return JsonDocument.Parse(s);
+            }
+
+            return Build(doc, LoadBitmap, TryLoadJson, bitmaps, hitTestPoses, posesToLoad, loadExpressions);
         }
         catch (Exception ex)
         {
@@ -186,7 +240,8 @@ public sealed class CharacterSprites : IDisposable
     /// which differ only in how a relative image path becomes a decoded bitmap.
     /// </summary>
     private static CharacterSprites? Build(JsonDocument doc, Func<string, Bitmap> loadBitmap,
-        IReadOnlyCollection<string>? hitTestPoses, IReadOnlyCollection<string>? posesToLoad)
+        Func<string, JsonDocument?> tryLoadJson, Dictionary<string, Bitmap> decoded,
+        IReadOnlyCollection<string>? hitTestPoses, IReadOnlyCollection<string>? posesToLoad, bool loadExpressions)
     {
         var poses = new Dictionary<string, Pose>(StringComparer.OrdinalIgnoreCase);
         foreach (var poseProp in doc.RootElement.GetProperty("animations").EnumerateObject())
@@ -208,10 +263,27 @@ public sealed class CharacterSprites : IDisposable
             }
         }
 
-        if (poses.Count == 0) return null;
+        if (poses.Count == 0)
+        {
+            // Nothing usable to render — no CharacterSprites will be constructed to own them, so free
+            // whatever PNGs the failed poses managed to decode before bailing.
+            foreach (var bmp in decoded.Values)
+                try { bmp.Dispose(); } catch { /* best effort */ }
+            return null;
+        }
+
+        // The Face item carries the swappable expressions in its own meta.json (alongside the per-pose
+        // faces the manifest already lists). Load them only when asked, and degrade silently to "no
+        // expressions" for a character without a Face item or from an older export.
+        var expressions = new Dictionary<string, Expression>(StringComparer.OrdinalIgnoreCase);
+        if (loadExpressions && FindFaceItemFolder(doc) is string faceFolder)
+        {
+            using var meta = tryLoadJson($"{faceFolder}/meta.json");
+            if (meta is not null) ParseExpressions(meta, faceFolder, loadBitmap, expressions);
+        }
 
         ComputeHitBounds(poses, hitTestPoses, out double halfWidth, out double heightAboveFeet);
-        return new CharacterSprites(poses, halfWidth, heightAboveFeet);
+        return new CharacterSprites(poses, expressions, decoded.Values, halfWidth, heightAboveFeet);
     }
 
     private static Pose ParsePose(JsonElement anim, Func<string, Bitmap> loadBitmap)
@@ -228,6 +300,13 @@ public sealed class CharacterSprites : IDisposable
         foreach (var fr in anim.GetProperty("frames").EnumerateArray())
         {
             double delay = fr.TryGetProperty("delayMs", out var d) ? d.GetDouble() : 150;
+
+            // The brow anchor this frame pins the face to (canvas coords), re-expressed navel-relative
+            // so the renderer can place a chosen expression there. Absent in pre-expression exports.
+            (double X, double Y)? faceAnchor = null;
+            if (fr.TryGetProperty("faceAnchor", out var fa) && fa.ValueKind == JsonValueKind.Object)
+                faceAnchor = (fa.GetProperty("x").GetDouble() - navelX, fa.GetProperty("y").GetDouble() - navelY);
+
             var layers = new List<Layer>();
             double bodyFoot = 0, anyFoot = 0;
             if (fr.TryGetProperty("draw", out var draws) && draws.ValueKind == JsonValueKind.Array)
@@ -247,10 +326,13 @@ public sealed class CharacterSprites : IDisposable
                     string layerName = dr.TryGetProperty("layer", out var ln) ? (ln.GetString() ?? "") : "";
                     bool isEffect = (dr.TryGetProperty("isEffect", out var ie) && ie.ValueKind == JsonValueKind.True)
                                     || layerName.Equals("effect", StringComparison.OrdinalIgnoreCase);
+                    // The neutral face layer (not FaceAcc): the renderer swaps a chosen expression in
+                    // here, at faceAnchor, while leaving the rest of the layer stack untouched.
+                    bool isFace = category.Equals("Face", StringComparison.OrdinalIgnoreCase);
                     // canvasX/Y are the layer's top-left in the pose canvas; the navel sits at
                     // (navelX, navelY) there, so (cx-navelX, cy-navelY) is the navel-relative offset.
                     double oy = cy - navelY;
-                    layers.Add(new Layer(loadBitmap(image), cx - navelX, oy, w, h, isEffect));
+                    layers.Add(new Layer(loadBitmap(image), cx - navelX, oy, w, h, isEffect, isFace));
 
                     // Foot line = the body's lowest pixel. Anchor on the Body category only so a long
                     // coat, weapon, or shield hanging below the legs can't lift the feet off the ground.
@@ -260,13 +342,75 @@ public sealed class CharacterSprites : IDisposable
                         bodyFoot = Math.Max(bodyFoot, bottom);
                 }
             }
-            frames.Add(new Frame(layers, delay, bodyFoot > 0 ? bodyFoot : anyFoot));
+            frames.Add(new Frame(layers, delay, bodyFoot > 0 ? bodyFoot : anyFoot, faceAnchor));
         }
 
         if (cycle.Count == 0)
             for (int i = 0; i < frames.Count; i++) cycle.Add(i);
 
         return new Pose { Frames = frames, Cycle = cycle };
+    }
+
+    /// <summary>The footage-relative folder of the equipped Face item (e.g. <c>Face/00027244</c>), whose
+    /// <c>meta.json</c> holds the expressions — or null if no Face is equipped.</summary>
+    private static string? FindFaceItemFolder(JsonDocument doc)
+    {
+        if (!doc.RootElement.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array)
+            return null;
+        foreach (var it in items.EnumerateArray())
+        {
+            // Guard the string reads against ValueKind — GetString() throws on a non-string element, and
+            // an uncaught throw here would discard the whole (otherwise valid) character, not just the
+            // expressions. Degrade locally instead, like ParsePose/ParseExpressions.
+            if (it.TryGetProperty("category", out var c) && c.ValueKind == JsonValueKind.String
+                && string.Equals(c.GetString(), "Face", StringComparison.OrdinalIgnoreCase)
+                && it.TryGetProperty("folder", out var f) && f.ValueKind == JsonValueKind.String
+                && f.GetString() is { Length: > 0 } folder)
+                return folder;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Parse the Face <c>meta.json</c>'s <c>expressions</c> map into drawable expressions, decoding
+    /// each frame's PNG via <paramref name="loadBitmap"/> (resolved under <paramref name="itemFolder"/>).
+    /// One malformed expression is skipped rather than failing the whole set.
+    /// </summary>
+    private static void ParseExpressions(JsonDocument meta, string itemFolder, Func<string, Bitmap> loadBitmap,
+        Dictionary<string, Expression> into)
+    {
+        if (!meta.RootElement.TryGetProperty("expressions", out var exprs) || exprs.ValueKind != JsonValueKind.Object)
+            return;
+
+        foreach (var ep in exprs.EnumerateObject())
+        {
+            try
+            {
+                var frames = new List<ExpressionFrame>();
+                foreach (var fr in ep.Value.GetProperty("frames").EnumerateArray())
+                {
+                    string image = fr.GetProperty("image").GetString()!;
+                    double w = fr.GetProperty("width").GetDouble();
+                    double h = fr.GetProperty("height").GetDouble();
+                    // Place the image by its brow-aligned anchorOffset, not the raw image origin — for
+                    // expressions padded above the eyes (hearts, sweat, sparkles) the two differ and the
+                    // origin sits in the padding, rendering the face too high. Fall back to origin for
+                    // older exports that don't carry anchorOffset.
+                    var anchor = fr.TryGetProperty("anchorOffset", out var ao) && ao.ValueKind == JsonValueKind.Object
+                        ? ao : fr.GetProperty("origin");
+                    double ax = anchor.GetProperty("x").GetDouble();
+                    double ay = anchor.GetProperty("y").GetDouble();
+                    double delay = fr.TryGetProperty("delayMs", out var d) ? d.GetDouble() : 100;
+                    frames.Add(new ExpressionFrame(loadBitmap($"{itemFolder}/{image}"), ax, ay, w, h, delay));
+                }
+                if (frames.Count > 0)
+                    into[ep.Name] = new Expression { Name = ep.Name, Frames = frames };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"[MaplePet] skipping malformed expression '{ep.Name}': {ex.Message}");
+            }
+        }
     }
 
     /// <summary>

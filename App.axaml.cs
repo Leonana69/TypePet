@@ -154,7 +154,7 @@ public partial class App : Application
     {
         if (_settings is null || _store is null || _petWindow is null) return;
 
-        var sprites = CharacterLoader.Load(_store, id, CharacterAnimator.ActivePoses);
+        var sprites = CharacterLoader.Load(_store, id, CharacterAnimator.ActivePoses, loadExpressions: true);
         _petWindow.SetCharacter(sprites);
         _settings.CurrentCharacterId = id;
         _settings.Save();

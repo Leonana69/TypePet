@@ -35,7 +35,11 @@ public static class PetRenderer
         // doesn't depend on facing, so leave it unflipped.
         bool flip = pet.Facing > 0 && pet.State != PetState.Rope;
 
-        DrawCharacter(ctx, sprites, animator.Pose, animator.FrameIndex, pet.CenterX, pet.FeetY, flip);
+        // While an expression is active (e.g. during a drag), substitute it for the neutral face.
+        var expression = animator.Expression is string name ? sprites.GetExpression(name) : null;
+
+        DrawCharacter(ctx, sprites, animator.Pose, animator.FrameIndex, pet.CenterX, pet.FeetY, flip,
+            expression, animator.ExpressionFrameIndex);
     }
 
     /// <summary>
@@ -43,9 +47,14 @@ public static class PetRenderer
     /// the body navel centered at <paramref name="centerX"/>. When <paramref name="flipHorizontal"/>
     /// is true the artwork is mirrored about the navel (canonical footage faces left). Shared by the
     /// live pet and the offscreen pose tests.
+    ///
+    /// When <paramref name="faceExpression"/> is non-null and this frame has a face anchor, the chosen
+    /// expression frame is drawn in the neutral face's place (same z-order), pinned so its origin lands
+    /// on the frame's brow anchor.
     /// </summary>
     public static void DrawCharacter(DrawingContext ctx, CharacterSprites sprites, string poseName,
-        int frameIndex, double centerX, double feetY, bool flipHorizontal)
+        int frameIndex, double centerX, double feetY, bool flipHorizontal,
+        CharacterSprites.Expression? faceExpression = null, int expressionFrame = 0)
     {
         var pose = sprites.GetPose(poseName);
         if (pose is null || pose.Frames.Count == 0) return;
@@ -65,11 +74,32 @@ public static class PetRenderer
         var transform = Matrix.CreateScale(flipHorizontal ? -1.0 : 1.0, 1.0)
                         * Matrix.CreateTranslation(navelX, navelY);
 
+        // Resolve the expression's current frame once (null if it has no usable frame).
+        CharacterSprites.ExpressionFrame? exprFrame = null;
+        if (faceExpression is { Frames.Count: > 0 } && frame.FaceAnchor is not null)
+        {
+            int ei = expressionFrame < 0 || expressionFrame >= faceExpression.Frames.Count ? 0 : expressionFrame;
+            exprFrame = faceExpression.Frames[ei];
+        }
+
         using (ctx.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.None }))
         using (ctx.PushTransform(transform))
         {
             foreach (var layer in frame.Layers)
-                ctx.DrawImage(layer.Image, new Avalonia.Rect(layer.OffsetX, layer.OffsetY, layer.Width, layer.Height));
+            {
+                if (layer.IsFace && exprFrame is { } ef && frame.FaceAnchor is { } anchor)
+                {
+                    // Place the expression so its anchor point sits on the brow anchor — exactly how the
+                    // neutral face's own offset was derived, so swapping is seamless across faces of
+                    // different sizes and decorations.
+                    ctx.DrawImage(ef.Image,
+                        new Avalonia.Rect(anchor.X - ef.AnchorOffsetX, anchor.Y - ef.AnchorOffsetY, ef.Width, ef.Height));
+                }
+                else
+                {
+                    ctx.DrawImage(layer.Image, new Avalonia.Rect(layer.OffsetX, layer.OffsetY, layer.Width, layer.Height));
+                }
+            }
         }
     }
 

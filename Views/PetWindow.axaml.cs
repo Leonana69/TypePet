@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -32,6 +33,8 @@ public partial class PetWindow : Window
 
     private nint _hwnd;
     private bool _lmbPrev;     // left button state on the previous tick
+    private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
+    private readonly Random _rng = new(); // picks the per-drag face expression
     private MouseClickBlocker? _clickBlocker; // eats the grab click so it doesn't hit the window behind
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
@@ -65,7 +68,7 @@ public partial class PetWindow : Window
         // Load the currently selected character (a user import from the store, or the bundled
         // Body+Head default). CharacterLoader falls back to the default if the footage can't be
         // decoded; if even that fails, the renderer draws the placeholder shape.
-        _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId, CharacterAnimator.ActivePoses);
+        _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId, CharacterAnimator.ActivePoses, loadExpressions: true);
         _animator = new CharacterAnimator();
         View.Sprites = _sprites;
         View.Animator = _animator;
@@ -301,12 +304,36 @@ public partial class PetWindow : Window
         View.ShowDebug = _cfg.ShowOverlay; // live-toggled from Settings
         if (_pet is not null && _world is not null)
         {
+            UpdateDragExpression(_pet.IsDragging); // react to the grab with a (held) random face
             _pet.Update(_world, dt);
             _animator?.Update(_sprites, _pet.State, dt);
             View.Pet = _pet;
         }
         PublishPetHitBox(); // keep the click hook's pet rect current
         View.InvalidateVisual();
+    }
+
+    /// <summary>
+    /// Drive the pet's face expression off the drag state: on grab, switch to one random expression and
+    /// hold it for the whole drag; on release, restore the neutral face. The pick happens once per drag
+    /// session (on the false→true edge), so the face doesn't flicker between expressions while held.
+    /// </summary>
+    private void UpdateDragExpression(bool dragging)
+    {
+        if (dragging == _wasDragging) return;
+        _wasDragging = dragging;
+        _animator?.SetExpression(dragging ? PickRandomExpression() : null);
+    }
+
+    /// <summary>A random expression name from the worn character, excluding the neutral "default" (so the
+    /// grab visibly changes the face). Null when the character has no expressions to show.</summary>
+    private string? PickRandomExpression()
+    {
+        if (_sprites is not { HasExpressions: true } s) return null;
+        var names = s.ExpressionNames
+            .Where(n => !n.Equals("default", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return names.Count == 0 ? null : names[_rng.Next(names.Count)];
     }
 
     private void ScheduleSmokeExit(double seconds)
