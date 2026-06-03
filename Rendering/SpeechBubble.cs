@@ -8,13 +8,13 @@ namespace MaplePet.Rendering;
 /// <summary>
 /// Draws a small speech bubble above (or, if there's no room, below) the pet — the control API's
 /// <c>Say</c> channel. Text wraps to a max width; the bubble is clamped to stay on screen and a tail
-/// points at the pet. The palette mirrors <c>Views/FrostTheme</c> so it matches the config UI.
+/// points at the pet. Drawn as a light bubble: gray fill, black border, black text.
 /// </summary>
 public static class SpeechBubble
 {
-    private static readonly IBrush Fill = new SolidColorBrush(Color.FromArgb(0xF2, 0x0E, 0x17, 0x1B)); // SurfaceTint
-    private static readonly IBrush TextBrush = new SolidColorBrush(Color.FromRgb(0xEA, 0xF2, 0xF2));    // TextPrimary
-    private static readonly IPen Border = new Pen(new SolidColorBrush(Color.FromArgb(0x80, 0x20, 0xC9, 0xC2)), 1); // Accent
+    private static readonly IBrush Fill = new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE)); // light gray
+    private static readonly IBrush TextBrush = new SolidColorBrush(Colors.Black);
+    private static readonly IPen Border = new Pen(new SolidColorBrush(Colors.Black), 1);
 
     private const double MaxTextWidth = 240;
     private const double PadX = 10, PadY = 7;
@@ -38,22 +38,42 @@ public static class SpeechBubble
         double bx = Math.Clamp(anchorX - w / 2, screen.Left + 4, Math.Max(screen.Left + 4, screen.Right - w - 4));
         double by = below ? topY + GapToPet + TailH : topY - GapToPet - TailH - h;
 
-        var rect = new Avalonia.Rect(bx, by, w, h);
-        ctx.DrawRectangle(Fill, Border, rect, Radius, Radius);
-
-        // Tail triangle, base on the bubble edge nearest the pet, apex pointing at the pet.
+        // Build the bubble body + tail as ONE rounded outline, so filling/stroking it once leaves no
+        // seam line where the tail joins the body (a separate bordered rect + triangle draws the body's
+        // border straight across the join). The tail springs from the bubble edge nearest the pet.
         double tailX = Math.Clamp(anchorX, bx + Radius + TailW / 2, bx + w - Radius - TailW / 2);
-        var tail = new StreamGeometry();
-        using (var g = tail.Open())
+        double left = bx, right = bx + w, top = by, bottom = by + h, r = Radius;
+        var corner = new Size(r, r);
+
+        var bubble = new StreamGeometry();
+        using (var g = bubble.Open())
         {
-            double baseY = below ? rect.Top + 0.5 : rect.Bottom - 0.5;
-            double apexY = below ? baseY - TailH : baseY + TailH;
-            g.BeginFigure(new Point(tailX - TailW / 2, baseY), true);
-            g.LineTo(new Point(tailX + TailW / 2, baseY));
-            g.LineTo(new Point(tailX, apexY));
+            g.BeginFigure(new Point(left + r, top), isFilled: true);
+            if (below)
+            {
+                // tail on the top edge, pointing up at the pet
+                g.LineTo(new Point(tailX - TailW / 2, top));
+                g.LineTo(new Point(tailX, top - TailH));
+                g.LineTo(new Point(tailX + TailW / 2, top));
+            }
+            g.LineTo(new Point(right - r, top));
+            g.ArcTo(new Point(right, top + r), corner, 0, false, SweepDirection.Clockwise);
+            g.LineTo(new Point(right, bottom - r));
+            g.ArcTo(new Point(right - r, bottom), corner, 0, false, SweepDirection.Clockwise);
+            if (!below)
+            {
+                // tail on the bottom edge, pointing down at the pet
+                g.LineTo(new Point(tailX + TailW / 2, bottom));
+                g.LineTo(new Point(tailX, bottom + TailH));
+                g.LineTo(new Point(tailX - TailW / 2, bottom));
+            }
+            g.LineTo(new Point(left + r, bottom));
+            g.ArcTo(new Point(left, bottom - r), corner, 0, false, SweepDirection.Clockwise);
+            g.LineTo(new Point(left, top + r));
+            g.ArcTo(new Point(left + r, top), corner, 0, false, SweepDirection.Clockwise);
             g.EndFigure(true);
         }
-        ctx.DrawGeometry(Fill, null, tail);
+        ctx.DrawGeometry(Fill, Border, bubble);
 
         ctx.DrawText(ft, new Point(bx + PadX, by + PadY));
     }
