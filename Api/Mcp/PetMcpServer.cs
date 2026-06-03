@@ -41,9 +41,30 @@ public sealed class PetMcpServer
     }
 
     /// <summary>Stop the server (best effort, on app shutdown).</summary>
+    /// <remarks>
+    /// Called from the Avalonia <c>desktop.Exit</c> handler, which runs synchronously on the UI thread
+    /// while the dispatcher loop is alive but NOT pumping. The host was started by <see cref="Start"/>'s
+    /// fire-and-forget <c>app.RunAsync</c> from the UI thread, so some of its (and its background
+    /// services') continuations are captured against the Avalonia SynchronizationContext. Blocking the
+    /// UI thread on <c>StopAsync().GetAwaiter().GetResult()</c> therefore deadlocks: those continuations
+    /// can never run, so the host never finishes stopping. We instead run the whole stop+dispose on a
+    /// plain thread-pool thread (Task.Run clears the captured sync-context) and wait with a bounded
+    /// timeout, so Exit always returns and the process can terminate even if a client holds a stream
+    /// open.
+    /// </remarks>
     public void Stop()
     {
-        try { _app.StopAsync().GetAwaiter().GetResult(); }
-        catch { /* best effort */ }
+        try
+        {
+            // Task.Run hops to a thread-pool thread with NO SynchronizationContext, so StopAsync's
+            // continuations resume there instead of being posted to the (blocked) UI dispatcher.
+            Task.Run(async () =>
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _app.StopAsync(cts.Token).ConfigureAwait(false);
+                await _app.DisposeAsync().ConfigureAwait(false);
+            }).Wait(TimeSpan.FromSeconds(6));
+        }
+        catch { /* best effort: never let shutdown hang on the server */ }
     }
 }
