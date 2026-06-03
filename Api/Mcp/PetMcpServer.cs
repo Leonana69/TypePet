@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace MaplePet.Api.Mcp;
@@ -18,6 +19,7 @@ namespace MaplePet.Api.Mcp;
 public sealed class PetMcpServer
 {
     private readonly WebApplication _app;
+    private bool _stopped; // guard: Stop() may be reached more than once (e.g. Exit raised twice)
 
     private PetMcpServer(WebApplication app) => _app = app;
 
@@ -26,6 +28,11 @@ public sealed class PetMcpServer
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders(); // this runs inside a GUI app — keep the console quiet
+
+        // Bound the host's graceful-shutdown drain so a slow/stuck hosted service (e.g. an open
+        // Streamable-HTTP/SSE stream) can't stall StopAsync longer than this — defense in depth
+        // alongside the cancellation token Stop() passes to StopAsync.
+        builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(3));
 
         builder.Services.AddSingleton(control); // injected into the PetTools methods
         builder.Services.AddMcpServer()
@@ -54,6 +61,8 @@ public sealed class PetMcpServer
     /// </remarks>
     public void Stop()
     {
+        if (_stopped) return; // idempotent: a second Stop() would hit an already-disposed host
+        _stopped = true;
         try
         {
             // Task.Run hops to a thread-pool thread with NO SynchronizationContext, so StopAsync's
