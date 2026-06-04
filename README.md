@@ -22,6 +22,7 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 | Drag | Grab the pet with the mouse (it follows the cursor in JUMP); release and it falls to the platform below and stands |
 | Tray menu | A tray icon with **Settings…** (live-editable parameters) and **Exit** |
 | Dynamic world | Rebuilds the graph and replans whenever windows move/open/close; if its surface vanishes it falls and recovers |
+| Fullscreen hide | Hides the overlay while a borderless/exclusive fullscreen app is foreground (taskbar-covering window, not a mere maximize); returns on alt-tab back to the desktop |
 
 The pet is a MapleStory character (Body + Head + equipped items, including item effects, rendered
 from `Assets/footage`) that stands, walks, jumps, and climbs with per-state poses. If the footage
@@ -67,6 +68,7 @@ dotnet run --project MaplePet.csproj -- --smoke 3
 | `targetFps` | `60` | render/physics tick rate |
 | `worldPollHz` | `8` | how often window geometry is re-read |
 | `showOverlay` | `false` | Draw the debug window-edge / path overlay |
+| `hideWhenFullscreen` | `true` | Hide the pet while a borderless/exclusive fullscreen app (game/video) is foreground; a normal maximized window keeps it visible |
 
 Lower `roamingLevel` to make the pet calmer (it wanders less often); raise `jumpHeight` to let it
 reach windows that float higher above the taskbar. Edit these live via the tray **Settings…** dialog.

@@ -25,6 +25,21 @@ public static class WindowsInterop
     /// <summary>Make the overlay click-through (input passes to the apps behind it).</summary>
     public static void MakeClickThrough(nint hwnd) => SetClickThrough(hwnd, true);
 
+    /// <summary>Hide the overlay window (used while a fullscreen app is foreground). SW_HIDE also lets
+    /// an exclusive-fullscreen game keep true fullscreen — a visible topmost overlay can force it into
+    /// the slower composited path.</summary>
+    public static void Hide(nint hwnd)
+    {
+        if (hwnd != 0) PInvoke.ShowWindow((HWND)hwnd, SHOW_WINDOW_CMD.SW_HIDE);
+    }
+
+    /// <summary>Re-show the overlay WITHOUT activating it, preserving the WS_EX_NOACTIVATE promise so
+    /// it never steals focus from whatever the user is now using.</summary>
+    public static void ShowNoActivate(nint hwnd)
+    {
+        if (hwnd != 0) PInvoke.ShowWindow((HWND)hwnd, SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE);
+    }
+
     /// <summary>
     /// Re-assert the overlay at the top of the topmost z-order WITHOUT activating it
     /// (SWP_NOACTIVATE keeps the WS_EX_NOACTIVATE promise — the overlay never steals focus).

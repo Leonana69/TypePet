@@ -46,6 +46,7 @@ public partial class PetWindow : Window
     public event Action? ControlReady;
 
     private nint _hwnd;
+    private bool _overlayHidden; // true while the overlay is hidden behind a fullscreen app
     private bool _lmbPrev;     // left button state on the previous tick
     private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
     private readonly Random _rng = new(); // picks the per-drag face expression
@@ -123,7 +124,7 @@ public partial class PetWindow : Window
             },
             SetSpeech);
 
-        PollWorld(); // prime the world before the first frame
+        PollWorld(); // prime the world before the first frame (may hide the overlay if a fullscreen app is already up)
 
         _pollTimer = new DispatcherTimer
         {
@@ -131,7 +132,7 @@ public partial class PetWindow : Window
         };
         _pollTimer.Tick += (_, _) => PollWorld();
         _pollTimer.Start();
-        _loop.Start();
+        if (!_overlayHidden) _loop.Start(); // PollWorld stops the loop while hidden; don't override that
 
         ControlReady?.Invoke(); // the control facade is live; the app can start the MCP transport now
 
@@ -242,7 +243,7 @@ public partial class PetWindow : Window
             // times a second; it's invisible (no move/size/activate) and a no-op under true exclusive
             // fullscreen, where DWM isn't compositing the desktop to that display anyway.
             _topmostTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-            _topmostTimer.Tick += (_, _) => { if (!SuppressOverlayTopmost) WindowsInterop.RaiseToTop(_hwnd); };
+            _topmostTimer.Tick += (_, _) => { if (!SuppressOverlayTopmost && !_overlayHidden) WindowsInterop.RaiseToTop(_hwnd); };
             _topmostTimer.Start();
         }
     }
@@ -421,6 +422,14 @@ public partial class PetWindow : Window
     private void PollWorld()
     {
         if (_tracker is null) return;
+
+        // Hide the pet while a borderless / exclusive-fullscreen app (a game or video) is foreground,
+        // so it never sits on top of it. Re-checked every poll, so the pet returns the moment the user
+        // alt-tabs back to the desktop. While hidden there's nothing to draw, so skip the world rebuild.
+        bool wantHidden = _cfg.HideWhenFullscreen && _tracker.IsForegroundFullscreen();
+        if (wantHidden != _overlayHidden) SetOverlayHidden(wantHidden);
+        if (_overlayHidden) return;
+
         try
         {
             var physical = _tracker.Capture();
@@ -436,6 +445,49 @@ public partial class PetWindow : Window
             // Transient capture errors (a window dying mid-enumeration) must not crash the
             // overlay; the next poll recovers. Trace it so it isn't fully invisible in dev.
             System.Diagnostics.Debug.WriteLine($"[MaplePet] world poll failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Hide or restore the whole overlay when a fullscreen app takes/relinquishes the foreground. When
+    /// hidden we freeze the game loop (the pet stops walking on now-stale geometry and the overlay stops
+    /// spending frames), clear the click hook's pet rect (so a click meant for the game is never eaten),
+    /// and SW_HIDE the native window. Restoring shows it without activating (preserving WS_EX_NOACTIVATE),
+    /// re-asserts topmost, and resumes the loop. The world poll keeps running throughout, so the next
+    /// poll after the app exits restores the pet and a fresh geometry capture follows.
+    /// </summary>
+    private void SetOverlayHidden(bool hidden)
+    {
+        _overlayHidden = hidden;
+
+        if (hidden)
+        {
+            // Tear down any in-progress grab before the pet vanishes: drop it, forget the click hook's
+            // swallowed press (so a button-up meant for the fullscreen app behind isn't eaten), and reset
+            // the per-drag input edges so a stale drag can't resume when we show again.
+            if (_pet?.IsDragging == true) _pet.EndDrag();
+            _clickBlocker?.SetPetRect(false, 0, 0, 0, 0);
+            _clickBlocker?.ResetSwallow();
+            _lmbPrev = false;
+            if (_wasDragging) { _wasDragging = false; _animator?.SetTransientExpression(null); }
+
+            _loop.Stop();
+            if (OperatingSystem.IsWindows()) WindowsInterop.Hide(_hwnd);
+        }
+        else
+        {
+            // Displays may have changed while we were hidden — a fullscreen game often switches
+            // resolution — so re-measure the overlay's span and coordinate origin before showing again,
+            // otherwise cursor hit-testing and the click hook's pet rect would be misaligned.
+            LayoutOverlay();
+            if (_pet is not null) { _pet.RoamMaxY = Height - 150; _pet.RoamMinY = 150; }
+
+            if (OperatingSystem.IsWindows())
+            {
+                WindowsInterop.ShowNoActivate(_hwnd);
+                WindowsInterop.RaiseToTop(_hwnd);
+            }
+            _loop.Start();
         }
     }
 

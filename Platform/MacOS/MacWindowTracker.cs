@@ -12,4 +12,7 @@ public sealed class MacWindowTracker : IWindowTracker
 {
     public WorldGeometry Capture() =>
         throw new PlatformNotSupportedException("macOS window tracker is not implemented yet.");
+
+    /// <summary>No fullscreen detection yet — the pet stays visible on macOS.</summary>
+    public bool IsForegroundFullscreen() => false;
 }

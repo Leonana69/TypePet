@@ -17,6 +17,8 @@ public sealed class Settings
     public double RoamingLevel { get; set; } = 50;   // 0..100: how restless it is — the chance it wanders
                                                      // to a new spot when idle (0 = stay put, 100 = always roam)
     public bool ShowOverlay { get; set; } = false;   // draw the debug window-edge / path overlay
+    public bool HideWhenFullscreen { get; set; } = true; // hide the pet while a borderless/exclusive
+                                                         // fullscreen app (a game/video) is foreground
     public int TargetFps { get; set; } = 60;
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";

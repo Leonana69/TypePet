@@ -23,7 +23,7 @@ public sealed class SettingsView : UserControl
     // (true)=suspend the live global hotkey while a capture is in progress; (false)=re-arm it afterwards.
     private readonly Action<bool>? _onHotkeyCapture;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort;
-    private readonly ToggleSwitch _overlay, _startup, _mcp;
+    private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen;
     private readonly Button _hotkeyBtn;
     private string _hotkeyText = "";    // the persisted gesture, mirrored into _cfg by ApplyLive
     private string _hotkeyBefore = "";  // button text to restore if a capture is cancelled
@@ -82,6 +82,10 @@ public sealed class SettingsView : UserControl
         _startup = Toggle();
         _startup.IsChecked = StartupRegistration.IsEnabled();
         rows.Children.Add(ToggleRow("Start with Windows", "Launch MaplePet automatically when you sign in", _startup));
+        _hideFullscreen = Toggle();
+        _hideFullscreen.IsChecked = cfg.HideWhenFullscreen;
+        rows.Children.Add(ToggleRow("Hide in fullscreen apps",
+            "Tuck the pet away while a borderless or fullscreen game/video is in front", _hideFullscreen));
         _overlay = Toggle();
         _overlay.IsChecked = cfg.ShowOverlay;
         rows.Children.Add(ToggleRow("Debug overlay", "Draw window edges, platforms & the pet's path", _overlay));
@@ -103,6 +107,7 @@ public sealed class SettingsView : UserControl
         foreach (var n in new[] { _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort })
             n.ValueChanged += (_, _) => ApplyLive();
         _overlay.IsCheckedChanged += (_, _) => ApplyLive();
+        _hideFullscreen.IsCheckedChanged += (_, _) => ApplyLive();
         _mcp.IsCheckedChanged += (_, _) => { _mcpPort.IsEnabled = _mcp.IsChecked == true; ApplyLive(); };
         _mcpPort.IsEnabled = _mcp.IsChecked == true; // the port only matters when the server is on
         _startup.IsCheckedChanged += (_, _) => { if (_ready) ApplyStartup(); };
@@ -122,6 +127,7 @@ public sealed class SettingsView : UserControl
         _cfg.TargetFps = (int)D(_fps, _cfg.TargetFps);
         _cfg.WorldPollHz = D(_poll, _cfg.WorldPollHz);
         _cfg.ShowOverlay = _overlay.IsChecked ?? _cfg.ShowOverlay;
+        _cfg.HideWhenFullscreen = _hideFullscreen.IsChecked ?? _cfg.HideWhenFullscreen;
         _cfg.EnableMcpServer = _mcp.IsChecked ?? _cfg.EnableMcpServer;
         _cfg.McpPort = (int)D(_mcpPort, _cfg.McpPort);
         _cfg.SayInputHotkey = _hotkeyText;

@@ -28,7 +28,7 @@ public sealed class MouseClickBlocker : IDisposable
     private volatile bool _enabled;
     private volatile int _left, _top, _right, _bottom;
     private volatile bool _leftDown; // physical left-button state seen by the hook (even when swallowed)
-    private bool _swallowedDown;     // latch: we ate the down, so eat the matching up (hook-thread only)
+    private volatile bool _swallowedDown; // latch: we ate the down, so eat the matching up
 
     /// <summary>Left-button state observed by the hook — reliable even when the click is swallowed
     /// (unlike GetAsyncKeyState, which doesn't see a hook-blocked button event).</summary>
@@ -50,6 +50,11 @@ public sealed class MouseClickBlocker : IDisposable
         _left = left; _top = top; _right = right; _bottom = bottom;
         _enabled = enabled;
     }
+
+    /// <summary>Forget any in-flight swallowed press so the NEXT button-up is passed through instead of
+    /// eaten. Used when the overlay is hidden mid-press (a fullscreen app took over): otherwise the
+    /// latch would swallow a release that belongs to the app behind us.</summary>
+    public void ResetSwallow() => _swallowedDown = false;
 
     private unsafe LRESULT HookProc(int nCode, WPARAM wParam, LPARAM lParam)
     {

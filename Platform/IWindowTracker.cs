@@ -10,4 +10,12 @@ namespace MaplePet.Platform;
 public interface IWindowTracker
 {
     WorldGeometry Capture();
+
+    /// <summary>
+    /// True when the foreground window is a borderless / exclusive-fullscreen app that covers its
+    /// entire monitor (the taskbar included). A normal window that's merely maximized is NOT
+    /// fullscreen. Used to hide the pet so it doesn't sit on top of (or kick out of fullscreen) a game
+    /// or video. Returns false on platforms without a real implementation.
+    /// </summary>
+    bool IsForegroundFullscreen();
 }

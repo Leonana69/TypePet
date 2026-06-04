@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Dwm;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 using MaplePet.Engine;
@@ -44,6 +45,67 @@ public sealed class WindowsWindowTracker : IWindowTracker
 
         var (taskbar, edge) = GetTaskbar();
         return new WorldGeometry(windows, taskbar, edge);
+    }
+
+    /// <summary>
+    /// True when the FOREGROUND window is borderless / exclusive fullscreen — it covers its whole
+    /// monitor, taskbar included. Three guards keep a normal desktop from tripping it:
+    /// <list type="bullet">
+    /// <item>The shell surfaces (desktop wallpaper host, taskbar) are excluded — they span the screen
+    /// too, so clicking the empty desktop would otherwise read as "fullscreen".</item>
+    /// <item>A normal app that's merely <b>maximized</b> still carries its title-bar / resize-frame
+    /// style; it's excluded even when an auto-hide taskbar lets it cover the whole monitor. A
+    /// borderless game drops that chrome, so it isn't excluded here.</item>
+    /// <item>Finally the window's true visible bounds must cover the full monitor rect (not just the
+    /// work area) — the test that actually separates fullscreen from a taskbar-respecting maximize.</item>
+    /// </list>
+    /// Only the foreground window is considered, so alt-tabbing out of a game (its window stays
+    /// fullscreen-sized but loses focus) brings the pet back.
+    /// </summary>
+    public bool IsForegroundFullscreen()
+    {
+        var fg = PInvoke.GetForegroundWindow();
+        if (fg == default || fg == (HWND)ExcludeHwnd) return false;
+        return IsFullscreenWindow(fg);
+    }
+
+    /// <summary>True when the given window is borderless / exclusive fullscreen — its true visible bounds
+    /// cover its whole monitor (taskbar included), rather than merely being maximized. The shell surfaces
+    /// and framed-maximized windows are excluded (see the summary on <see cref="IsForegroundFullscreen"/>).</summary>
+    private bool IsFullscreenWindow(HWND h)
+    {
+        if (IsShellWindow(h)) return false;
+
+        // A framed window that's just maximized (e.g. over an auto-hide taskbar) is not fullscreen.
+        if (PInvoke.IsZoomed(h) && HasCaption(h)) return false;
+
+        var monitor = PInvoke.MonitorFromWindow(h, MONITOR_FROM_FLAGS.MONITOR_DEFAULTTONEAREST);
+        if (monitor == default) return false;
+        var mi = new MONITORINFO { cbSize = (uint)Marshal.SizeOf<MONITORINFO>() };
+        if (!PInvoke.GetMonitorInfo(monitor, ref mi)) return false;
+        var m = mi.rcMonitor;
+
+        var w = GetVisibleRect(h);
+        const double tol = 2; // borderless windows are sometimes a pixel shy of the exact monitor rect
+        return w.Left <= m.left + tol && w.Top <= m.top + tol
+            && w.Right >= m.right - tol && w.Bottom >= m.bottom - tol;
+    }
+
+    private static bool HasCaption(HWND h)
+    {
+        long style = (long)PInvoke.GetWindowLongPtr(h, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+        return (style & (long)WINDOW_STYLE.WS_CAPTION) == (long)WINDOW_STYLE.WS_CAPTION;
+    }
+
+    /// <summary>True for the desktop wallpaper hosts and taskbar windows, which also span the screen
+    /// but must never count as a fullscreen app.</summary>
+    private static unsafe bool IsShellWindow(HWND h)
+    {
+        char* buf = stackalloc char[64];
+        int n = PInvoke.GetClassName(h, new PWSTR(buf), 64);
+        if (n <= 0) return false;
+        string cls = new(buf, 0, n);
+        return cls is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd";
     }
 
     private static bool IsToolWindow(HWND h)

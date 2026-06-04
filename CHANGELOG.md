@@ -7,6 +7,14 @@ All notable changes to MaplePet are recorded here. The format is based on
 The version lives in [`MaplePet.csproj`](MaplePet.csproj) (`<Version>`); bump it together with the
 matching `AssemblyVersion`/`FileVersion` and add an entry here when releasing.
 
+## [Unreleased]
+
+### Added
+- Auto-hide: the pet tucks away while a borderless or exclusive-fullscreen app (a game or video) is
+  the foreground window, and returns when you alt-tab back to the desktop. A window that's merely
+  maximized keeps the pet visible. Toggle it in Settings → System ("Hide in fullscreen apps") or via
+  `hideWhenFullscreen` in `settings.json` (default on).
+
 ## [1.0.0] - 2026-06-03
 
 First tagged release. The desktop pet walks, jumps, and climbs along the geometry derived from your
