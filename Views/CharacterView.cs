@@ -17,13 +17,19 @@ namespace MaplePet.Views;
 /// The Characters tab of <see cref="ConfigWindow"/>. Shows one card per available character — the
 /// built-in Default plus every imported one — six per row in a scrolling grid, with a trailing import
 /// card to add a new character from a zip. Clicking a card makes the pet wear it (via the
-/// <c>onSelect</c> callback); clicking a card's name renames it; right-clicking offers Export and
-/// Delete. The currently worn character gets an accent ring and a "WORN" badge.
+/// <c>onSelect</c> callback); right-clicking offers Rename, Export, and Delete. The currently worn
+/// character gets an accent ring and a "WORN" badge.
 /// </summary>
 public sealed class CharacterView : UserControl
 {
     private const int Columns = 6;
-    private const double CardW = 96, CardH = 132, ThumbSize = 84;
+    private const double CardW = 96, CardH = 158;
+    // The character preview is a portrait well: its width is capped by the card, but its height fills
+    // most of the (taller) card. The footage is drawn at 100% (native pixels), centered in the well.
+    private const double ThumbW = 84, ThumbH = 110;
+    // The smallest gap kept between the feet and the well's bottom edge when a tall figure would
+    // otherwise reach past it.
+    private const double ThumbFootMargin = 6;
 
     // Where the user can build/obtain importable MapleStory character footage.
     private const string MapleSimUrl = "https://maple-sim.net/";
@@ -63,7 +69,7 @@ public sealed class CharacterView : UserControl
 
         var hint = new TextBlock
         {
-            Text = "Click a character to wear it · right-click to export or delete",
+            Text = "Click a character to wear it · right-click to rename, export, or delete",
             VerticalAlignment = VerticalAlignment.Center,
         };
         hint.Classes.Add("caption");
@@ -130,8 +136,8 @@ public sealed class CharacterView : UserControl
 
         var thumb = new Image
         {
-            Width = ThumbSize,
-            Height = ThumbSize,
+            Width = ThumbW,
+            Height = ThumbH,
             Stretch = Stretch.Uniform,
             Source = Thumbnail(entry),
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -141,8 +147,8 @@ public sealed class CharacterView : UserControl
 
         var thumbWell = new Border
         {
-            Width = ThumbSize + 14,
-            Height = ThumbSize + 14,
+            Width = ThumbW + 14,
+            Height = ThumbH + 14,
             CornerRadius = new CornerRadius(10),
             Background = FrostTheme.ThumbWell,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -163,7 +169,7 @@ public sealed class CharacterView : UserControl
 
         var content = new StackPanel
         {
-            Spacing = 7,
+            Spacing = 3, // sit the name close under the thumbnail
             VerticalAlignment = VerticalAlignment.Center,
             Children = { thumbWell, namePanel },
         };
@@ -197,20 +203,15 @@ public sealed class CharacterView : UserControl
 
         if (!entry.IsBuiltIn)
         {
+            // The built-in default can't be renamed/exported/deleted, so it gets no context menu.
+            // Rename lives here (not on a name-click) so it doesn't fight the card's wear-on-click.
+            var rename = new MenuItem { Header = "Rename" };
+            rename.Click += (_, _) => BeginRename(entry, namePanel);
             var export = new MenuItem { Header = "Export…" };
             export.Click += (_, _) => _ = ExportAsync(entry);
             var delete = new MenuItem { Header = "Delete" };
             delete.Click += (_, _) => _ = DeleteAsync(entry);
-            card.ContextMenu = new ContextMenu { Items = { export, delete } };
-
-            // Click the name to edit it (the built-in default can't be renamed).
-            nameBlock.Cursor = new Cursor(StandardCursorType.Ibeam);
-            nameBlock.PointerPressed += (_, e) =>
-            {
-                if (!e.GetCurrentPoint(nameBlock).Properties.IsLeftButtonPressed) return;
-                e.Handled = true; // don't also trigger card-select
-                BeginRename(entry, namePanel);
-            };
+            card.ContextMenu = new ContextMenu { Items = { rename, export, delete } };
         }
 
         return card;
@@ -260,7 +261,7 @@ public sealed class CharacterView : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             Children =
             {
-                new Panel { Height = ThumbSize + 14, Children = { plus } },
+                new Panel { Height = ThumbH + 14, Children = { plus } },
                 label,
             },
         };
@@ -314,6 +315,10 @@ public sealed class CharacterView : UserControl
             MaxLength = 40,
             FontSize = 12,
             Padding = new Thickness(4, 1),
+            // Collapse the Fluent default 32px MinHeight so the field hugs the 12px text instead
+            // of standing ~1.5x too tall over the name it replaces (same trick as TextBox.sayInput).
+            MinHeight = 0,
+            VerticalContentAlignment = VerticalAlignment.Center,
         };
         namePanel.Children.Clear();
         namePanel.Children.Add(box);
@@ -382,7 +387,7 @@ public sealed class CharacterView : UserControl
             var entry = await Task.Run(() => _store.Import(path));
             _onSelect(entry.Id); // wear the freshly imported character
             Rebuild();
-            Status($"Imported “{entry.DisplayName}”. Click its name to rename it.");
+            Status($"Imported “{entry.DisplayName}”. Right-click it to rename.");
         }
         catch (Exception ex)
         {
@@ -453,22 +458,19 @@ public sealed class CharacterView : UserControl
             using var sprites = CharacterLoader.Load(_store, entry.Id, ThumbnailPoses);
             if (sprites is null) return null;
 
-            const double pad = 8;
-            double contentW = Math.Max(1, sprites.HalfWidth * 2);
-            double contentH = Math.Max(1, sprites.HeightAboveFeet);
-            double scale = Math.Min((ThumbSize - pad) / contentW, (ThumbSize - pad) / contentH);
-            scale = Math.Clamp(scale, 0.3, 2.0);
-
-            int px = (int)Math.Round(ThumbSize);
-            var rtb = new RenderTargetBitmap(new PixelSize(px, px), new Vector(96, 96));
+            // Draw the footage at 100% — it's native-resolution pixel art, so any non-integer scale
+            // would shimmer/blur it. Every character shares one body rig, so at 1:1 their heads already
+            // come out the same size with no scaling. Center the figure vertically in the well and
+            // horizontally on the navel; anything that overruns the well (a long weapon, a tall hat) is
+            // cropped by the bitmap's own bounds.
+            int pw = (int)Math.Round(ThumbW), ph = (int)Math.Round(ThumbH);
+            var rtb = new RenderTargetBitmap(new PixelSize(pw, ph), new Vector(96, 96));
             using (var ctx = rtb.CreateDrawingContext())
-            using (ctx.PushTransform(Matrix.CreateScale(scale, scale)))
             {
-                double localW = ThumbSize / scale;
-                double localH = ThumbSize / scale;
-                double centerX = localW / 2;
-                // Vertically center the sprite (it spans [feetY - height, feetY]).
-                double feetY = localH / 2 + contentH / 2;
+                double centerX = ThumbW / 2;
+                // Vertically center the drawn figure (it spans HeightAboveFeet up from the feet), but
+                // never push the feet past the bottom edge — a tall hat then crops at the top instead.
+                double feetY = Math.Min(ThumbH - ThumbFootMargin, (ThumbH + sprites.HeightAboveFeet) / 2);
                 PetRenderer.DrawCharacter(ctx, sprites, "stand1", 0, centerX, feetY, flipHorizontal: false);
             }
             return rtb;
@@ -493,9 +495,21 @@ public sealed class CharacterView : UserControl
             ShowInTaskbar = false,
         };
 
-        var ok = new Button { Content = "Delete", MinWidth = 88, IsDefault = true };
+        var ok = new Button
+        {
+            Content = "Delete",
+            MinWidth = 88,
+            IsDefault = true,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+        };
         ok.Classes.Add("danger");
-        var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 88 };
+        var cancel = new Button
+        {
+            Content = "Cancel",
+            IsCancel = true,
+            MinWidth = 88,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+        };
         cancel.Classes.Add("ghost");
         ok.Click += (_, _) => { tcs.TrySetResult(true); dlg.Close(); };
         cancel.Click += (_, _) => { tcs.TrySetResult(false); dlg.Close(); };
