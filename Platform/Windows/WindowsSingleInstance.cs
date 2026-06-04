@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
+using MaplePet.Platform.Abstractions;
 
-namespace MaplePet.Platform;
+namespace MaplePet.Platform.Windows;
 
 /// <summary>
 /// Single-instance guard. The first process to call <see cref="Acquire"/> creates and owns a named
@@ -15,7 +16,7 @@ namespace MaplePet.Platform;
 /// session are blocked. Every step is best-effort: if the OS denies the named objects the app still
 /// starts (one extra pet beats no pet).
 /// </summary>
-public sealed class SingleInstance : IDisposable
+public sealed class WindowsSingleInstance : ISingleInstance
 {
     // A fixed GUID keeps these names from colliding with any other app's kernel objects; the
     // "Local\" prefix scopes them to the current login session.
@@ -33,13 +34,13 @@ public sealed class SingleInstance : IDisposable
     /// <summary>The owning guard for this process, set by <see cref="Acquire"/>. The app reads this to
     /// subscribe to <see cref="Activated"/>; it is only ever the owner's instance (a second process
     /// exits immediately after <see cref="Acquire"/>).</summary>
-    public static SingleInstance? Current { get; private set; }
+    public static WindowsSingleInstance? Current { get; private set; }
 
     /// <summary>Raised (on a thread-pool thread) on the OWNER each time another instance attempts to
     /// launch. Handlers must marshal to the UI thread themselves.</summary>
     public event Action? Activated;
 
-    private SingleInstance(bool isOwner, Mutex? mutex, EventWaitHandle? signal)
+    private WindowsSingleInstance(bool isOwner, Mutex? mutex, EventWaitHandle? signal)
     {
         IsOwner = isOwner;
         _mutex = mutex;
@@ -56,7 +57,7 @@ public sealed class SingleInstance : IDisposable
 
     /// <summary>Acquire the guard for this process. The returned instance's <see cref="IsOwner"/> tells
     /// the caller whether to run (true) or defer to the already-running instance (false). Never throws.</summary>
-    public static SingleInstance Acquire()
+    public static WindowsSingleInstance Acquire()
     {
         Mutex? mutex = null;
         bool isOwner;
@@ -72,7 +73,7 @@ public sealed class SingleInstance : IDisposable
             // The kernel object couldn't be created (locked-down policy, name clash, …). Fail open:
             // run as a lone instance rather than refusing to start.
             mutex?.Dispose();
-            return Current = new SingleInstance(isOwner: true, null, null);
+            return Current = new WindowsSingleInstance(isOwner: true, null, null);
         }
 
         // The activation signal is a nicety that lets a second launch poke the owner. If it can't be
@@ -81,7 +82,7 @@ public sealed class SingleInstance : IDisposable
         try { signal = new EventWaitHandle(false, EventResetMode.AutoReset, SignalName, out _); }
         catch { signal = null; }
 
-        return Current = new SingleInstance(isOwner, mutex, signal);
+        return Current = new WindowsSingleInstance(isOwner, mutex, signal);
     }
 
     /// <summary>(Second instance only) Wake the already-running owner so it can acknowledge the launch;

@@ -14,8 +14,9 @@ namespace MaplePet.Views;
 /// The Settings tab of <see cref="ConfigWindow"/>: the configurable parameters grouped into Movement /
 /// Behavior / Advanced / System sections. Every change applies immediately — the controller reads
 /// <see cref="Settings"/> each tick — and is persisted to settings.json on the spot, so there is no
-/// Save button. Target FPS / poll rate only take effect on the next launch. "Start with Windows" is
-/// backed by the registry (see <see cref="StartupRegistration"/>), not settings.json.
+/// Save button. Target FPS / poll rate only take effect on the next launch. "Start at login" is
+/// backed by the OS (registry on Windows, SMAppService on macOS) via
+/// <see cref="PlatformServices.StartupAtLogin"/>, not settings.json.
 /// </summary>
 public sealed class SettingsView : UserControl
 {
@@ -80,8 +81,9 @@ public sealed class SettingsView : UserControl
         rows.Children.Add(Divider());
         rows.Children.Add(Section("SYSTEM"));
         _startup = Toggle();
-        _startup.IsChecked = StartupRegistration.IsEnabled();
-        rows.Children.Add(ToggleRow("Start with Windows", "Launch MaplePet automatically when you sign in", _startup));
+        _startup.IsChecked = PlatformServices.StartupAtLogin.IsEnabled();
+        _startup.IsEnabled = PlatformServices.StartupAtLogin.IsSupported; // disabled on platforms that can't register (e.g. unbundled macOS)
+        rows.Children.Add(ToggleRow("Start at login", "Launch MaplePet automatically when you sign in", _startup));
         _hideFullscreen = Toggle();
         _hideFullscreen.IsChecked = cfg.HideWhenFullscreen;
         rows.Children.Add(ToggleRow("Hide in fullscreen apps",
@@ -192,14 +194,14 @@ public sealed class SettingsView : UserControl
         _onHotkeyCapture?.Invoke(false); // re-arm the live hotkey with the new chord
     }
 
-    /// <summary>Apply the "Start with Windows" toggle to the registry, then re-read so the switch
-    /// reflects the actual state if the write was blocked.</summary>
+    /// <summary>Apply the "Start at login" toggle to the OS, then re-read so the switch reflects the
+    /// actual state if the write was blocked.</summary>
     private void ApplyStartup()
     {
-        StartupRegistration.SetEnabled(_startup.IsChecked ?? false);
+        PlatformServices.StartupAtLogin.SetEnabled(_startup.IsChecked ?? false);
         bool prev = _ready;
         _ready = false;
-        _startup.IsChecked = StartupRegistration.IsEnabled();
+        _startup.IsChecked = PlatformServices.StartupAtLogin.IsEnabled();
         _ready = prev;
     }
 

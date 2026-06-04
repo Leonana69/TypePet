@@ -1,11 +1,12 @@
 using MaplePet.Engine;
 
-namespace MaplePet.Platform;
+namespace MaplePet.Platform.Abstractions;
 
 /// <summary>
-/// The single seam between the shared engine and OS-specific code. Returns the current
-/// visible window rectangles and the taskbar, all in PHYSICAL screen pixels. Called a
-/// few times per second (worldPollHz), never every frame.
+/// The seam between the shared engine and OS-specific window enumeration. Returns the current
+/// visible window rectangles and the taskbar/ground, in the platform's screen-coordinate unit
+/// (Windows: physical pixels; macOS: points — see <c>ScreenSpace</c> for how the overlay reconciles
+/// the unit). Called a few times per second (worldPollHz), never every frame.
 /// </summary>
 public interface IWindowTracker
 {

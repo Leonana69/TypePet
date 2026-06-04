@@ -1,13 +1,12 @@
 using System;
-using System.Globalization;
 using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using MaplePet.Engine;
+using MaplePet.Platform;
+using MaplePet.Platform.Abstractions;
 using MaplePet.Rendering;
 using MaplePet.Views;
 
@@ -45,8 +44,13 @@ public partial class App : Application
                 return;
             }
 
-            _settings = Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json"));
-            _store = new CharacterStore();
+            // Resolve writable on-disk locations per platform (a signed macOS .app bundle's
+            // Contents/MacOS is read-only, so settings/characters live under ~/Library/Application
+            // Support/MaplePet there; Windows and dev runs keep their existing locations).
+            var paths = PlatformServices.AppPaths;
+            try { Directory.CreateDirectory(paths.DataRoot); } catch { /* best effort */ }
+            _settings = Settings.Load(paths.SettingsPath);
+            _store = new CharacterStore(paths.CharactersRoot);
 
             // If the remembered character's folder is gone (deleted out-of-band while closed), fall
             // back to the default and persist it, so the pet and the picker's highlight agree.
@@ -66,7 +70,7 @@ public partial class App : Application
             // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
             // but it pokes us on the way out; acknowledge with a quick speech bubble so the double-click
             // isn't silent. The poke arrives on a thread-pool thread, so marshal onto the UI thread.
-            if (MaplePet.Platform.SingleInstance.Current is { } single)
+            if (MaplePet.Platform.PlatformServices.SingleInstance is { } single)
                 single.Activated += () =>
                     Avalonia.Threading.Dispatcher.UIThread.Post(AcknowledgeSecondInstance);
 
@@ -87,12 +91,6 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    // Segoe Fluent Icons / MDL2 glyph codepoints (present on Windows 10/11) for the tray menu items.
-    // Stored as ints so no Private-Use-Area chars live in the source file.
-    private const int GlyphContact = 0xE77B;  // person bust
-    private const int GlyphSettings = 0xE713;  // gear
-    private const int GlyphPower = 0xE7E8;      // power button
-
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
         var accent = FrostTheme.Accent;
@@ -104,13 +102,15 @@ public partial class App : Application
             IsEnabled = false,
         };
 
-        var charactersItem = new NativeMenuItem("Characters…") { Icon = RenderGlyph(GlyphContact, accent) };
+        var glyphs = PlatformServices.TrayGlyphs;
+
+        var charactersItem = new NativeMenuItem("Characters…") { Icon = glyphs.Render(TrayGlyph.Contact, accent) };
         charactersItem.Click += (_, _) => ShowCharacters();
 
-        var settingsItem = new NativeMenuItem("Settings…") { Icon = RenderGlyph(GlyphSettings, accent) };
+        var settingsItem = new NativeMenuItem("Settings…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
-        var exitItem = new NativeMenuItem("Exit") { Icon = RenderGlyph(GlyphPower, FrostTheme.Exit) };
+        var exitItem = new NativeMenuItem("Exit") { Icon = glyphs.Render(TrayGlyph.Power, FrostTheme.Exit) };
         exitItem.Click += (_, _) => desktop.Shutdown();
 
         var menu = new NativeMenu();
@@ -238,85 +238,4 @@ public partial class App : Application
         if (_wearingItem is not null) _wearingItem.Header = WearingLabel();
     }
 
-    private static readonly string[] IconFonts = { "Segoe Fluent Icons", "Segoe MDL2 Assets" };
-
-    // The dark Fluent menu surface the tray popup paints behind each item (measured: solid #2B2B2B).
-    // The app forces RequestedThemeVariant=Dark, so this is stable regardless of the Windows light/dark
-    // setting. Glyph icons are rendered ONTO this exact colour (see RenderGlyph) so the icon tile is
-    // invisible against the menu.
-    private static readonly Color TrayMenuSurface = Color.FromRgb(0x2B, 0x2B, 0x2B);
-
-    /// <summary>Rasterize a Segoe Fluent Icons / MDL2 glyph (by codepoint) into a tinted bitmap for a
-    /// native menu item. Returns null when no installed icon font actually contains the glyph, so the
-    /// menu item shows no icon rather than a ".notdef" tofu box (Avalonia silently substitutes a
-    /// fallback font and renders glyph 0 instead of throwing).</summary>
-    /// <remarks>
-    /// The glyph is drawn on an OPAQUE background (<see cref="TrayMenuSurface"/>), NOT a transparent one,
-    /// and at a SMALL size. Both matter, and were verified in the live tray popup:
-    /// <list type="bullet">
-    /// <item>A small TRANSPARENT glyph bitmap renders an opaque BLACK box behind the glyph — the tray
-    /// popup is a transparent per-pixel-alpha window (Avalonia's TrayPopupRoot) and small
-    /// render-target-derived bitmaps lose their alpha when composited into it. A fully OPAQUE bitmap has
-    /// no alpha to lose, so no box; and because its background is the exact menu colour the tile is
-    /// invisible (only faintly visible under the row's hover highlight).</item>
-    /// <item>Rendering small (≈ the ~16–24px display size) keeps the thin 1px strokes crisp. Rendering
-    /// large and letting the menu downscale heavily thins/breaks them (256px → the ring became
-    /// disconnected arcs; even 96px dropped pixels).</item>
-    /// </list>
-    /// Grayscale text AA (not the default subpixel) avoids the coloured LCD fringing that drawing text on
-    /// an opaque background otherwise produces. The result is baked into an immutable decoded bitmap so
-    /// the menu doesn't hold a live (disposable) render target.
-    /// </remarks>
-    private static Bitmap? RenderGlyph(int codepoint, Color color, int size = 32)
-    {
-        try
-        {
-            if (!TryGetIconTypeface((uint)codepoint, out var typeface))
-                return null;
-
-            var text = new FormattedText(
-                char.ConvertFromUtf32(codepoint),
-                CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight,
-                typeface,
-                size * 0.66,
-                new SolidColorBrush(color));
-
-            using var rtb = new RenderTargetBitmap(new PixelSize(size, size), new Vector(96, 96));
-            using (var ctx = rtb.CreateDrawingContext())
-            using (ctx.PushRenderOptions(new RenderOptions { TextRenderingMode = TextRenderingMode.Antialias }))
-            {
-                ctx.DrawRectangle(new SolidColorBrush(TrayMenuSurface), null, new Avalonia.Rect(0, 0, size, size));
-                var origin = new Point((size - text.Width) / 2, (size - text.Height) / 2);
-                ctx.DrawText(text, origin);
-            }
-
-            using var ms = new MemoryStream();
-            rtb.Save(ms);
-            ms.Position = 0;
-            return new Bitmap(ms);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>Find an installed icon font that actually contains <paramref name="codepoint"/> (glyph
-    /// index != 0), so we can decline to draw rather than emit a tofu box on a font-less machine.</summary>
-    private static bool TryGetIconTypeface(uint codepoint, out Typeface typeface)
-    {
-        foreach (var family in IconFonts)
-        {
-            var tf = new Typeface(new FontFamily(family));
-            if (FontManager.Current.TryGetGlyphTypeface(tf, out var gt) &&
-                gt.TryGetGlyph(codepoint, out var gid) && gid != 0)
-            {
-                typeface = tf;
-                return true;
-            }
-        }
-        typeface = default!;
-        return false;
-    }
 }

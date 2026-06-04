@@ -225,6 +225,9 @@
     <!-- ============================ inputs ============================ -->
     <Style Selector="NumericUpDown">
       <Setter Property="CornerRadius" Value="8" />
+      <!-- Center the value text vertically (flows to PART_TextBox). The Fluent default leaves it
+           top-biased, which is most visible on macOS where the UI font's metrics seat digits high. -->
+      <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <!-- Round the inner text field's LEFT corners to match the 8px outer radius (the spinner buttons
          own the right side). The Fluent NumericUpDown template doesn't flow CornerRadius to
@@ -232,6 +235,11 @@
          :pointerover and the corners appear to change when hovered. -->
     <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
       <Setter Property="CornerRadius" Value="8,0,0,8" />
+      <!-- Center the text, and use symmetric vertical padding: the Fluent TextBox theme pads the top
+           and bottom unequally, which (combined with macOS font metrics) seats the digits above the
+           true center. Keep the horizontal padding, zero out the vertical, and center the content. -->
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Padding" Value="10,0,6,0" />
     </Style>
     <!-- Round the down (decrease) spinner button's RIGHT corners so its dark background follows the
          rounded border instead of poking a square corner past it. It's the right-most button; the up

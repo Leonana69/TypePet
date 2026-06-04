@@ -1,0 +1,10 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Allow the net10.0-windows head to restore/build on a non-Windows host (the dev Mac, and any
+         CI runner) without NETSDK1100. It only affects -windows TFMs; net10.0 ignores it. The Windows
+         head still can't RUN on macOS — iterate locally with `dotnet build -f net10.0`. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>
