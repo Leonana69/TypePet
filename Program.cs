@@ -33,7 +33,25 @@ internal static class Program
             return 0;
         }
 
-        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        // Enforce a single running pet for the normal interactive launch. Dev/test invocations
+        // (--render-poses, --smoke) are exempt: they're short-lived and shouldn't be blocked by — or
+        // register as — the live instance.
+        bool interactiveRun = AppState.RenderPosesDir is null && AppState.SmokeSeconds <= 0;
+        MaplePet.Platform.SingleInstance? instance = null;
+        if (interactiveRun)
+        {
+            instance = MaplePet.Platform.SingleInstance.Acquire();
+            if (!instance.IsOwner)
+            {
+                instance.SignalOwner(); // poke the already-running pet to acknowledge, then bow out
+                instance.Dispose();
+                return 0;
+            }
+        }
+
+        // Owner: hold the mutex for the whole run (using over a null instance is a no-op in dev/test).
+        using (instance)
+            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
     public static AppBuilder BuildAvaloniaApp() =>

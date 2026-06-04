@@ -63,6 +63,13 @@ public partial class App : Application
             // Pop up the floating say-input bar when the pet is double-clicked or the global hotkey fires.
             _petWindow.SayInputRequested += ShowSayInput;
 
+            // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
+            // but it pokes us on the way out; acknowledge with a quick speech bubble so the double-click
+            // isn't silent. The poke arrives on a thread-pool thread, so marshal onto the UI thread.
+            if (MaplePet.Platform.SingleInstance.Current is { } single)
+                single.Activated += () =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(AcknowledgeSecondInstance);
+
             // Optionally expose the pet over a local MCP tool server so an LLM/agent can drive it.
             // Started once the control facade is live (end of PetWindow.OnOpened); off by default.
             if (_settings.EnableMcpServer)
@@ -138,6 +145,18 @@ public partial class App : Application
     {
         var name = _store?.Get(_settings?.CurrentCharacterId ?? CharacterStore.DefaultId)?.DisplayName ?? "Default";
         return $"MaplePet — {name}";
+    }
+
+    /// <summary>The running pet's response to a blocked second launch — a brief speech bubble so the
+    /// user gets visible feedback instead of a silently-ignored double-click. Control is null only in
+    /// the sliver before the pet finishes opening; a missed acknowledgement there is harmless. Skipped
+    /// while the overlay is hidden behind a fullscreen app: the game loop is frozen then, so the bubble
+    /// wouldn't render and its countdown wouldn't tick — it would instead pop up, stale, when the user
+    /// later returns to the desktop.</summary>
+    private void AcknowledgeSecondInstance()
+    {
+        if (_petWindow is { IsOverlayHidden: false })
+            _ = _petWindow.Control?.Say("I'm already here!");
     }
 
     private void ShowSettings() => ShowConfig(ConfigTab.Settings);

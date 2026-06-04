@@ -71,6 +71,12 @@ public partial class PetWindow : Window
     /// opened above it (the say-input bar) isn't pushed behind the pet. Set by the app.</summary>
     public bool SuppressOverlayTopmost { get; set; }
 
+    /// <summary>True while the overlay is hidden behind a fullscreen app — the game loop is frozen, so
+    /// nothing draws and the speech-bubble countdown doesn't tick. The app checks this before arming a
+    /// transient bubble (e.g. the second-launch greeting) that would otherwise resurface, stale, only
+    /// when the overlay is later restored.</summary>
+    public bool IsOverlayHidden => _overlayHidden;
+
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
     // app always constructs it via the overload below (with the shared instances).
     public PetWindow() : this(Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json")), new CharacterStore()) { }
