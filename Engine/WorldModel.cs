@@ -1,6 +1,6 @@
 namespace MaplePet.Engine;
 
-/// <summary>A walkable, horizontal surface (a window top edge, or the taskbar face).</summary>
+/// <summary>A walkable, horizontal surface (a window top or bottom edge, or the taskbar face).</summary>
 public readonly record struct Platform(double Y, double XStart, double XEnd)
 {
     public double Width => XEnd - XStart;
@@ -21,8 +21,8 @@ public sealed record World(IReadOnlyList<Platform> Platforms, IReadOnlyList<Ladd
 /// Pure transformation from raw rectangles into the platform/ladder collision world.
 /// No OS calls — fully unit-testable with synthetic geometry.
 ///
-/// Only the VISIBLE part of each edge is emitted: a window's top/side edge is clipped against
-/// every window in front of it (the input list is in Z-order, front-first) and against the
+/// Only the VISIBLE part of each edge is emitted: a window's top/bottom/side edge is clipped
+/// against every window in front of it (the input list is in Z-order, front-first) and against the
 /// taskbar, so an edge split by overlapping windows produces several segments.
 /// </summary>
 public static class WorldModel
@@ -55,13 +55,15 @@ public static class WorldModel
             if (w.Width <= 1 || w.Height <= 1) continue;
 
             var topHoles = new List<(double, double)>();
+            var bottomHoles = new List<(double, double)>();
             var leftHoles = new List<(double, double)>();
             var rightHoles = new List<(double, double)>();
 
-            // The taskbar sits in front of windows, hiding the lower part of the side edges.
+            // The taskbar sits in front of windows, hiding any window edge that falls within its band.
             if (hasTaskbar)
             {
                 if (Covers(tb.Top, tb.Bottom, w.Top)) topHoles.Add((tb.Left, tb.Right));
+                if (Covers(tb.Top, tb.Bottom, w.Bottom)) bottomHoles.Add((tb.Left, tb.Right));
                 if (Covers(tb.Left, tb.Right, w.Left)) leftHoles.Add((tb.Top, tb.Bottom));
                 if (Covers(tb.Left, tb.Right, w.Right)) rightHoles.Add((tb.Top, tb.Bottom));
             }
@@ -72,12 +74,15 @@ public static class WorldModel
                 var o = wins[j];
                 if (o.Width <= 1 || o.Height <= 1) continue;
                 if (Covers(o.Top, o.Bottom, w.Top)) topHoles.Add((o.Left, o.Right));
+                if (Covers(o.Top, o.Bottom, w.Bottom)) bottomHoles.Add((o.Left, o.Right));
                 if (Covers(o.Left, o.Right, w.Left)) leftHoles.Add((o.Top, o.Bottom));
                 if (Covers(o.Left, o.Right, w.Right)) rightHoles.Add((o.Top, o.Bottom));
             }
 
             foreach (var (s, e) in VisibleSegments(w.Left, w.Right, topHoles))
                 platforms.Add(new Platform(w.Top, s, e));
+            foreach (var (s, e) in VisibleSegments(w.Left, w.Right, bottomHoles))
+                platforms.Add(new Platform(w.Bottom, s, e));
             foreach (var (s, e) in VisibleSegments(w.Top, w.Bottom, leftHoles))
                 ladders.Add(new Ladder(w.Left, s, e));
             foreach (var (s, e) in VisibleSegments(w.Top, w.Bottom, rightHoles))

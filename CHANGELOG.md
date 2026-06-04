@@ -10,6 +10,9 @@ matching `AssemblyVersion`/`FileVersion` and add an entry here when releasing.
 ## [Unreleased]
 
 ### Added
+- Window **bottom edges** are now walkable platforms, not just the top edge. The pet can roam onto a
+  window's lower border, drop onto it from the roof above, and climb back up the side edges — each
+  bottom edge is clipped against windows in front and the taskbar just like the top edge.
 - Auto-hide: the pet tucks away while a borderless or exclusive-fullscreen app (a game or video) is
   the foreground window, and returns when you alt-tab back to the desktop. A window that's merely
   maximized keeps the pet visible. Toggle it in Settings → System ("Hide in fullscreen apps") or via

@@ -335,7 +335,7 @@ public sealed class PetController
         for (int attempt = 0; attempt < TargetTries; attempt++)
         {
             var p = world.Platforms[plats[_rng.Next(plats.Count)]];
-            // A random point INSIDE the top edge, not a corner.
+            // A random point INSIDE the edge, not a corner.
             double margin = Math.Min(TargetEdgeMargin, p.Width / 3.0);
             double inner = p.Width - 2 * margin;
             double tx = inner > 1 ? p.XStart + margin + _rng.NextDouble() * inner : p.CenterX;

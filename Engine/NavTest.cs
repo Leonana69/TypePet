@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace MaplePet.Engine;
@@ -137,6 +138,91 @@ public static class NavTest
 
             Check("world geometry is clipped to the screen", allOnScreen && world.Platforms.Count > 0,
                 $"platforms={world.Platforms.Count} ladders={world.Ladders.Count}");
+        }
+
+        // ---- Scenario H: a window's BOTTOM edge is a platform too, not just its top. A lone, ----
+        // unoccluded window must yield walkable surfaces at BOTH w.Top and w.Bottom spanning its width.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var win = new Rect(100, 100, 200, 150); // x:100..300, y:100..250 (top=100, bottom=250)
+            var geo = new WorldGeometry(new[] { win }, new Rect(0, 590, 800, 10), TaskbarEdge.Bottom);
+            var world = WorldModel.Build(geo, screen);
+
+            static bool HasEdge(World w, double y, double xs, double xe) =>
+                w.Platforms.Any(p => System.Math.Abs(p.Y - y) < 0.5
+                    && System.Math.Abs(p.XStart - xs) < 0.5 && System.Math.Abs(p.XEnd - xe) < 0.5);
+
+            Check("window top edge is a platform", HasEdge(world, 100, 100, 300), $"platforms={world.Platforms.Count}");
+            Check("window bottom edge is a platform", HasEdge(world, 250, 100, 300), $"platforms={world.Platforms.Count}");
+        }
+
+        // ---- Scenario I: the bottom edge is occluded by a window IN FRONT, exactly like the top ----
+        // edge. A front window covers the middle of a back window's bottom edge, so only the two
+        // flanking segments survive — and nothing spans the hidden middle.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var front = new Rect(250, 250, 100, 200); // x:250..350, y:250..450 — covers back.Bottom (y=300)
+            var back = new Rect(100, 100, 300, 200);  // x:100..400, y:100..300 (bottom edge y=300)
+            // Z-order: front first (index 0), back second (index 1).
+            var geo = new WorldGeometry(new[] { front, back }, new Rect(0, 590, 800, 10), TaskbarEdge.Bottom);
+            var world = WorldModel.Build(geo, screen);
+
+            var bottomSegs = world.Platforms
+                .Where(p => System.Math.Abs(p.Y - 300) < 0.5)
+                .OrderBy(p => p.XStart)
+                .ToList();
+            bool twoFlanks = bottomSegs.Count == 2
+                && System.Math.Abs(bottomSegs[0].XStart - 100) < 0.5 && System.Math.Abs(bottomSegs[0].XEnd - 250) < 0.5
+                && System.Math.Abs(bottomSegs[1].XStart - 350) < 0.5 && System.Math.Abs(bottomSegs[1].XEnd - 400) < 0.5;
+            bool nothingSpansHole = !bottomSegs.Any(p => p.XStart < 250 - 0.5 && p.XEnd > 350 + 0.5);
+
+            Check("occluded bottom edge yields only its two visible segments", twoFlanks,
+                string.Join(", ", bottomSegs.ConvertAll(p => $"[{p.XStart:0.#}..{p.XEnd:0.#}]")));
+            Check("nothing spans the occluded bottom-edge middle", nothingSpansHole, $"segments={bottomSegs.Count}");
+        }
+
+        // ---- Scenario J: the TASKBAR occludes a window's bottom edge, exactly like the top edge. A ----
+        // window whose lower border falls inside the docked taskbar's band emits NO bottom platform
+        // there (it would only duplicate the taskbar ground); its top edge above the band survives.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var win = new Rect(100, 400, 200, 180);     // x:100..300, y:400..580
+            var taskbar = new Rect(0, 560, 800, 40);    // docked bottom, band y:560..600 — covers y=580
+            var geo = new WorldGeometry(new[] { win }, taskbar, TaskbarEdge.Bottom);
+            var world = WorldModel.Build(geo, screen);
+
+            bool topSurvives = world.Platforms.Any(p => System.Math.Abs(p.Y - 400) < 0.5
+                && System.Math.Abs(p.XStart - 100) < 0.5 && System.Math.Abs(p.XEnd - 300) < 0.5);
+            bool bottomHidden = !world.Platforms.Any(p => System.Math.Abs(p.Y - 580) < 0.5);
+            Check("window top edge survives above the taskbar", topSurvives, $"platforms={world.Platforms.Count}");
+            Check("taskbar occludes the window bottom edge", bottomHidden, $"platforms={world.Platforms.Count}");
+        }
+
+        // ---- Scenario K: a window extending BELOW the screen has its off-screen bottom edge clipped ----
+        // away (ClipPlatforms drops any platform past screen.Bottom), while its on-screen top edge stays.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var win = new Rect(100, 400, 200, 300);                   // y:400..700 — bottom=700 is off-screen
+            var geo = new WorldGeometry(new[] { win }, new Rect(0, 0, 0, 0), TaskbarEdge.Bottom); // no taskbar
+            var world = WorldModel.Build(geo, screen);
+
+            bool topKept = world.Platforms.Any(p => System.Math.Abs(p.Y - 400) < 0.5);
+            bool noOffScreen = !world.Platforms.Any(p => p.Y > screen.Bottom + 0.5);
+            Check("off-screen bottom edge is clipped away", topKept && noOffScreen, $"platforms={world.Platforms.Count}");
+        }
+
+        // ---- Scenario L: a bottom-edge fragment thinner than MinSegment (4px) is discarded. A front ----
+        // window covers all but a 3px sliver of the back window's bottom edge, so no bottom platform
+        // survives at that Y — the same sliver rule already applied to top/side edges.
+        {
+            var screen = new Rect(0, 0, 800, 600);
+            var front = new Rect(103, 250, 400, 100);   // x:103..503, y:250..350 — hides back.Bottom (y=300) from x=103
+            var back = new Rect(100, 100, 300, 200);    // x:100..400, y:100..300 — only a 3px flank [100..103] is left
+            var geo = new WorldGeometry(new[] { front, back }, new Rect(0, 0, 0, 0), TaskbarEdge.Bottom);
+            var world = WorldModel.Build(geo, screen);
+
+            int y300 = world.Platforms.Count(p => System.Math.Abs(p.Y - 300) < 0.5);
+            Check("sub-MinSegment bottom-edge sliver is discarded", y300 == 0, $"y300 platforms={y300}");
         }
 
         sb.AppendLine();

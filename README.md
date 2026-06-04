@@ -14,9 +14,9 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 |---|---|
 | Overlay | Transparent, borderless, topmost, click-through, full-virtual-screen (`WS_EX_TRANSPARENT \| WS_EX_LAYERED`) |
 | Window tracker | Detects visible windows (DWM visible bounds; cloaked/minimized/tool-window filtered) + taskbar |
-| Visible-only geometry | Window top/side edges are clipped against windows **in front** (Z-order) and the taskbar, so an occluded edge yields only its visible segments |
+| Visible-only geometry | Window top/bottom/side edges are clipped against windows **in front** (Z-order) and the taskbar, so an occluded edge yields only its visible segments |
 | Debug overlay | Draws windows, **platforms** (green), and **ladders** (orange) — toggle with `showOverlay` |
-| Roaming | Treats the visible platforms/ladders as a navigation graph (clipped to the visible screen): picks a random point on a reachable window top edge, plans a path, and follows it — walking, **jumping up** onto platforms within `jumpHeight`, climbing ladders only for taller gaps, and **down-jumping** through to the platform below. How often it wanders is set by `roamingLevel` |
+| Roaming | Treats the visible platforms/ladders as a navigation graph (clipped to the visible screen): picks a random point on a reachable window edge (top or bottom), plans a path, and follows it — walking, **jumping up** onto platforms within `jumpHeight`, climbing ladders only for taller gaps, and **down-jumping** through to the platform below. How often it wanders is set by `roamingLevel` |
 | Jumps | Jumps and down-jumps follow a real **parabolic arc** under gravity (state JUMP); to mount a ladder the pet runs up and jumps early so the arc's **peak meets the ladder line**, then grabs on mid-air |
 | States | STAND (idle) / WALK / ROPE (climbing) / JUMP (airborne); idles between trips |
 | Drag | Grab the pet with the mouse (it follows the cursor in JUMP); release and it falls to the platform below and stands |
