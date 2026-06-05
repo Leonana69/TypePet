@@ -24,6 +24,15 @@ public sealed class MacWindowTracker : IWindowTracker
     private static readonly IntPtr KeyLayer = MacNative.CgConstant("kCGWindowLayer");
     private static readonly IntPtr KeyOwnerPid = MacNative.CgConstant("kCGWindowOwnerPID");
     private static readonly IntPtr KeyOwnerName = MacNative.CgConstant("kCGWindowOwnerName");
+    private static readonly IntPtr KeyWindowNumber = MacNative.CgConstant("kCGWindowNumber");
+
+    /// <summary>Our own full-screen overlay's window number (NSWindow.windowNumber == CGWindowList's
+    /// kCGWindowNumber), excluded from the captured world — the macOS analogue of the Windows tracker's
+    /// <c>ExcludeHwnd</c>. The overlay spans the whole screen and would otherwise read as a giant
+    /// platform; every other MaplePet window (the config/character window, the say bar) is an ordinary
+    /// window and stays walkable. 0 disables the match — in the normal case the overlay is still kept out
+    /// by the window-level filter below, since it floats at screen-saver level.</summary>
+    public long ExcludeWindowNumber { get; set; }
 
     public WorldGeometry Capture()
     {
@@ -38,13 +47,15 @@ public sealed class MacWindowTracker : IWindowTracker
             try
             {
                 long count = MacNative.CFArrayGetCount(array);
-                int myPid = Environment.ProcessId;
                 for (long i = 0; i < count; i++) // CGWindowList is front-to-back, the order WorldModel wants
                 {
                     IntPtr dict = MacNative.CFArrayGetValueAtIndex(array, i);
                     if (dict == IntPtr.Zero) continue;
 
-                    if ((int)ReadNumber(dict, KeyOwnerPid) == myPid) continue; // our own windows
+                    // Skip only our own full-screen overlay, matched by window number (like the Windows
+                    // tracker's ExcludeHwnd). Other MaplePet windows — the config/character window and the
+                    // say bar — are ordinary windows and stay walkable, so the pet can perch on them too.
+                    if (ExcludeWindowNumber != 0 && ReadNumber(dict, KeyWindowNumber) == ExcludeWindowNumber) continue;
                     string? owner = ReadString(dict, KeyOwnerName);
 
                     if (owner == "Dock")
