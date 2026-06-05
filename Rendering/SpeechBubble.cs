@@ -25,8 +25,13 @@ public static class SpeechBubble
 
     /// <summary>Draw <paramref name="text"/> in a bubble whose tail points at (<paramref name="anchorX"/>,
     /// <paramref name="topY"/>) — the top-center of the drawn pet — clamped within <paramref name="screen"/>.</summary>
+    private const int MaxChars = 700; // a speech bubble shouldn't show a wall of text; long replies are clipped
+
     public static void Draw(DrawingContext ctx, string text, double anchorX, double topY, MaplePet.Engine.Rect screen)
     {
+        text = Sanitize(text);
+        if (string.IsNullOrEmpty(text)) return;
+
         var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
             Typeface.Default, FontSize, TextBrush) { MaxTextWidth = MaxTextWidth };
 
@@ -76,5 +81,19 @@ public static class SpeechBubble
         ctx.DrawGeometry(Fill, Border, bubble);
 
         ctx.DrawText(ft, new Point(bx + PadX, by + PadY));
+    }
+
+    /// <summary>Make arbitrary text safe to render: drop control characters (stray ANSI/escape codes from
+    /// scraped pages, etc.) except newline/tab, and cap the length so a long reply can't blow up the bubble.</summary>
+    private static string Sanitize(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        var sb = new System.Text.StringBuilder(text.Length);
+        foreach (var c in text)
+        {
+            if (c == '\n' || c == '\t' || !char.IsControl(c)) sb.Append(c);
+            if (sb.Length >= MaxChars) { sb.Append('…'); break; }
+        }
+        return sb.ToString().Trim();
     }
 }

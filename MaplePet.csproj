@@ -61,6 +61,12 @@
          Streamable HTTP and pulls in the ASP.NET Core shared framework referenced below. -->
     <PackageReference Include="ModelContextProtocol" Version="1.3.0" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.3.0" />
+    <!-- In-app chatbot backends. Anthropic = official Claude SDK; OpenAI = official SDK whose ChatClient
+         accepts a custom Endpoint, so it also drives DeepSeek / Ollama / LM Studio (OpenAI-compatible). -->
+    <PackageReference Include="Anthropic" Version="12.24.1" />
+    <PackageReference Include="OpenAI" Version="2.10.0" />
+    <!-- HTML parsing for the keyless web tools: DuckDuckGo result scraping + web_fetch page→text. -->
+    <PackageReference Include="AngleSharp" Version="1.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -73,6 +79,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <AdditionalFiles Include="Platform/Windows/NativeMethods.txt" />
+    <!-- DPAPI for the Windows secret store (encrypts provider API keys at rest). Windows-only:
+         WindowsSecretStore.cs compiles only in this head. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
   </ItemGroup>
 
   <!-- Per-OS source partitioning: the SDK globs all *.cs, so exclude the off-platform folder from each

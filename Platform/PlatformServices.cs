@@ -61,6 +61,15 @@ public static class PlatformServices
         new MacAppPaths();
 #endif
 
+    /// <summary>Encrypted-at-rest store for chatbot secrets (provider API keys, the web-search key).
+    /// Windows uses DPAPI under <see cref="IAppPaths.DataRoot"/>; macOS uses the login Keychain.</summary>
+    public static ISecretStore SecretStore { get; } =
+#if WINDOWS
+        new WindowsSecretStore(AppPaths.DataRoot);
+#else
+        new MacSecretStore();
+#endif
+
     // The dark Fluent menu surface the Windows tray popup paints behind each item (measured #2B2B2B).
     // The app forces a Dark theme variant, so this is stable. Glyphs are drawn onto this exact colour
     // so the icon tile is invisible against the menu (see TrayGlyphs). Unused on macOS (transparent).

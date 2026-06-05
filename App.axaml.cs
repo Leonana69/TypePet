@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using MaplePet.Api.Chat;
 using MaplePet.Engine;
 using MaplePet.Platform;
 using MaplePet.Platform.Abstractions;
@@ -20,6 +22,7 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
     private SayBarWindow? _sayBar;
+    private PetChatAgent? _chatAgent;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
     // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
@@ -64,8 +67,18 @@ public partial class App : Application
             desktop.MainWindow = _petWindow;
             SetupTrayIcon(desktop);
 
-            // Pop up the floating say-input bar when the pet is double-clicked or the global hotkey fires.
+            // Pop up the floating input bar when the pet is double-clicked or the global hotkey fires.
+            // It's the single input surface: when the chatbot is enabled + configured, what you type goes
+            // to the LLM and the pet speaks the reply; otherwise the pet just says what you typed.
             _petWindow.SayInputRequested += ShowSayInput;
+
+            // Build the in-app chatbot agent once the control facade is live. The agent reads the active
+            // provider + key from settings/secret store per message, so a provider change applies at once.
+            _petWindow.ControlReady += () =>
+            {
+                if (_petWindow?.Control is { } control)
+                    _chatAgent = new PetChatAgent(control, BuildChatConfig);
+            };
 
             // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
             // but it pokes us on the way out; acknowledge with a quick speech bubble so the double-click
@@ -196,20 +209,23 @@ public partial class App : Application
     private void ShowSayInput()
     {
         if (_petWindow is null) return;
-        if (_sayBar is not null)
+
+        // A persistent singleton: the say bar is hidden (not destroyed) so the conversation history and
+        // agent context survive between opens. It owns the chat flow (say vs LLM, history, the pet's
+        // thinking animation + spoken reply); the app only shows/hides it.
+        if (_sayBar is null)
         {
-            _sayBar.Activate();
-            _sayBar.FocusInput();
-            return;
+            _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
+                () => BuildChatConfig() is not null);
+            _sayBar.HideRequested += HideSayBar;
+            _sayBar.Closed += (_, _) =>
+            {
+                _sayBar = null;
+                if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
+            };
         }
 
         _petWindow.SuppressOverlayTopmost = true; // keep the bar above the (topmost) pet overlay while open
-        _sayBar = new SayBarWindow(text => _petWindow?.Control?.Say(text));
-        _sayBar.Closed += (_, _) =>
-        {
-            _sayBar = null;
-            if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
-        };
         _sayBar.Show();
         _sayBar.Activate();
 
@@ -220,6 +236,40 @@ public partial class App : Application
             _sayBar?.Activate();
             _sayBar?.FocusInput();
         }, Avalonia.Threading.DispatcherPriority.Input);
+    }
+
+    /// <summary>Hide (not destroy) the say bar and stop suppressing the overlay's topmost re-assert.</summary>
+    private void HideSayBar()
+    {
+        _sayBar?.Hide();
+        if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
+    }
+
+    /// <summary>Resolve the active provider into a chat session config (backend + model + web search),
+    /// reading the key from the secret store. Returns null when nothing usable is configured — the agent
+    /// then tells the user to add a key. Called per message so a provider/key change applies at once.</summary>
+    private ChatSessionConfig? BuildChatConfig()
+    {
+        if (_settings is null) return null;
+        var profile = _settings.Providers.FirstOrDefault(p => p.Id == _settings.ActiveProviderId)
+                      ?? _settings.Providers.FirstOrDefault();
+        if (profile is null) return null;
+
+        var secrets = PlatformServices.SecretStore;
+        string key = profile.UsesKey ? (secrets.Get(profile.Id) ?? "") : "";
+        if (profile.UsesKey && string.IsNullOrEmpty(key)) return null; // needs a key but none stored
+
+        try
+        {
+            var backend = ChatBackendFactory.Create(profile.Kind, profile.BaseUrl, key, profile.Model);
+            // Web search/fetch are keyless (DuckDuckGo) — enabled unless the user turned it off.
+            WebTools? web = _settings.EnableWebSearch ? new WebTools() : null;
+            return new ChatSessionConfig(backend, profile.Model, profile.MaxTokens, web);
+        }
+        catch
+        {
+            return null; // a malformed base URL / model would otherwise throw out of the backend ctor
+        }
     }
 
     /// <summary>Make the pet wear the given character and remember the choice. Invoked by the

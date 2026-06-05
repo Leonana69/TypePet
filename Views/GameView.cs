@@ -30,22 +30,32 @@ public sealed class GameView : Control
     {
         base.Render(context);
 
-        if (ShowDebug && Geometry is { } geo && World is { } world)
-            DebugOverlay.Draw(context, geo, world);
-
-        if (Pet is { } pet)
+        // The whole frame is guarded: this runs in Avalonia's render pass (the game loop), so an
+        // exception here — e.g. text shaping a pathological speech-bubble glyph — would otherwise be
+        // unhandled and force-close the app. A dropped frame is far better than a crash.
+        try
         {
-            if (ShowDebug) DebugOverlay.DrawPath(context, pet);
-            PetRenderer.Draw(context, pet, Sprites, Animator);
+            if (ShowDebug && Geometry is { } geo && World is { } world)
+                DebugOverlay.Draw(context, geo, world);
 
-            if (!string.IsNullOrEmpty(Speech))
+            if (Pet is { } pet)
             {
-                // Anchor the bubble at the top-center of the drawn pet (falls back to the physics box
-                // when footage didn't load).
-                double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
-                SpeechBubble.Draw(context, Speech!, pet.CenterX, topY,
-                    new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
+                if (ShowDebug) DebugOverlay.DrawPath(context, pet);
+                PetRenderer.Draw(context, pet, Sprites, Animator);
+
+                if (!string.IsNullOrEmpty(Speech))
+                {
+                    // Anchor the bubble at the top-center of the drawn pet (falls back to the physics box
+                    // when footage didn't load).
+                    double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
+                    SpeechBubble.Draw(context, Speech!, pet.CenterX, topY,
+                        new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MaplePet] render failed: {ex.Message}");
         }
     }
 }

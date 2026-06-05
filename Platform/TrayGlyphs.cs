@@ -51,6 +51,7 @@ public sealed class TrayGlyphs : ITrayGlyphs
                     case TrayGlyph.Contact: DrawPerson(ctx, brush); break;
                     case TrayGlyph.Settings: DrawSliders(ctx, brush); break;
                     case TrayGlyph.Power: DrawPower(ctx, brush); break;
+                    case TrayGlyph.Chat: DrawChat(ctx, brush); break;
                 }
             }
 
@@ -95,6 +96,30 @@ public sealed class TrayGlyphs : ITrayGlyphs
             ctx.DrawLine(pen, new Point(7, ys[i]), new Point(25, ys[i]));
             ctx.DrawEllipse(brush, null, new Point(knobX[i], ys[i]), 3, 3);
         }
+    }
+
+    /// <summary>A speech bubble: a rounded rectangle with a small tail at the lower-left.</summary>
+    private static void DrawChat(DrawingContext ctx, IBrush brush)
+    {
+        var body = new StreamGeometry();
+        using (var g = body.Open())
+        {
+            // Rounded-rect-ish bubble (7..25 x, 7..21 y) with a downward tail near the left.
+            g.BeginFigure(new Point(11, 7), isFilled: true);
+            g.LineTo(new Point(21, 7));
+            g.CubicBezierTo(new Point(24, 7), new Point(25, 8.5), new Point(25, 11));
+            g.LineTo(new Point(25, 17));
+            g.CubicBezierTo(new Point(25, 19.5), new Point(24, 21), new Point(21, 21));
+            g.LineTo(new Point(15, 21));
+            g.LineTo(new Point(12, 25));     // tail tip
+            g.LineTo(new Point(12, 21));
+            g.LineTo(new Point(11, 21));
+            g.CubicBezierTo(new Point(8, 21), new Point(7, 19.5), new Point(7, 17));
+            g.LineTo(new Point(7, 11));
+            g.CubicBezierTo(new Point(7, 8.5), new Point(8, 7), new Point(11, 7));
+            g.EndFigure(true);
+        }
+        ctx.DrawGeometry(brush, null, body);
     }
 
     /// <summary>A power symbol: a near-full ring with a gap at the top, plus a vertical stem.</summary>

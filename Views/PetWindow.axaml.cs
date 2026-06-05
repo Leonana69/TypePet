@@ -49,10 +49,10 @@ public partial class PetWindow : Window
     private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
     private readonly Random _rng = new(); // picks the per-drag face expression
     private IPetInput? _input;                // drag/click gestures (Windows: polled cursor + click hook)
-    private IGlobalHotkey? _hotkey;           // global hotkey that opens the say-input bar (may be unsupported)
+    private IGlobalHotkey? _hotkey;           // global hotkey that opens the input bar (may be unsupported)
 
-    /// <summary>Raised (on the UI thread) when the user asks to open the say-input bar — by
-    /// double-clicking the pet or pressing the configured global hotkey.</summary>
+    /// <summary>Raised (on the UI thread) when the user asks to open the input bar — by double-clicking
+    /// the pet or pressing the configured global hotkey.</summary>
     public event Action? SayInputRequested;
 
     /// <summary>While true, the overlay stops re-asserting its topmost z-order, so a focusable window
@@ -260,8 +260,8 @@ public partial class PetWindow : Window
     /// subsequent <see cref="SetSayHotkey"/>.</summary>
     public void SuspendSayHotkey() => _hotkey?.Disable();
 
-    /// <summary>Ask the app to open the say-input bar. Posted to the dispatcher so it never runs inline
-    /// on the keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
+    /// <summary>Ask the app to open the input bar. Posted to the dispatcher so it never runs inline on the
+    /// keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
     private void RequestSayInput()
         => Dispatcher.UIThread.Post(() => SayInputRequested?.Invoke());
 
