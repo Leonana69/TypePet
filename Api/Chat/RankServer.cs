@@ -12,11 +12,13 @@ public enum RankSourceKind { Gms, MapleGg, MapleKit }
 /// <see cref="DataUrl"/> is what the source fetches: the GMS ranking base, or a <c>{0}</c>-templated URL
 /// (maple.gg profile page / maple-kit API). <see cref="ServerCode"/> is the GMS sub-server (<c>na</c>/<c>eu</c>),
 /// empty otherwise. <see cref="InfoSite"/> + <see cref="InfoUrlFormat"/> give the human profile page for the
-/// "check more info on …" link (a single <c>{0}</c> for the URL-encoded character name).
+/// "check more info on …" link (a single <c>{0}</c> for the URL-encoded character name). <see cref="StatsUrl"/>
+/// is the <c>{0}</c>-templated dak.gg JSON API for EXP%/rank/Legion on the maple.gg servers (KMS/MSEA),
+/// empty for the others which carry those fields in their own response.
 /// </summary>
 public sealed record RankServer(
     string Flag, string Label, RankSourceKind Kind, string DataUrl, string ServerCode,
-    string InfoSite, string InfoUrlFormat);
+    string InfoSite, string InfoUrlFormat, string StatsUrl = "");
 
 /// <summary>The flag → server table for <c>/rank</c>. The server is picked per call by a leading flag; with
 /// no flag it defaults to <c>-na</c> (GMS North America). All sources are keyless.</summary>
@@ -28,8 +30,8 @@ public static class RankServers
     {
         new RankServer("na",  "GMS NA", RankSourceKind.Gms,     GmsRankingBase, "na", "MapleRanks",    "https://mapleranks.com/u/{0}"),
         new RankServer("eu",  "GMS EU", RankSourceKind.Gms,     GmsRankingBase, "eu", "MapleRanks",    "https://mapleranks.com/u/{0}"),
-        new RankServer("kr",  "KMS",    RankSourceKind.MapleGg,  "https://maple.gg/u/{0}",      "", "maple.gg",      "https://maple.gg/u/{0}"),
-        new RankServer("sea", "MSEA",   RankSourceKind.MapleGg,  "https://msea.maple.gg/u/{0}", "", "maple.gg",      "https://msea.maple.gg/u/{0}"),
+        new RankServer("kr",  "KMS",    RankSourceKind.MapleGg,  "https://maple.gg/u/{0}",      "", "maple.gg",      "https://maple.gg/u/{0}",      "https://maple.dakgg.io/api/v1/characters/{0}/profile"),
+        new RankServer("sea", "MSEA",   RankSourceKind.MapleGg,  "https://msea.maple.gg/u/{0}", "", "maple.gg",      "https://msea.maple.gg/u/{0}", "https://msea.dakgg.io/api/v1/characters/{0}/profile"),
         new RankServer("tw",  "TMS",    RankSourceKind.MapleKit, "https://maple-kit.com/api/character?character_name={0}", "", "maple-kit.com", "https://maple-kit.com/character/{0}"),
     };
 

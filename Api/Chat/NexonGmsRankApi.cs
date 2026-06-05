@@ -48,10 +48,13 @@ public sealed class NexonGmsRankApi
     };
 
     /// <summary>The fields <c>/rank</c> shows for GMS. <see cref="Rank"/> is the character's global position
-    /// in the Overall (weekly) ranking; <see cref="Total"/> is the size of that ranking — best-effort, null
-    /// if the population sub-request failed. <see cref="LegionLevel"/> is 0 in the overall ranking.</summary>
+    /// in the Overall (weekly) ranking. <see cref="ExpPercent"/> is progress through the current level (0–100,
+    /// derived from the raw <c>exp</c> via <see cref="GmsExpTable"/>); null at the level cap. <see cref="LegionLevel"/>
+    /// comes from a separate Legion-ranking lookup and is 0 unless the looked-up character is its account's
+    /// Legion representative — its highest-level character, the only one that ranking lists.</summary>
     public sealed record GmsRank(
-        string Name, long Rank, int Level, string Job, string World, string? ImageUrl, int LegionLevel, long? Total);
+        string Name, long Rank, int Level, string Job, string World, string? ImageUrl,
+        double? ExpPercent, int LegionLevel);
 
     /// <summary>Look <paramref name="characterName"/> up in the GMS Overall (weekly) ranking. The endpoint
     /// is <paramref name="baseUrl"/> (…/ranking/v2) plus the <paramref name="serverCode"/> sub-server
@@ -62,14 +65,7 @@ public sealed class NexonGmsRankApi
     {
         string serverUrl = $"{baseUrl.TrimEnd('/')}/{serverCode}";
 
-        // The character's row (with its global rank) and the ranking's population are independent, so fetch
-        // both at once. The population call is best-effort and never throws — if the name lookup fails first,
-        // it just completes (and is discarded) harmlessly.
-        var rowTask = SearchAsync(serverUrl, characterName, ct);
-        var totalTask = TryTotalAsync(serverUrl, ct);
-
-        JsonElement row = await rowTask.ConfigureAwait(false); // may throw RankException (not found / API error)
-        long? total = await totalTask.ConfigureAwait(false);
+        JsonElement row = await SearchAsync(serverUrl, characterName, ct).ConfigureAwait(false); // throws on not-found / API error
 
         long rank = row.TryGetProperty("rank", out var rk) && rk.TryGetInt64(out var rv) ? rv : 0;
         int level = row.TryGetProperty("level", out var lv) && lv.TryGetInt32(out var l) ? l : 0;
@@ -78,9 +74,20 @@ public sealed class NexonGmsRankApi
         string world = Worlds.TryGetValue(worldId, out var wn) ? wn : (worldId >= 0 ? $"World {worldId}" : "?");
         string name = Str(row, "characterName") ?? characterName;
         string? image = NullIfEmpty(Str(row, "characterImgURL"));
-        int legion = row.TryGetProperty("legionLevel", out var lg) && lg.TryGetInt32(out var lgv) ? lgv : 0;
 
-        return new GmsRank(name, rank, level, job, world, image, legion, total);
+        // `exp` is the character's progress WITHIN the current level (not cumulative; 0 at the level cap),
+        // with no percentage in the response — GmsExpTable turns it into a 0–100 % for the EXP bar.
+        long exp = row.TryGetProperty("exp", out var ex) && ex.TryGetInt64(out var exv) ? exv : 0;
+        double? expPct = GmsExpTable.Percent(level, exp);
+
+        // Legion level isn't in the Overall row (it's 0 there); it lives in a separate "legion" ranking keyed
+        // by world — its `id` IS the worldID. That ranking lists one row per account, the account's Legion
+        // representative (its highest-level character), so this resolves only when the looked-up name IS that
+        // representative; otherwise it stays 0 and /rank omits it. It needs the worldId from the row above, so
+        // it runs after the search; best-effort, it never sinks the lookup.
+        int legion = await TryLegionAsync(serverUrl, worldId, name, ct).ConfigureAwait(false);
+
+        return new GmsRank(name, rank, level, job, world, image, expPct, legion);
     }
 
     /// <summary>The matched ranking row, detached (<see cref="JsonElement.Clone"/>) so it outlives the parsed
@@ -107,17 +114,29 @@ public sealed class NexonGmsRankApi
         throw new RankException($"Character \"{name}\" not found in the GMS rankings.");
     }
 
-    /// <summary>The total number of ranked characters (the leaderboard size, for "#N of T" context). Best
-    /// effort: any failure returns null rather than sinking the lookup.</summary>
-    private static async Task<long?> TryTotalAsync(string baseUrl, CancellationToken ct)
+    /// <summary>Best-effort Legion level for <paramref name="name"/>, read from the Legion ranking of world
+    /// <paramref name="worldId"/> — the Legion endpoint keys its <c>id</c> on the worldID, and the same
+    /// exact-name filter applies. That ranking holds one row per account (its Legion representative, the
+    /// highest-level character), so a non-representative name simply isn't listed; that, a missing world, or
+    /// any failure returns 0 rather than sinking the core lookup. The returned row's name is re-checked so a
+    /// loose server-side match can't graft another character's Legion onto this one.</summary>
+    private static async Task<int> TryLegionAsync(string baseUrl, int worldId, string name, CancellationToken ct)
     {
+        if (worldId < 0) return 0;
         try
         {
-            string url = $"{baseUrl}?type=overall&id=weekly&reboot_index=0&page_index=1";
+            string url = $"{baseUrl}?type=legion&id={worldId}&reboot_index=0&character_name={Uri.EscapeDataString(name)}";
             using var doc = await GetAsync(url, ct).ConfigureAwait(false);
-            return doc.RootElement.TryGetProperty("totalCount", out var c) && c.TryGetInt64(out var n) ? n : null;
+            if (!doc.RootElement.TryGetProperty("ranks", out var ranks) ||
+                ranks.ValueKind != JsonValueKind.Array || ranks.GetArrayLength() == 0)
+                return 0;
+
+            var r = ranks[0];
+            if (!string.Equals(Str(r, "characterName")?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase))
+                return 0;
+            return r.TryGetProperty("legionLevel", out var lg) && lg.TryGetInt32(out var lgv) ? lgv : 0;
         }
-        catch { return null; }
+        catch { return 0; }
     }
 
     /// <summary>GET <paramref name="url"/> and return the parsed JSON (caller disposes). Transport failures

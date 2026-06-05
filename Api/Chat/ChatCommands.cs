@@ -105,15 +105,16 @@ public sealed class ChatCommands
                 }
                 case RankSourceKind.MapleGg:
                 {
-                    // KMS/MSEA: scrape the public maple.gg page (also the "more info" link + render image).
-                    var m = await _mapleGg.GetRankAsync(rest, server.DataUrl, ct).ConfigureAwait(false);
-                    return CommandResult.Ok(FormatMapleGgRank(m), link: BuildInfoLink(server, m.Name), imageUrl: m.ImageUrl);
+                    // KMS/MSEA: scrape the public maple.gg page for identity, plus a best-effort dak.gg API
+                    // call (server.StatsUrl) for EXP%/rank/Legion.
+                    var m = await _mapleGg.GetRankAsync(rest, server.DataUrl, server.StatsUrl, ct).ConfigureAwait(false);
+                    return CommandResult.Ok(FormatMapleGgRank(m, server), link: BuildInfoLink(server, m.Name), imageUrl: m.ImageUrl);
                 }
                 case RankSourceKind.MapleKit:
                 {
                     // TMS: the keyless maple-kit proxy returns the full Open-API profile in one call.
                     var r = await _mapleKit.GetRankAsync(rest, server.DataUrl, ct).ConfigureAwait(false);
-                    return CommandResult.Ok(FormatRank(r), link: BuildInfoLink(server, r.Name), imageUrl: r.ImageUrl);
+                    return CommandResult.Ok(FormatRank(r, server), link: BuildInfoLink(server, r.Name), imageUrl: r.ImageUrl);
                 }
                 default:
                     return CommandResult.Error("Unsupported server.");
@@ -162,47 +163,60 @@ public sealed class ChatCommands
         return CommandResult.Error($"{head} Try: {known}");
     }
 
-    private static string FormatRank(MapleKitApi.CharacterRank r)
+    // TMS (maple-kit): the proxy returns EXP%, the global rank and the Legion (Union) level + grade.
+    private static string FormatRank(MapleKitApi.CharacterRank r, RankServer server)
     {
-        var lines = new List<string>
-        {
-            $"{r.Name} · Lv.{r.Level} ({r.ExpRate}%)",
-            $"{r.Class} · {r.World}",
-        };
+        var lines = new List<string> { $"{r.Name} · Lv.{r.Level} · {r.Class}" };
+        if (r.ExpPercent is double pct) lines.Add(ExpBar(pct));
+        lines.Add(r.World);
+        lines.Add(r.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
         if (r.Guild is not null) lines.Add($"Guild: {r.Guild}");
-        if (r.UnionLevel is int ul)
-            lines.Add($"Union Lv.{ul}" + (r.UnionGrade is null ? "" : $" · {r.UnionGrade}"));
-        if (r.Popularity is int pop) lines.Add($"Popularity {pop}");
+        if (r.UnionLevel is int ul && ul > 0)
+            lines.Add($"Legion Lv.{ul:N0}" + (r.UnionGrade is { } grade ? $" · {grade}" : ""));
+        if (r.Popularity is int pop) lines.Add($"Fame {pop}");
         return string.Join("\n", lines);
     }
 
-    private static string FormatMapleGgRank(MapleGgScraper.MapleGgRank m)
+    // KMS/MSEA (maple.gg): identity from the page scrape; EXP% (most recent EXP-history point), rank and
+    // Legion from the best-effort dak.gg API (null when unavailable — e.g. MSEA omits rank/Legion).
+    private static string FormatMapleGgRank(MapleGgScraper.MapleGgRank m, RankServer server)
     {
-        var lines = new List<string>
-        {
-            $"{m.Name} · Lv.{m.Level}",
-            $"{m.Class} · {m.World}",
-        };
+        var lines = new List<string> { $"{m.Name} · Lv.{m.Level} · {m.Class}" };
+        if (m.ExpPercent is double pct) lines.Add(ExpBar(pct));
+        lines.Add(m.World);
+        lines.Add(m.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
         if (m.Guild is not null) lines.Add($"Guild: {m.Guild}");
-        if (m.Popularity is int pop) lines.Add($"Popularity {pop}");
+        if (m.LegionLevel is int legion && legion > 0) lines.Add($"Legion Lv.{legion:N0}");
+        if (m.Popularity is int pop) lines.Add($"Fame {pop}");
         return string.Join("\n", lines);
     }
 
     private static string FormatGmsRank(NexonGmsRankApi.GmsRank g, RankServer server)
     {
-        string total = g.Total is long t ? $" of {t:N0}" : "";
-        // Rank is the command's headline value and always present in a real response; if it's somehow
-        // missing (degenerate API row), show the world without a bogus "#0" rather than a wrong-looking number.
-        string rankLine = g.Rank > 0
-            ? $"{server.Label} Rank #{g.Rank:N0}{total} · {g.World}"
-            : $"{server.Label} · {g.World}";
         var lines = new List<string>
         {
-            $"{g.Name} · Lv.{g.Level} {g.Job}",
-            rankLine,
+            $"{g.Name} · Lv.{g.Level} · {g.Job}",
         };
-        if (g.LegionLevel > 0) lines.Add($"Legion Lv.{g.LegionLevel}");
+        // EXP progress through the current level, as a text bar (omitted at the level cap, where it's null).
+        if (g.ExpPercent is double pct) lines.Add(ExpBar(pct));
+        lines.Add(g.World);
+        // Rank is the command's headline and GMS's unique offering (the other servers don't expose a global
+        // rank). If it's somehow missing (degenerate row), show the server alone rather than a bogus "#0".
+        lines.Add(g.Rank > 0 ? $"{server.Label} · Rank #{g.Rank:N0}" : server.Label);
+        // Legion level is present only when the looked-up character is its account's Legion representative
+        // (its highest-level character); otherwise it's 0 and the line is omitted.
+        if (g.LegionLevel > 0) lines.Add($"Legion Lv.{g.LegionLevel:N0}");
         return string.Join("\n", lines);
+    }
+
+    /// <summary>A fixed-width EXP progress bar from a 0–100 percentage, drawn with full/empty block cells
+    /// (e.g. <c>EXP ██████░░░░ 60.05%</c>) since the bubble renders the result as plain text.</summary>
+    private static string ExpBar(double pct)
+    {
+        const int width = 10;
+        int filled = (int)Math.Round(pct / 100.0 * width, MidpointRounding.AwayFromZero);
+        filled = Math.Clamp(filled, 0, width);
+        return $"EXP {new string('█', filled)}{new string('░', width - filled)} {pct:0.00}%";
     }
 
     private sealed record Command(

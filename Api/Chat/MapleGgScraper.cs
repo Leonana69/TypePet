@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,10 +26,14 @@ namespace MaplePet.Api.Chat;
 public sealed class MapleGgScraper
 {
     /// <summary>The fields <c>/rank</c> shows for a maple.gg lookup. <see cref="Guild"/> and
-    /// <see cref="Popularity"/> are null when the profile omits them (e.g. guildless characters);
-    /// <see cref="ImageUrl"/> is the full-body character render shown in the bubble + history.</summary>
+    /// <see cref="Popularity"/> (Fame) are null when the profile omits them (e.g. guildless characters);
+    /// <see cref="ImageUrl"/> is the full-body character render shown in the bubble + history.
+    /// <see cref="ExpPercent"/> (most-recent EXP-history %), <see cref="Rank"/> (global overall rank) and
+    /// <see cref="LegionLevel"/> come from a best-effort dak.gg API call (the page itself doesn't carry them)
+    /// and are null if it fails / the character isn't ranked / has no Union / is at the level cap.</summary>
     public sealed record MapleGgRank(
-        string Name, int Level, string Class, string World, string? Guild, int? Popularity, string? ImageUrl);
+        string Name, int Level, string Class, string World, string? Guild, int? Popularity, string? ImageUrl,
+        double? ExpPercent = null, long? Rank = null, int? LegionLevel = null);
 
     private static readonly HttpClient Http = CreateHttp();
 
@@ -66,14 +71,83 @@ public sealed class MapleGgScraper
     private static readonly Regex DigitsRx      = new(@"[\d,]+", RegexOptions.Compiled);
 
     /// <summary>Look <paramref name="characterName"/> up on maple.gg. <paramref name="urlFormat"/> is the
-    /// region's <c>{0}</c>-templated profile URL (e.g. <c>https://maple.gg/u/{0}</c>). Throws
-    /// <see cref="RankException"/> with a user-facing message on any failure or when the character
+    /// region's <c>{0}</c>-templated profile URL (e.g. <c>https://maple.gg/u/{0}</c>); <paramref
+    /// name="statsUrlFormat"/> is its <c>{0}</c>-templated dak.gg JSON API URL for EXP%/rank/Legion
+    /// (e.g. <c>https://maple.dakgg.io/api/v1/characters/{0}/profile</c>) — best-effort, skipped when empty.
+    /// Throws <see cref="RankException"/> with a user-facing message on any failure or when the character
     /// doesn't exist.</summary>
-    public async Task<MapleGgRank> GetRankAsync(string characterName, string urlFormat, CancellationToken ct)
+    public async Task<MapleGgRank> GetRankAsync(string characterName, string urlFormat, string statsUrlFormat, CancellationToken ct)
     {
         string url = string.Format(urlFormat, Uri.EscapeDataString(characterName));
         string html = await GetHtmlAsync(url, characterName, ct).ConfigureAwait(false);
-        return ParseProfile(html, characterName);
+        var rank = ParseProfile(html, characterName);
+
+        // The page's SSR HTML carries only the identity card; EXP%, rank and Legion come from the dak.gg JSON
+        // API the page calls client-side. Fetch them with the resolved (canonical) name; any failure leaves
+        // them null so the core lookup still succeeds.
+        if (!string.IsNullOrEmpty(statsUrlFormat))
+        {
+            string statsUrl = string.Format(statsUrlFormat, Uri.EscapeDataString(rank.Name));
+            var (expPct, globalRank, legion) = await TryStatsAsync(statsUrl, ct).ConfigureAwait(false);
+            rank = rank with { ExpPercent = expPct, Rank = globalRank, LegionLevel = legion };
+        }
+        return rank;
+    }
+
+    /// <summary>Best-effort EXP% + global rank + Legion level from the dak.gg JSON API (the profile endpoint):
+    /// the most recent <c>characterExpLogs</c> point's percentage, <c>totalRank.rank</c> (global overall rank)
+    /// and <c>unionRank.n4level</c> (Legion/Union level). Any failure (or a character with no ranking / no
+    /// Union) returns nulls rather than sinking the lookup.</summary>
+    private static async Task<(double? expPct, long? rank, int? legion)> TryStatsAsync(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.TryAddWithoutValidation("Accept", "application/json");
+            // The API is served for the maple.gg SPA; a matching Referer avoids any origin gating at the edge.
+            req.Headers.TryAddWithoutValidation("Referer",
+                url.Contains("msea.dakgg.io", StringComparison.Ordinal) ? "https://msea.maple.gg/" : "https://maple.gg/");
+            using var resp = await Http.SendAsync(req, ct).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode) return (null, null, null);
+
+            await using var s = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(s, default, ct).ConfigureAwait(false);
+            var root = doc.RootElement;
+
+            // Each field is read only after a ValueKind==Number guard: TryGetInt32/64/Double THROW (not
+            // return false) on a string/null element, and a throw here would fall to the catch below and drop
+            // the OTHER fields too — so every field stays independently best-effort.
+            long? rank = root.TryGetProperty("totalRank", out var tr) && tr.ValueKind == JsonValueKind.Object
+                && tr.TryGetProperty("rank", out var rv) && rv.ValueKind == JsonValueKind.Number
+                && rv.TryGetInt64(out var rn) && rn > 0 ? rn : null;
+
+            int? legion = root.TryGetProperty("unionRank", out var ur) && ur.ValueKind == JsonValueKind.Object
+                && ur.TryGetProperty("n4level", out var nl) && nl.ValueKind == JsonValueKind.Number
+                && nl.TryGetInt32(out var nlv) && nlv > 0 ? nlv : null;
+
+            double? expPct = MostRecentExp(root);
+            return (expPct, rank, legion);
+        }
+        catch { return (null, null, null); }
+    }
+
+    /// <summary>The most recent EXP-history point's percentage (the "EXP History" chart's latest value), or
+    /// null if absent or the character is at the level cap. Each <c>characterExpLogs</c> entry is
+    /// <c>[timestampMs, level, exp%, rawExp]</c>; at the cap (300) the % is 0, so it's omitted like GMS/TMS.</summary>
+    private static double? MostRecentExp(JsonElement root)
+    {
+        if (!root.TryGetProperty("characterExpLogs", out var logs) || logs.ValueKind != JsonValueKind.Array
+            || logs.GetArrayLength() == 0)
+            return null;
+        var last = logs[logs.GetArrayLength() - 1];
+        // Guard that both fields we read are present numbers — TryGetDouble THROWS on a string/null element.
+        if (last.ValueKind != JsonValueKind.Array || last.GetArrayLength() < 3
+            || last[1].ValueKind != JsonValueKind.Number || last[2].ValueKind != JsonValueKind.Number)
+            return null;
+        // Omit at the level cap (300), where the % is 0. Read the level as a double so a float-encoded 300.0
+        // still trips the gate.
+        if (last[1].TryGetDouble(out var lv) && lv >= 300) return null;
+        return last[2].TryGetDouble(out var pct) ? pct : null;
     }
 
     /// <summary>GET <paramref name="url"/> and return the page HTML. A redirect (307→/search) means the

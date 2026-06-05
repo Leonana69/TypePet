@@ -22,10 +22,13 @@ namespace MaplePet.Api.Chat;
 /// </summary>
 public sealed class MapleKitApi
 {
-    /// <summary>The fields <c>/rank</c> shows. Optional fields are null when absent in the response.</summary>
+    /// <summary>The fields <c>/rank</c> shows. Optional fields are null when absent in the response.
+    /// <see cref="ExpPercent"/> is progress through the current level (0–100, from <c>character_exp_rate</c>);
+    /// <see cref="Rank"/> is the global overall rank (<c>ranking.rank</c>); <see cref="UnionLevel"/> is the
+    /// Legion (Union) level. maple-kit doesn't expose a Union Raid Power, so /rank omits it for TMS.</summary>
     public sealed record CharacterRank(
-        string Name, string World, string Class, int Level, string ExpRate,
-        string? Guild, string? CreatedDate, string? ImageUrl,
+        string Name, string World, string Class, int Level, double? ExpPercent,
+        string? Guild, string? ImageUrl, long? Rank,
         int? Popularity, int? UnionLevel, string? UnionGrade);
 
     private static readonly HttpClient Http = CreateHttp();
@@ -57,10 +60,15 @@ public sealed class MapleKitApi
         string world = Str(b, "world_name") ?? "?";
         string cls = Str(b, "character_class") ?? "?";
         int level = b.TryGetProperty("character_level", out var lv) && lv.TryGetInt32(out var l) ? l : 0;
-        string expRate = FormatExp(Str(b, "character_exp_rate"));
+        // character_exp_rate is a 0–100 % through the level, but at the cap (300) it comes back "0.000" — omit
+        // the EXP bar there (null), like the GMS path, instead of rendering a misleading empty 0% bar.
+        double? expPct = level >= 300 ? null : ParsePercent(Str(b, "character_exp_rate"));
         string? guild = NullIfEmpty(Str(b, "character_guild_name"));
-        string? created = ShortDate(Str(b, "character_date_create"));
         string? image = NullIfEmpty(Str(b, "character_image"));
+
+        // The global overall rank lives in a separate `ranking` block (`rank` = global, plus world/class ranks).
+        long? rank = root.TryGetProperty("ranking", out var rk) && rk.ValueKind == JsonValueKind.Object
+            && rk.TryGetProperty("rank", out var rv) && rv.TryGetInt64(out var rn) && rn > 0 ? rn : null;
 
         int? popularity = root.TryGetProperty("popularity", out var p) && p.ValueKind == JsonValueKind.Object
             && p.TryGetProperty("popularity", out var pv) && pv.TryGetInt32(out var pn) ? pn : null;
@@ -73,7 +81,7 @@ public sealed class MapleKitApi
             unionGrade = NullIfEmpty(Str(u, "union_grade"));
         }
 
-        return new CharacterRank(name, world, cls, level, expRate, guild, created, image, popularity, unionLevel, unionGrade);
+        return new CharacterRank(name, world, cls, level, expPct, guild, image, rank, popularity, unionLevel, unionGrade);
     }
 
     /// <summary>GET <paramref name="url"/> and return the parsed JSON (the caller disposes it). The proxy
@@ -135,11 +143,7 @@ public sealed class MapleKitApi
 
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
-    private static string? ShortDate(string? iso) => iso is { Length: >= 10 } ? iso[..10] : null;
-
-    /// <summary>"12.830" → "12.83"; leaves a non-numeric value as-is.</summary>
-    private static string FormatExp(string? rate)
-        => double.TryParse(rate, NumberStyles.Any, CultureInfo.InvariantCulture, out var d)
-            ? d.ToString("0.##", CultureInfo.InvariantCulture)
-            : (rate ?? "0");
+    /// <summary>Parse <c>character_exp_rate</c> ("33.136") into a 0–100 percentage, or null if non-numeric.</summary>
+    private static double? ParsePercent(string? rate)
+        => double.TryParse(rate, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : null;
 }
