@@ -23,6 +23,7 @@ public partial class App : Application
     private ConfigWindow? _configWindow;
     private SayBarWindow? _sayBar;
     private PetChatAgent? _chatAgent;
+    private ChatCommands? _commands;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
     // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
@@ -215,8 +216,13 @@ public partial class App : Application
         // thinking animation + spoken reply); the app only shows/hides it.
         if (_sayBar is null)
         {
+            // Slash commands run locally (no LLM); /rank reads the selected region + its Nexon key live
+            // from settings + the secret store (keys are stored per region).
+            _commands ??= new ChatCommands(
+                () => PlatformServices.SecretStore.Get(NexonMapleApi.SecretId(_settings?.MapleRegion ?? "kms")),
+                () => _settings?.MapleRegion ?? "kms");
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
-                () => BuildChatConfig() is not null);
+                () => BuildChatConfig() is not null, _commands);
             _sayBar.HideRequested += HideSayBar;
             _sayBar.Closed += (_, _) =>
             {
@@ -229,12 +235,16 @@ public partial class App : Application
         _sayBar.Show();
         _sayBar.Activate();
 
-        // The double-click that summons the bar is swallowed by the mouse hook, so Windows can refuse
-        // the initial foreground activation; re-assert focus once the window exists.
+        // The bar is summoned while another app owns the foreground (global hotkey) or the click that
+        // summoned it was swallowed by the mouse hook, so Windows' foreground lock lets plain Activate()
+        // raise the bar WITHOUT giving it keyboard focus. Force it to the foreground (no-op on macOS),
+        // then move Avalonia focus into the text box — once the native window exists.
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            _sayBar?.Activate();
-            _sayBar?.FocusInput();
+            if (_sayBar is null) return;
+            PlatformServices.ForceForeground(_sayBar.TryGetPlatformHandle()?.Handle ?? 0);
+            _sayBar.Activate();
+            _sayBar.FocusInput();
         }, Avalonia.Threading.DispatcherPriority.Input);
     }
 

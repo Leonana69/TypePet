@@ -42,6 +42,7 @@ public sealed class SayBarWindow : Window
     private readonly Func<PetChatAgent?> _agent;
     private readonly Func<IPetControl?> _control;
     private readonly Func<bool> _chatConfigured;
+    private readonly ChatCommands _commands;
 
     private readonly TextBox _input;
     private readonly StackPanel _history;
@@ -58,12 +59,14 @@ public sealed class SayBarWindow : Window
     /// The app hides the window (keeping it alive) and clears the overlay's topmost suppression.</summary>
     public event Action? HideRequested;
 
-    public SayBarWindow(Settings cfg, Func<PetChatAgent?> agent, Func<IPetControl?> control, Func<bool> chatConfigured)
+    public SayBarWindow(Settings cfg, Func<PetChatAgent?> agent, Func<IPetControl?> control,
+        Func<bool> chatConfigured, ChatCommands commands)
     {
         _cfg = cfg;
         _agent = agent;
         _control = control;
         _chatConfigured = chatConfigured;
+        _commands = commands;
 
         // Frosted-glass plumbing (borderless acrylic, DWM round/shadow on Win11).
         Title = "MaplePet";
@@ -198,8 +201,27 @@ public sealed class SayBarWindow : Window
         _busy = true;
         try
         {
-            var agent = _agent();
             control = _control();
+
+            // Slash command (e.g. "/rank Name") — handled locally and deterministically, with NO LLM, so
+            // it works even when the chatbot is off. Shown the same way as a reply: history bubble when
+            // the panel is open, otherwise the bar dismisses and the pet speaks the result.
+            if (ChatCommands.IsCommand(text))
+            {
+                keepOpen = _cfg.EnableChatbot && _cfg.ChatHistoryVisible;
+                if (keepOpen) AddUserBubble(text);
+                else HideRequested?.Invoke();
+
+                if (control is not null) StartThinking(control);
+                var cmd = await _commands.RunAsync(text, CancellationToken.None);
+                StopThinking();
+                var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
+                _ = control?.Say(ctext, ChatSpeechSeconds(ctext));
+                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError); _input.Focus(); }
+                return;
+            }
+
+            var agent = _agent();
             bool chat = _cfg.EnableChatbot && agent is not null && control is not null && SafeChatConfigured();
 
             if (!chat)

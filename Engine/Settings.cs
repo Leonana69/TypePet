@@ -40,6 +40,10 @@ public sealed class Settings
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
 
+    // The MapleStory region the /rank chat command queries (one of NexonMapleApi.Regions: kms/sea/tms).
+    // The Nexon API key is per-region and also lives in the secret store, NOT here.
+    public string MapleRegion { get; set; } = "kms";
+
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
 
@@ -107,6 +111,8 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
+        // Keep in sync with NexonMapleApi.Regions ids (Engine can't reference Api → hardcoded guard).
+        if (MapleRegion is not ("kms" or "sea" or "tms")) MapleRegion = d.MapleRegion;
 
         // ---- chatbot ----
         Providers ??= new();

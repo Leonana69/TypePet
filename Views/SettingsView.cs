@@ -33,6 +33,8 @@ public sealed class SettingsView : UserControl
     private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen, _chatbot, _webSearch;
     private readonly ComboBox _provider;
     private readonly Panel _providerHost;
+    private readonly ComboBox _mapleRegion;
+    private readonly Panel _mapleKeyHost; // the per-region Nexon key field, rebuilt when the region changes
     private readonly Button _hotkeyBtn;
     private string _hotkeyText = "";    // the persisted gesture, mirrored into _cfg by ApplyLive
     private string _hotkeyBefore = "";  // button text to restore if a capture is cancelled
@@ -112,6 +114,29 @@ public sealed class SettingsView : UserControl
         RebuildProviderPanel();
 
         rows.Children.Add(Divider());
+        rows.Children.Add(Section("MAPLESTORY · /rank COMMAND"));
+
+        // Server/region for the /rank command. Each region has its own API endpoint AND its own key, so
+        // changing the region swaps which stored key the key field below edits.
+        var regions = NexonMapleApi.Regions;
+        _mapleRegion = new ComboBox
+        {
+            ItemsSource = regions.Select(r => r.Label).ToList(),
+            SelectedIndex = Math.Max(0, IndexOfRegion(regions, cfg.MapleRegion)),
+            Width = 240,
+            Height = FieldHeight,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        rows.Children.Add(Row("Server", "Which MapleStory region /rank queries · each needs its own key", _mapleRegion));
+
+        _mapleKeyHost = new StackPanel();
+        rows.Children.Add(_mapleKeyHost);
+        RebuildMapleKeyField();
+
+        rows.Children.Add(Row("Get a key",
+            "Register a free app (one per region) and copy its API key", NexonKeyLink()));
+
+        rows.Children.Add(Divider());
         rows.Children.Add(Section("SYSTEM"));
         _startup = Toggle();
         _startup.IsChecked = PlatformServices.StartupAtLogin.IsEnabled();
@@ -163,6 +188,12 @@ public sealed class SettingsView : UserControl
             int i = _provider.SelectedIndex;
             if (i >= 0 && i < _cfg.Providers.Count) { _cfg.ActiveProviderId = _cfg.Providers[i].Id; _cfg.Save(); }
             RebuildProviderPanel();
+        };
+        _mapleRegion.SelectionChanged += (_, _) =>
+        {
+            int i = _mapleRegion.SelectedIndex;
+            if (i >= 0 && i < NexonMapleApi.Regions.Count) { _cfg.MapleRegion = NexonMapleApi.Regions[i].Id; _cfg.Save(); }
+            RebuildMapleKeyField();
         };
     }
 
@@ -357,6 +388,44 @@ public sealed class SettingsView : UserControl
             if (models.Count > 0) box.ItemsSource = models;
         }
         catch { /* leave as free text */ }
+    }
+
+    private static int IndexOfRegion(IReadOnlyList<NexonMapleApi.Region> regions, string? id)
+    {
+        for (int i = 0; i < regions.Count; i++) if (regions[i].Id == id) return i;
+        return 0;
+    }
+
+    /// <summary>(Re)build the masked Nexon-key field for the currently-selected region. Keys are stored
+    /// per region, so switching the server shows (and edits) that region's own key.</summary>
+    private void RebuildMapleKeyField()
+    {
+        _mapleKeyHost.Children.Clear();
+        var region = NexonMapleApi.ResolveRegion(_cfg.MapleRegion);
+        var secrets = PlatformServices.SecretStore;
+        string id = NexonMapleApi.SecretId(region.Id);
+        _mapleKeyHost.Children.Add(TextRow($"{region.Label} key",
+            "Nexon Open API key for this server (openapi.nexon.com)",
+            secrets.Get(id) ?? "", 240, v => secrets.Set(id, v), passwordChar: '•'));
+    }
+
+    /// <summary>A link button that opens the Nexon Open API console (where the user registers an app and
+    /// copies the API key — one per region).</summary>
+    private Button NexonKeyLink()
+    {
+        var b = new Button
+        {
+            Content = "openapi.nexon.com ↗",
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        b.Classes.Add("link");
+        b.Click += (_, _) =>
+        {
+            try { _ = TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(new Uri("https://openapi.nexon.com/")); }
+            catch { /* ignore launcher failures */ }
+        };
+        return b;
     }
 
     /// <summary>A text-input row. <paramref name="onChanged"/> fires on edits only (the initial value is
