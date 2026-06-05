@@ -219,8 +219,8 @@ public partial class App : Application
             // Slash commands run locally (no LLM); /rank reads the selected region + its Nexon key live
             // from settings + the secret store (keys are stored per region).
             _commands ??= new ChatCommands(
-                () => PlatformServices.SecretStore.Get(NexonMapleApi.SecretId(_settings?.MapleRegion ?? "kms")),
-                () => _settings?.MapleRegion ?? "kms");
+                () => PlatformServices.SecretStore.Get(NexonMapleApi.SecretId(_settings?.MapleRegion ?? "gms")),
+                () => _settings?.MapleRegion ?? "gms");
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
                 () => BuildChatConfig() is not null, _commands);
             _sayBar.HideRequested += HideSayBar;

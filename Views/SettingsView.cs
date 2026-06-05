@@ -127,14 +127,13 @@ public sealed class SettingsView : UserControl
             Height = FieldHeight,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        rows.Children.Add(Row("Server", "Which MapleStory region /rank queries · each needs its own key", _mapleRegion));
+        rows.Children.Add(Row("Server", "Which MapleStory server /rank queries · KMS/SEA/TMS need a key, GMS is keyless", _mapleRegion));
 
+        // The key field AND the "get a key" link are per-region and only apply to the Open-API servers, so
+        // they live entirely inside this host and are rebuilt (or hidden) when the server changes.
         _mapleKeyHost = new StackPanel();
         rows.Children.Add(_mapleKeyHost);
         RebuildMapleKeyField();
-
-        rows.Children.Add(Row("Get a key",
-            "Register a free app (one per region) and copy its API key", NexonKeyLink()));
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("SYSTEM"));
@@ -396,17 +395,31 @@ public sealed class SettingsView : UserControl
         return 0;
     }
 
-    /// <summary>(Re)build the masked Nexon-key field for the currently-selected region. Keys are stored
-    /// per region, so switching the server shows (and edits) that region's own key.</summary>
+    /// <summary>(Re)build the per-server key UI for the currently-selected region. The Open-API servers
+    /// (KMS/SEA/TMS) get a masked key field (keys are stored per region) plus a "get a key" link; GMS is
+    /// keyless, so it just shows a short note instead.</summary>
     private void RebuildMapleKeyField()
     {
         _mapleKeyHost.Children.Clear();
         var region = NexonMapleApi.ResolveRegion(_cfg.MapleRegion);
+
+        // GMS has no Open API — its rankings are public, so there's no key to enter.
+        if (!region.RequiresKey)
+        {
+            var note = new TextBlock { Text = "Not required", VerticalAlignment = VerticalAlignment.Center };
+            note.Classes.Add("rowLabel");
+            _mapleKeyHost.Children.Add(Row("API key",
+                "GMS rankings are public — no key. Use /rank -na or -eu to pick the region (default NA)", note));
+            return;
+        }
+
         var secrets = PlatformServices.SecretStore;
         string id = NexonMapleApi.SecretId(region.Id);
         _mapleKeyHost.Children.Add(TextRow($"{region.Label} key",
             "Nexon Open API key for this server (openapi.nexon.com)",
             secrets.Get(id) ?? "", 240, v => secrets.Set(id, v), passwordChar: '•'));
+        _mapleKeyHost.Children.Add(Row("Get a key",
+            "Register a free app (one per region) and copy its API key", NexonKeyLink()));
     }
 
     /// <summary>A link button that opens the Nexon Open API console (where the user registers an app and

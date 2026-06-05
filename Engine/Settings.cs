@@ -40,9 +40,10 @@ public sealed class Settings
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
 
-    // The MapleStory region the /rank chat command queries (one of NexonMapleApi.Regions: kms/sea/tms).
-    // The Nexon API key is per-region and also lives in the secret store, NOT here.
-    public string MapleRegion { get; set; } = "kms";
+    // The MapleStory server the /rank chat command queries (one of NexonMapleApi.Regions: kms/sea/tms or
+    // gms). Defaults to GMS, which is keyless and works out of the box (its NA/EU split is chosen per command
+    // via the /rank -na|-eu flag); the Open-API regions' per-region key lives in the secret store, NOT here.
+    public string MapleRegion { get; set; } = "gms";
 
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
@@ -112,7 +113,8 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
         // Keep in sync with NexonMapleApi.Regions ids (Engine can't reference Api → hardcoded guard).
-        if (MapleRegion is not ("kms" or "sea" or "tms")) MapleRegion = d.MapleRegion;
+        if (MapleRegion is "gms-na" or "gms-eu") MapleRegion = "gms"; // migrate the former split GMS entries
+        if (MapleRegion is not ("kms" or "sea" or "tms" or "gms")) MapleRegion = d.MapleRegion;
 
         // ---- chatbot ----
         Providers ??= new();

@@ -24,8 +24,10 @@ public sealed record CommandResult(string Text, IReadOnlyList<WebSource> Sources
 /// shown the same way as a chat reply (the pet speaks it; it's added to history if the panel is open).
 /// Adding a command is a one-line edit to the table in the constructor.
 ///
-/// First command: <c>/rank &lt;character&gt;</c> — looks a MapleStory (KMS) character up via the Nexon
-/// Open API (<see cref="NexonMapleApi"/>).
+/// First command: <c>/rank &lt;character&gt;</c> — looks a MapleStory character up. The server is chosen in
+/// Settings: KMS/SEA/TMS go through the keyed Nexon Open API (<see cref="NexonMapleApi"/>); GMS (NA/EU) has
+/// no Open API and uses the keyless public rankings endpoint (<see cref="NexonGmsRankApi"/>), which also
+/// returns a true global rank position.
 /// </summary>
 public sealed class ChatCommands
 {
@@ -35,18 +37,20 @@ public sealed class ChatCommands
     private readonly Func<string?> _nexonKey;
     private readonly Func<string> _region;
     private readonly NexonMapleApi _maple = new();
+    private readonly NexonGmsRankApi _gms = new();
     private readonly IReadOnlyList<Command> _commands;
 
     /// <param name="nexonKey">Live accessor for the Nexon Open API key of the SELECTED region (read per
-    /// call, so a key/region edited in Settings applies immediately). Null/empty means "not configured".</param>
-    /// <param name="region">Live accessor for the selected MapleStory region id (kms/sea/tms).</param>
+    /// call, so a key/region edited in Settings applies immediately). Null/empty means "not configured".
+    /// Unused for GMS, which is keyless.</param>
+    /// <param name="region">Live accessor for the selected MapleStory region id (kms/sea/tms or gms).</param>
     public ChatCommands(Func<string?> nexonKey, Func<string> region)
     {
         _nexonKey = nexonKey;
         _region = region;
         _commands = new[]
         {
-            new Command("rank", "/rank <character>", "Look up a MapleStory character (KMS): level, class, world, union.", RankAsync),
+            new Command("rank", "/rank [-na|-eu] <character>", "Look up a MapleStory character (server set in Settings): level/class/world — plus a global rank on GMS. On GMS, -na/-eu picks the region (default NA).", RankAsync),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
     }
@@ -78,26 +82,66 @@ public sealed class ChatCommands
 
     private async Task<CommandResult> RankAsync(string args, CancellationToken ct)
     {
-        string charName = args.Trim();
-        if (charName.Length == 0) return CommandResult.Error("Usage: /rank <character name>");
+        // An optional leading flag (e.g. "-eu Name") picks the GMS sub-server; when absent, `rest` is the
+        // whole argument. Names are alphanumeric, so a leading '-' is always a flag, never part of the name.
+        var (flag, rest) = SplitLeadingFlag(args);
+        var region = NexonMapleApi.ResolveRegion(_region());
 
-        string region = _region();
+        // GMS has no Open API: it uses the keyless public rankings endpoint and (uniquely) returns a true
+        // global rank position. Its NA/EU split is selected here by the -na/-eu flag (default NA).
+        if (!region.RequiresKey)
+        {
+            var server = NexonGmsRankApi.DefaultServer;
+            if (flag is not null)
+            {
+                var s = NexonGmsRankApi.ResolveServer(flag);
+                if (s is null) return CommandResult.Error($"Unknown flag \"-{flag}\" — use -na or -eu.");
+                server = s;
+            }
+            if (rest.Length == 0) return CommandResult.Error("Usage: /rank [-na|-eu] <character name>");
+
+            try
+            {
+                var g = await _gms.GetRankAsync(rest, region.BasePath, server.Code, ct).ConfigureAwait(false);
+                return CommandResult.Ok(FormatGmsRank(g, server));
+            }
+            catch (NexonApiException ex)
+            {
+                return CommandResult.Error(ex.Message); // already user-facing
+            }
+        }
+
+        // Keyed Open-API path (KMS/SEA/TMS): a single endpoint, so the -na/-eu flag doesn't apply here.
+        if (flag is not null)
+            return CommandResult.Error($"The -{flag} flag only applies to GMS. Switch the server in Settings → MAPLESTORY.");
+        if (rest.Length == 0) return CommandResult.Error("Usage: /rank <character name>");
+
         string? key = _nexonKey();
         if (string.IsNullOrWhiteSpace(key))
-        {
-            string label = NexonMapleApi.ResolveRegion(region).Label;
-            return CommandResult.Error($"No {label} Nexon API key set. Add it in Settings → MAPLESTORY to use /rank.");
-        }
+            return CommandResult.Error($"No {region.Label} Nexon API key set. Add it in Settings → MAPLESTORY to use /rank.");
 
         try
         {
-            var r = await _maple.GetRankAsync(charName, key!, region, ct).ConfigureAwait(false);
+            var r = await _maple.GetRankAsync(rest, key!, region.Id, ct).ConfigureAwait(false);
             return CommandResult.Ok(FormatRank(r));
         }
         catch (NexonApiException ex)
         {
             return CommandResult.Error(ex.Message); // already user-facing
         }
+    }
+
+    /// <summary>Split an optional leading <c>-flag</c>/<c>--flag</c> token off the front of <paramref
+    /// name="args"/>. Returns the lowercased flag name (no dashes) or null, plus the remaining text trimmed.
+    /// When there's no flag, the flag is null and the remainder is the full trimmed input.</summary>
+    private static (string? flag, string rest) SplitLeadingFlag(string args)
+    {
+        string s = (args ?? "").Trim();
+        if (s.Length == 0 || s[0] != '-') return (null, s);
+        int sp = s.IndexOfAny(new[] { ' ', '\t', '\n', '\r' });
+        string token = sp < 0 ? s : s[..sp];
+        string rest = sp < 0 ? "" : s[(sp + 1)..].Trim();
+        return (token.TrimStart('-').ToLowerInvariant(), rest);
     }
 
     private Task<CommandResult> HelpAsync(string args, CancellationToken ct)
@@ -126,6 +170,23 @@ public sealed class ChatCommands
         if (r.UnionLevel is int ul)
             lines.Add($"Union Lv.{ul}" + (r.UnionGrade is null ? "" : $" · {r.UnionGrade}"));
         if (r.Popularity is int pop) lines.Add($"Popularity {pop}");
+        return string.Join("\n", lines);
+    }
+
+    private static string FormatGmsRank(NexonGmsRankApi.GmsRank g, NexonGmsRankApi.Server server)
+    {
+        string total = g.Total is long t ? $" of {t:N0}" : "";
+        // Rank is the command's headline value and always present in a real response; if it's somehow
+        // missing (degenerate API row), show the world without a bogus "#0" rather than a wrong-looking number.
+        string rankLine = g.Rank > 0
+            ? $"GMS {server.Tag} Rank #{g.Rank:N0}{total} · {g.World}"
+            : $"GMS {server.Tag} · {g.World}";
+        var lines = new List<string>
+        {
+            $"{g.Name} · Lv.{g.Level} {g.Job}",
+            rankLine,
+        };
+        if (g.LegionLevel > 0) lines.Add($"Legion Lv.{g.LegionLevel}");
         return string.Join("\n", lines);
     }
 
