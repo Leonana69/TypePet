@@ -164,6 +164,13 @@ public sealed class CharacterView : UserControl
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxLines = 1,
             HorizontalAlignment = HorizontalAlignment.Stretch,
+#if MACOS
+            // macOS' system font (San Francisco) seats a single line of text high in its line box — the
+            // descent leaves an extra gap below the glyphs — so the name reads as sitting a touch above
+            // the centre of its band under the thumbnail. Nudge it down to land where Windows' Segoe UI
+            // already does. (Same root cause as the NumericUpDown vertical-centering note in App.axaml.)
+            Margin = new Thickness(0, 3, 0, 0),
+#endif
         };
         var namePanel = new Panel { Children = { nameBlock } };
 

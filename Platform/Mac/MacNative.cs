@@ -43,6 +43,15 @@ internal static class MacNative
         return isWindow ? handle : msgSend(handle, Sel("window"));
     }
 
+    /// <summary>The CGWindowID of the window behind an Avalonia platform handle — NSWindow.windowNumber,
+    /// which is exactly the value CGWindowList reports as kCGWindowNumber. Returns 0 when the handle has
+    /// no on-screen window device yet (so callers can treat 0 as "no match").</summary>
+    internal static long NSWindowNumber(IntPtr handle)
+    {
+        var win = ToNSWindow(handle);
+        return win == IntPtr.Zero ? 0 : SendRetLong(win, "windowNumber");
+    }
+
     // Convenience senders keyed by selector name (selectors are cheap and cached by the runtime).
     internal static void Send(IntPtr recv, string sel) => msgSendVoid(recv, Sel(sel));
     internal static void SendULong(IntPtr recv, string sel, ulong a) => msgSendULong(recv, Sel(sel), a);
