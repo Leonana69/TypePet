@@ -54,12 +54,41 @@ public static class DebugOverlay
                 case MoveKind.DropDown:
                     DrawArc(ctx, px, py, s.X, s.Y, upward: false);
                     break;
+                case MoveKind.EdgeDrop:
+                    // Walk off the edge and fall: a free-fall-from-rest parabola, like a down-jump.
+                    DrawArc(ctx, px, py, s.X, s.Y, upward: false);
+                    break;
+                case MoveKind.GapJump:
+                    // A lateral leap follows a real ballistic parabola whose height depends on the
+                    // gap/drop — sample the solved arc so the drawn curve matches the flown one.
+                    DrawGapArc(ctx, px, py, s.X, s.Y, pet.Motion);
+                    break;
                 default:
                     ctx.DrawLine(PathPen, new Avalonia.Point(px, py), new Avalonia.Point(s.X, s.Y));
                     break;
             }
             ctx.DrawEllipse(NodeBrush, null, new Avalonia.Point(s.X, s.Y), 3, 3);
             px = s.X; py = s.Y;
+        }
+    }
+
+    /// <summary>Sample the real gap-jump parabola (the same one the executor flies) so its drawn
+    /// height matches the leap. Falls back to a generic over-arc if the leap is no longer solvable.</summary>
+    private static void DrawGapArc(DrawingContext ctx, double x0, double y0, double x1, double y1, MoveParams mp)
+    {
+        var solved = Physics.SolveGapJump(x0, y0, x1, y1, mp.Gravity, mp.WalkSpeed, mp.JumpHeight);
+        if (solved is not Physics.GapJumpArc a) { DrawArc(ctx, x0, y0, x1, y1, upward: true); return; }
+        double g = Math.Max(1.0, mp.Gravity);
+        double launchY = Physics.GapJumpLaunchFeet(y0, y1);
+        const int n = 16;
+        double prevX = x0, prevY = y0;
+        for (int i = 1; i <= n; i++)
+        {
+            double t = a.Time * i / n;
+            double x = x0 + a.Vx * t;
+            double y = launchY - a.LaunchVy * t + 0.5 * g * t * t;
+            ctx.DrawLine(PathPen, new Avalonia.Point(prevX, prevY), new Avalonia.Point(x, y));
+            prevX = x; prevY = y;
         }
     }
 

@@ -9,7 +9,15 @@ public enum MoveKind
     ClimbUp,  // grab a ladder (jumping up to its bottom if needed) and climb up
     JumpUp,   // hop straight up onto a higher platform within jump height (a parabola)
     DropDown, // down-jump: drop through the current platform onto the one below (a parabola)
+    EdgeDrop, // walk off this platform's edge and free-fall onto the platform below (a cliff drop)
+    GapJump,  // leap sideways across a horizontal GAP onto a detached platform (a parabola)
 }
+
+/// <summary>The pet's movement capabilities the nav graph needs to decide which moves are possible
+/// (notably which gaps are jumpable). <see cref="TargetFps"/> sets the time-step the gap-jump
+/// reachability sim integrates at, so it matches the live executor's per-frame physics. Value type so
+/// the controller can cheaply detect changes.</summary>
+public readonly record struct MoveParams(double JumpHeight, double Gravity, double WalkSpeed, int TargetFps);
 
 /// <summary>A waypoint on a platform (a specific x on a specific platform).</summary>
 public readonly record struct NavNode(double X, double Y, int PlatformIndex);
@@ -45,6 +53,13 @@ public sealed class MapGraph
     private const double DropBias = 1.0;   // cost penalty for a down-jump
     private const double MinOverlap = 12.0; // need at least this much shared x to jump/drop between
     private const double HopDist = 28.0;    // horizontal span of a jump/drop arc (bounded for sane vx)
+    private const double GapMin = 2.0;      // min clear horizontal gap (px) to treat as a leap-across
+                                            // (below this, abutting platforms walk/touch across instead)
+    private const double GapLandInset = 6.0;// land this far inside the far platform's edge (solid footing, not the lip)
+    private const double GapJumpBias = 2.0; // cost penalty for a lateral leap (riskier than a step/drop)
+    private const double GapUpClear = 10.0; // an UPWARD leap's arc must crest this far above the target,
+                                            // so frame-to-frame physics jitter can't drop it into the void
+    private const double EdgeDropBias = 1.0;// cost penalty for walking off a cliff edge (as easy as a drop)
 
     private readonly World _world;
     private readonly List<NavNode> _nodes = new();
@@ -59,8 +74,9 @@ public sealed class MapGraph
     private void AddEdge(int from, int to, MoveKind kind, double cost, int ladder)
         => _adj[from].Add((to, kind, cost, ladder));
 
-    public static MapGraph Build(World world, double jumpHeight)
+    public static MapGraph Build(World world, MoveParams mp)
     {
+        double jumpHeight = mp.JumpHeight, gravity = mp.Gravity, walkSpeed = mp.WalkSpeed;
         var g = new MapGraph(world);
         var platforms = world.Platforms;
         var ladders = world.Ladders;
@@ -151,6 +167,69 @@ public sealed class MapGraph
                     across.Add((i, j, x));
                 }
 
+        // Gap-jump edges: leap sideways across a horizontal GAP (the platforms do NOT overlap in x)
+        // onto a detached platform beside — and possibly below ("jump down a cliff") or above — the
+        // current one. The pet launches from its near edge and arcs at run speed onto the far one;
+        // only gaps it can clear within jumpHeight qualify (Physics.SolveGapJump is the gate), and the
+        // arc must actually land on the target — GapJumpLands replays the SAME per-frame physics the
+        // executor uses, so a planned leap is admitted only if the pet would really land on it (never
+        // short into the void, never on an intermediate platform caught on the way over).
+        double simDt = 1.0 / System.Math.Max(1, mp.TargetFps);
+        var gapJumps = new List<(int from, double fromX, int to, double toX)>();
+        for (int a = 0; a < pc; a++)
+            for (int b = 0; b < pc; b++)
+            {
+                if (a == b) continue;
+                var pa = platforms[a];
+                var pb = platforms[b];
+
+                // Pick the facing edges of a real gap (no x-overlap). Launch from a's edge toward b
+                // and land just inside b's near edge for solid footing.
+                double launchX, landX;
+                if (pb.XStart - pa.XEnd > GapMin) { launchX = pa.XEnd; landX = pb.XStart + GapLandInset; }
+                else if (pa.XStart - pb.XEnd > GapMin) { launchX = pa.XStart; landX = pb.XEnd - GapLandInset; }
+                else continue; // overlapping or touching: walk-across / jump-up / drop handle it
+
+                if (landX <= pb.XStart + Eps || landX >= pb.XEnd - Eps) continue; // b too thin for the inset
+                if (pa.Y - pb.Y > jumpHeight) continue; // b sits higher than the pet can jump — skip early
+
+                var arc = Physics.SolveGapJump(launchX, pa.Y, landX, pb.Y, gravity, walkSpeed, jumpHeight);
+                if (arc is not Physics.GapJumpArc gj) continue;
+                if (!GapJumpLands(platforms, b, launchX, pa.Y, pb.Y, gj, gravity, simDt)) continue;
+
+                attach[a].Add(launchX);
+                attach[b].Add(landX);
+                gapJumps.Add((a, launchX, b, landX));
+            }
+
+        // Edge-drop edges: walk off a platform's edge into open air and free-fall onto the platform
+        // below ("keep walking right over a cliff"). For each side of A, step off at walk speed and
+        // simulate the fall with the SAME physics the executor uses; if it lands on a strictly LOWER
+        // platform, connect to it. A same-height neighbour right at the edge catches the step instead
+        // (the sim lands on it, not lower) so no edge is emitted there — that seam is a plain
+        // walk-across. The fall can never sink below the lowest surface, so that bounds the sim.
+        double worldBottom = double.NegativeInfinity;
+        for (int i = 0; i < pc; i++) if (platforms[i].Y > worldBottom) worldBottom = platforms[i].Y;
+        worldBottom += HopDist + 200.0;
+        var edgeDrops = new List<(int from, double fromX, int to, double toX)>();
+        for (int a = 0; a < pc; a++)
+        {
+            var pa = platforms[a];
+            for (int side = -1; side <= 1; side += 2) // -1 = walk off the left edge, +1 = the right edge
+            {
+                double edgeX = side > 0 ? pa.XEnd : pa.XStart;
+                // Start the fall just PAST the lip so the platform we step off is never re-detected as
+                // the landing (frame-rate-independent); the executor's BeginEdgeDrop launches here too.
+                int b = SimulateLanding(platforms, edgeX + side * Physics.EdgeLipClear, pa.Y, side * walkSpeed, 0.0,
+                    System.Math.Max(1.0, gravity), simDt, worldBottom, out double landX, out _);
+                if (b < 0 || b == a) continue;
+                if (platforms[b].Y <= pa.Y + YTol) continue; // landed level or above: not a cliff drop
+                attach[a].Add(edgeX);
+                attach[b].Add(landX);
+                edgeDrops.Add((a, edgeX, b, landX));
+            }
+        }
+
         // Create platform-point nodes (deduped) and walk edges between consecutive ones.
         var nodeOf = new Dictionary<(int plat, long key), int>();
         int NodeFor(int pi, double x)
@@ -223,7 +302,97 @@ public sealed class MapGraph
             g.AddEdge(NodeFor(from, fx), NodeFor(to, tx), MoveKind.DropDown, cost, -1);
         }
 
+        // Gap-jump edges. Cost spans both the gap and the height change so a wide/tall leap is
+        // appropriately pricier than a short hop, plus a bias making a leap a touch less eager than a
+        // plain step or drop when an alternative route exists.
+        foreach (var (from, fx, to, tx) in gapJumps)
+        {
+            double cost = System.Math.Abs(tx - fx) + System.Math.Abs(platforms[to].Y - platforms[from].Y) + GapJumpBias;
+            g.AddEdge(NodeFor(from, fx), NodeFor(to, tx), MoveKind.GapJump, cost, -1);
+        }
+
+        // Edge-drop edges. Cost = the drop height + a small bias; stepping off a ledge is as cheap as a
+        // straight down-jump, so the pet readily takes a cliff when that's the way down.
+        foreach (var (from, fx, to, tx) in edgeDrops)
+        {
+            double cost = (platforms[to].Y - platforms[from].Y) + EdgeDropBias;
+            g.AddEdge(NodeFor(from, fx), NodeFor(to, tx), MoveKind.EdgeDrop, cost, -1);
+        }
+
         return g;
+    }
+
+    /// <summary>
+    /// True if the gap-jump <paramref name="arc"/> from (<paramref name="launchX"/>,
+    /// <paramref name="launchY"/>) actually lands the pet on platform <paramref name="to"/>. This
+    /// replays the EXACT per-frame integration the live executor uses (semi-implicit Euler at the
+    /// runtime time-step, the shared launch sink, and <see cref="Physics.FindLanding"/>'s
+    /// descending-crossing rule, the launch platform included) — so planning and execution can't
+    /// disagree: a leap that would fall short into the void or get caught on an intermediate platform
+    /// is rejected here, never emitted. An UPWARD leap additionally must crest <see cref="GapUpClear"/>
+    /// above the target so per-frame jitter can't tip it under the lip.
+    /// </summary>
+    private static bool GapJumpLands(IReadOnlyList<Platform> platforms, int to,
+        double launchX, double launchY, double landY, Physics.GapJumpArc arc, double gravity, double dt)
+    {
+        double startFeet = Physics.GapJumpLaunchFeet(launchY, landY);
+        // The arc has either reached the void or landed by the time it could fall this far below.
+        double voidY = System.Math.Max(launchY, landY) + System.Math.Abs(landY - launchY) + HopDist + 200.0;
+        int hit = SimulateLanding(platforms, launchX, startFeet, arc.Vx, -arc.LaunchVy,
+            System.Math.Max(1.0, gravity), dt, voidY, out _, out double apex);
+        if (hit != to) return false;
+        // An UPWARD leap must crest GapUpClear above the target, so per-frame jitter can't tip it under.
+        return landY >= launchY - Eps || apex <= landY - GapUpClear;
+    }
+
+    /// <summary>
+    /// Replay a ballistic launch with the EXACT semi-implicit Euler step the live executor uses
+    /// (<c>vy += g·dt; feet += vy·dt; center += vx·dt</c>) from (<paramref name="startX"/>,
+    /// <paramref name="startFeet"/>) with initial velocity (<paramref name="vx"/>,
+    /// <paramref name="vy0"/>). Returns the index of the first platform the DESCENDING feet land on —
+    /// the planner's faithful stand-in for <see cref="Physics.FindLanding"/>, so planning and
+    /// execution can't disagree — or -1 if it falls past everything (<paramref name="voidY"/>). Reports
+    /// the landing x and the arc's apex (smallest feet-Y) for callers that need them.
+    /// </summary>
+    private static int SimulateLanding(IReadOnlyList<Platform> platforms, double startX, double startFeet,
+        double vx, double vy0, double g, double dt, double voidY, out double landX, out double apex)
+    {
+        double center = startX, feet = startFeet, vy = vy0;
+        apex = feet; landX = startX;
+        // Bound the loop by when the arc would reach voidY (it lands earlier on any real surface); a
+        // hard step cap backstops a pathological flight. An upward launch (vy0 < 0) needs the longer
+        // ascending-then-descending time, which this closed-form solve captures.
+        double tMax = (-vy0 + System.Math.Sqrt(vy0 * vy0 + 2 * g * System.Math.Max(0.0, voidY - startFeet))) / g + dt;
+        int steps = System.Math.Min((int)(tMax / dt) + 2, 4096);
+        for (int i = 0; i < steps; i++)
+        {
+            vy += g * dt;
+            double fromFeet = feet;
+            double newCenter = center + vx * dt;
+            double newFeet = feet + vy * dt;
+            int hit = LandingIndex(platforms, newCenter, fromFeet, newFeet);
+            if (hit >= 0) { landX = newCenter; return hit; }
+            center = newCenter;
+            feet = newFeet;
+            if (feet < apex) apex = feet;
+            if (feet > voidY) return -1; // fell clear past everything
+        }
+        return -1;
+    }
+
+    /// <summary>Index of the platform the feet land on moving from <paramref name="fromFeetY"/> down to
+    /// <paramref name="toFeetY"/> at <paramref name="centerX"/> (highest such surface), or -1 — the
+    /// index-returning twin of <see cref="Physics.FindLanding"/> used by the gap-jump sim.</summary>
+    private static int LandingIndex(IReadOnlyList<Platform> platforms, double centerX, double fromFeetY, double toFeetY)
+    {
+        int best = -1; double bestY = double.MaxValue;
+        for (int i = 0; i < platforms.Count; i++)
+        {
+            var p = platforms[i];
+            if (!p.ContainsX(centerX, Physics.Eps)) continue;
+            if (p.Y >= fromFeetY - 0.01 && p.Y <= toFeetY + 0.01 && p.Y < bestY) { bestY = p.Y; best = i; }
+        }
+        return best;
     }
 
     /// <summary>

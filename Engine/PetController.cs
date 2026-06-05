@@ -70,7 +70,7 @@ public sealed class PetController
     // Navigation
     private MapGraph? _graph;
     private World? _graphWorld;
-    private double _graphJumpHeight; // JumpHeight the cached graph was built with (rebuild on change)
+    private MoveParams _graphParams; // the movement params the cached graph was built with (rebuild on change)
     private List<PathStep>? _path;
     private int _step;
     private Vec2 _targetPos;
@@ -122,12 +122,13 @@ public sealed class PetController
         // route to step 0 mid-walk and make the pet stutter / shuttle in place.
         if (!ReferenceEquals(world, _graphWorld))
         {
+            var mp = Params;
             if (_graph is null || _graphWorld is null
-                || _cfg.JumpHeight != _graphJumpHeight
+                || _graphParams != mp
                 || !SameGeometry(_graphWorld, world))
             {
-                _graph = MapGraph.Build(world, _cfg.JumpHeight);
-                _graphJumpHeight = _cfg.JumpHeight;
+                _graph = MapGraph.Build(world, mp);
+                _graphParams = mp;
                 _pendingReplan = true;
             }
             _graphWorld = world;
@@ -264,11 +265,17 @@ public sealed class PetController
     {
         if (_graph is null)
         {
-            _graph = MapGraph.Build(world, _cfg.JumpHeight);
-            _graphJumpHeight = _cfg.JumpHeight;
+            _graph = MapGraph.Build(world, Params);
+            _graphParams = Params;
             _graphWorld = world;
         }
     }
+
+    /// <summary>The pet's current movement capabilities, as the nav graph needs them.</summary>
+    private MoveParams Params => new(_cfg.JumpHeight, _cfg.Gravity, _cfg.WalkSpeed, _cfg.TargetFps);
+
+    /// <summary>The movement params, exposed so the debug overlay can redraw the real gap-jump arc.</summary>
+    internal MoveParams Motion => Params;
 
     // ---------------------------------------------------------------- Stand (idle)
     private void EnterStand(double seconds = -1)
@@ -452,6 +459,14 @@ public sealed class PetController
             case MoveKind.DropDown:
                 // Down-jump: drop through this platform and arc onto (step.X, step.Y) below.
                 BeginDrop(step.X, step.Y);
+                break;
+            case MoveKind.EdgeDrop:
+                // The previous step walked us to the platform edge; step off and fall onto the one below.
+                BeginEdgeDrop(world, step.X);
+                break;
+            case MoveKind.GapJump:
+                // The previous step walked us to the launch edge; leap across the gap onto (step.X, step.Y).
+                LaunchGapJump(world, step.X, step.Y);
                 break;
         }
     }
@@ -639,6 +654,62 @@ public sealed class PetController
         State = PetState.Jump;
     }
 
+    /// <summary>
+    /// Edge-drop: walk straight off the current platform's edge and free-fall onto the platform below.
+    /// The pet keeps its run speed in the walk-off direction (toward <paramref name="landX"/>) with no
+    /// upward pop and no sink. It first snaps to the exact lip: <see cref="WalkToward"/> stops within
+    /// <see cref="ArriveTol"/> of the edge node, which could leave the pet a hair inside the platform
+    /// so the first falling tick re-detects it; launching from the true edge (where the planner's
+    /// reachability sim launches) makes it clear the lip in one frame and keeps plan == execution.
+    /// </summary>
+    private void BeginEdgeDrop(World world, double landX)
+    {
+        int dir = landX > CenterX ? 1 : landX < CenterX ? -1 : Facing;
+        // Launch just PAST the lip (not merely AT it): WalkToward stops within ArriveTol of the edge
+        // node, and at the bare edge the first falling tick can still sit inside ContainsX's tolerance
+        // and re-detect the platform. Stepping EdgeLipClear past it clears the lip in one frame
+        // regardless of frame rate / walk speed, and matches where the planner's reachability sim
+        // launches, so plan == execution.
+        if (Physics.FindSupport(world, CenterX, FeetY, SupportTol) is Platform p)
+        {
+            double edge = dir > 0 ? p.XEnd : p.XStart;
+            Pos = new Vec2(edge + dir * Physics.EdgeLipClear - Size.X / 2, Pos.Y);
+        }
+        _grabbingLadder = false;
+        Vel = new Vec2(dir * _cfg.WalkSpeed, 0);
+        Facing = dir;
+        State = PetState.Jump;
+    }
+
+    /// <summary>
+    /// Gap-jump: leap sideways across a horizontal gap onto (<paramref name="landX"/>,
+    /// <paramref name="landY"/>) on a detached platform. The same solver the graph used to admit the
+    /// edge (<see cref="Physics.SolveGapJump"/>) recomputes the arc from the live launch position, so
+    /// the leap lands where it was planned. If the geometry shifted so the leap is no longer solvable,
+    /// replan toward the same target (keeping a commanded destination) — the geometry change rebuilds
+    /// the graph next tick, so this can't busy-retry the vanished edge.
+    /// </summary>
+    private void LaunchGapJump(World world, double landX, double landY)
+    {
+        // Snap to the exact launch lip first: WalkToward stops within ArriveTol of the edge node, and
+        // re-solving the arc from a hair short of the edge can push a near-jump-limit leap over the
+        // height cap (SolveGapJump returns null) — leaving the pet busy-replanning the same edge. The
+        // planner admitted the leap from the true edge, so launch from there to stay consistent.
+        int dir = landX > CenterX ? 1 : landX < CenterX ? -1 : Facing;
+        if (Physics.FindSupport(world, CenterX, FeetY, SupportTol) is Platform lip)
+            Pos = new Vec2((dir > 0 ? lip.XEnd : lip.XStart) - Size.X / 2, Pos.Y);
+        var arc = Physics.SolveGapJump(CenterX, FeetY, landX, landY, _cfg.Gravity, _cfg.WalkSpeed, _cfg.JumpHeight);
+        if (arc is not Physics.GapJumpArc a) { _pendingReplan = true; return; } // unsolvable now: replan to the target
+        // Sink just under the source lip on a level/downward leap so the platform we just left isn't
+        // re-detected as the landing on the first descending tick (the planner's reachability sim
+        // assumes this same launch). An upward leap rises clear of the lip on its own.
+        Pos = new Vec2(Pos.X, Physics.GapJumpLaunchFeet(FeetY, landY) - Size.Y);
+        _grabbingLadder = false;
+        Vel = new Vec2(a.Vx, -a.LaunchVy);
+        if (Math.Abs(a.Vx) > 1e-3) Facing = a.Vx > 0 ? 1 : -1; // face the way we leap
+        State = PetState.Jump;
+    }
+
     private void UpdateJump(World world, double dt)
     {
         double vy = Vel.Y + _cfg.Gravity * dt;
@@ -716,9 +787,45 @@ public sealed class PetController
     /// feet-center <paramref name="fromCenterFeet"/> to <paramref name="target"/> (see NavTest).</summary>
     internal List<PathStep>? PlanForTest(World world, Vec2 fromCenterFeet, Vec2 target)
     {
-        _graph = MapGraph.Build(world, _cfg.JumpHeight);
+        _graph = MapGraph.Build(world, Params);
         Pos = new Vec2(fromCenterFeet.X - Size.X / 2, fromCenterFeet.Y - Size.Y);
         return PlanTo(target);
+    }
+
+    /// <summary>
+    /// Test seam (destructive — throwaway controller only): place the pet at
+    /// <paramref name="fromCenterFeet"/>, plan a route to <paramref name="target"/>, then actually
+    /// DRIVE the physics by ticking <see cref="Update"/> at <paramref name="dt"/> for up to
+    /// <paramref name="maxTicks"/> frames, stopping as soon as it stands on the target. Returns the
+    /// platform index it ends on (-1 if airborne/void), whether it is standing there, and how many
+    /// distinct jumps it launched (a re-launch loop inflates this — used to catch soft-locks).
+    /// </summary>
+    internal (int platform, bool atTarget, int launches) SimulateForTest(
+        World world, Vec2 fromCenterFeet, Vec2 target, double dt, int maxTicks)
+    {
+        _graph = MapGraph.Build(world, Params);
+        _graphParams = Params;
+        _graphWorld = world;
+        _spawned = true;
+        RoamingSuspended = true; // isolate the commanded route from autonomous wandering (deterministic)
+        Pos = new Vec2(fromCenterFeet.X - Size.X / 2, fromCenterFeet.Y - Size.Y);
+        Vel = default;
+        State = PetState.Stand;
+        if (!RequestMoveTo(world, target))
+            return (_graph.PlatformAt(CenterX, FeetY), false, 0); // no route: stays put (graceful)
+
+        int launches = 0;
+        var prev = State;
+        for (int i = 0; i < maxTicks; i++)
+        {
+            Update(world, dt); // same world instance every tick: ReferenceEquals keeps the graph
+            if (State == PetState.Jump && prev != PetState.Jump) launches++;
+            prev = State;
+            if (State == PetState.Stand
+                && Math.Abs(CenterX - target.X) < 2.5 && Math.Abs(FeetY - target.Y) < SupportTol)
+                return (_graph.PlatformAt(CenterX, FeetY), true, launches);
+        }
+        return (_graph.PlatformAt(CenterX, FeetY), false, launches);
     }
 
     private static double Clamp(double v, double lo, double hi) => v < lo ? lo : v > hi ? hi : v;

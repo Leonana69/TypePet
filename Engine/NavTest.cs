@@ -225,6 +225,127 @@ public static class NavTest
             Check("sub-MinSegment bottom-edge sliver is discarded", y300 == 0, $"y300 platforms={y300}");
         }
 
+        // ===== Gap-jump (leap across a detached platform) — END-TO-END runtime checks. These DRIVE =====
+        // the real physics tick loop (not just the planner), because the gap-jump bugs live in the
+        // launch/landing execution: re-landing on the launch lip, sailing into the void, etc.
+        double simDt = 1.0 / cfg.TargetFps;
+
+        // ---- Scenario M: same-height leap across a clear gap, executed. The pet must walk to the lip,
+        // leap, and end standing on the far platform at the target — with a single launch (no stutter).
+        {
+            var a = new Platform(300, 0, 150);
+            var b = new Platform(300, 230, 380); // 80px gap, same height
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 1);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(75, 300), new Vec2(300, 300), simDt, 600);
+            Check("same-height leap reaches the far platform", atTarget && plat == 1, $"plat={plat} atTarget={atTarget} launches={launches}");
+            Check("same-height leap doesn't stutter at the lip", launches <= 2, $"launches={launches}");
+        }
+
+        // ---- Scenario N: JUMP DOWN A CLIFF across a narrow gap with a steep drop — the headline case
+        // AND the regression guard for the run-off launch re-landing on its own lip. Must reach B with
+        // a single clean leap, not jitter at the edge.
+        {
+            var a = new Platform(300, 0, 150);
+            var b = new Platform(540, 160, 400); // 10px gap, 240px drop -> run-off launch (LaunchVy=0)
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 2);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(75, 300), new Vec2(280, 540), simDt, 600);
+            Check("cliff run-off leap reaches the lower platform", atTarget && plat == 1, $"plat={plat} atTarget={atTarget} launches={launches}");
+            Check("cliff run-off leap does not re-land on the launch lip (no soft-lock)", launches <= 2, $"launches={launches}");
+        }
+
+        // ---- Scenario O: a gap too wide to clear is not offered, so the pet stays safely put rather
+        // than leaping into the void.
+        {
+            var a = new Platform(300, 0, 150);
+            var b = new Platform(300, 420, 560); // 270px gap — unjumpable
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 3);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(75, 300), new Vec2(480, 300), simDt, 300);
+            Check("too-wide gap: pet stays put, never leaps", !atTarget && plat == 0 && launches == 0, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
+        // ---- Scenario P: an UPWARD leap onto a higher detached platform near the jump-height limit.
+        // The ideal-parabola plan would graze the apex and the real (Euler) arc would sail into the
+        // void and soft-loop; the executor-faithful reachability sim must reject it, so the pet ends on
+        // a real platform without an endless leap/void/teleport cycle.
+        {
+            var a = new Platform(281, 74, 220);
+            var b = new Platform(150, 265, 349); // 45px gap, 131px HIGHER (near the 150 jump limit)
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 4);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(140, 281), new Vec2(300, 150), simDt, 600);
+            Check("upward near-apex leap never voids/soft-loops (ends on a platform)", plat >= 0 && launches <= 3, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
+        // ---- Scenario Q: a comfortably-reachable UPWARD leap onto a higher detached platform MUST be
+        // taken (regression guard: the reachability sim's flight-time bound must follow the arc all the
+        // way to its DESCENDING landing, not cut off at the ascending crossing, or higher platforms
+        // become silently unreachable).
+        {
+            var a = new Platform(400, 50, 300);
+            var b = new Platform(370, 303, 503); // 3px gap, 30px higher — well within a run-up leap
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 5);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(150, 400), new Vec2(400, 370), simDt, 600);
+            Check("reachable upward leap is taken (not over-rejected)", atTarget && plat == 1, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
+        // ---- Scenario R: WALK OFF A CLIFF EDGE onto an adjacent lower platform. A and B abut exactly
+        // at the edge (no x-overlap to drop straight through, no gap to leap), so ONLY an edge-drop
+        // connects them — the pet keeps walking right to the lip and steps off into the fall.
+        {
+            var a = new Platform(300, 0, 200);
+            var b = new Platform(500, 200, 600); // abuts A's right edge at x=200, 200px lower
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 6);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(80, 300), new Vec2(400, 500), simDt, 600);
+            Check("walk off a cliff edge reaches the lower platform", atTarget && plat == 1, $"plat={plat} atTarget={atTarget} launches={launches}");
+            Check("cliff walk-off is a single step-off (no stutter)", launches <= 2, $"launches={launches}");
+        }
+
+        // ---- Scenario S: a same-height neighbour AT the edge is walked across, not dropped through —
+        // the pet only steps off where the ledge truly ends. A->C is level and abutting (walk-across,
+        // no edge-drop), and C drops to a lower B past C's far edge.
+        {
+            var a = new Platform(300, 0, 200);
+            var c = new Platform(300, 200, 400); // same height, abuts A -> walk across, NOT an edge-drop
+            var b = new Platform(500, 400, 600); // lower, past C's right edge -> edge-drop from C
+            var world = new World(new[] { a, c, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 7);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(80, 300), new Vec2(500, 500), simDt, 600);
+            Check("walk across a level seam, then edge-drop off the true ledge", atTarget && plat == 2, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
+        // ---- Scenario T: a near-jump-limit GAP JUMP must not soft-lock. The planner admits it from
+        // the exact edge; the executor stops within ArriveTol of the edge, so it must snap back to that
+        // edge before re-solving — else the hair's shortfall tips the leap over the height cap and it
+        // busy-replans the same edge forever.
+        {
+            var a = new Platform(238, 45, 109);
+            var b = new Platform(332, 221, 356); // 112px gap, 94px lower — v0 sits right at the jump limit
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 8);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(70, 238), new Vec2(300, 332), simDt, 800);
+            Check("near-jump-limit gap-jump reaches the target (no lip-precision soft-lock)", atTarget && plat == 1, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
+        // ---- Scenario U: the cliff walk-off must work at a HIGH frame rate too. At >=180fps the
+        // per-frame advance is <= the lip tolerance, so launching AT the bare edge would re-detect it
+        // and stall; stepping just past the lip keeps the edge-drop emitted AND stutter-free.
+        {
+            var hi = new Settings { TargetFps = 240 };
+            double hiDt = 1.0 / hi.TargetFps;
+            var a = new Platform(300, 0, 200);
+            var b = new Platform(500, 200, 600);
+            var world = new World(new[] { a, b }, System.Array.Empty<Ladder>());
+            var pet = new PetController(hi, new Vec2(30, 38), seed: 9);
+            var (plat, atTarget, launches) = pet.SimulateForTest(world, new Vec2(80, 300), new Vec2(400, 500), hiDt, 3000);
+            Check("cliff walk-off works at high frame rate (lip cleared frame-rate-independently)",
+                atTarget && plat == 1 && launches <= 2, $"plat={plat} atTarget={atTarget} launches={launches}");
+        }
+
         sb.AppendLine();
         sb.AppendLine($"SUMMARY: {pass} passed, {fail} failed");
         File.WriteAllText(outFile, sb.ToString());
