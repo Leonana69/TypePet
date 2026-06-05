@@ -215,6 +215,9 @@ public sealed class SayBarWindow : Window
                 if (control is not null) StartThinking(control);
                 var cmd = await _commands.RunAsync(text, CancellationToken.None);
                 StopThinking();
+                // A command can ask for text to be put on the clipboard (e.g. /ssc, /asc). The write is a UI
+                // concern (needs a TopLevel), so the command only carries the text and the say bar copies it.
+                if (!string.IsNullOrEmpty(cmd.ClipboardText)) await SetClipboardAsync(cmd.ClipboardText);
                 var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
                 // A command link (e.g. /rank's MapleRanks page) shows as a clickable line in the pet's bubble
                 // (and, when open, in history). A bubble link gets a longer dwell so there's time to click it.
@@ -414,6 +417,19 @@ public sealed class SayBarWindow : Window
     {
         try { TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(new Uri(url)); }
         catch { /* ignore bad URLs */ }
+    }
+
+    /// <summary>Write <paramref name="text"/> to the system clipboard via this window's TopLevel. The bar is a
+    /// persistent singleton (only hidden, never closed), so the platform clipboard stays reachable even after
+    /// a folded-mode command has dismissed it. Failures are swallowed — a copy command should never crash.</summary>
+    private async Task SetClipboardAsync(string text)
+    {
+        try
+        {
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard is not null) await clipboard.SetTextAsync(text);
+        }
+        catch { /* ignore clipboard failures */ }
     }
 
     private static string Trim(string title, string url)

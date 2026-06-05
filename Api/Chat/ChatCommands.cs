@@ -11,13 +11,16 @@ namespace MaplePet.Api.Chat;
 /// in history, and <see cref="IsError"/> tints the history bubble. <see cref="Link"/> is a single primary
 /// link surfaced as a clickable button IN THE PET'S SPEECH BUBBLE too (the say bar passes it to Say); it's
 /// also typically included in <see cref="Sources"/> so it appears in history. <see cref="ImageUrl"/> is an
-/// optional image (e.g. the character canvas) shown in both the pet's bubble and the history card.</summary>
+/// optional image (e.g. the character canvas) shown in both the pet's bubble and the history card.
+/// <see cref="ClipboardText"/>, when set, is written to the system clipboard by the say bar (which owns a
+/// <c>TopLevel</c>); the command stays UI-free and only carries the text to copy.</summary>
 public sealed record CommandResult(
-    string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null, string? ImageUrl = null)
+    string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null, string? ImageUrl = null,
+    string? ClipboardText = null)
 {
     public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null,
-        WebSource? link = null, string? imageUrl = null)
-        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl);
+        WebSource? link = null, string? imageUrl = null, string? clipboardText = null)
+        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl, clipboardText);
 
     public static CommandResult Error(string text) => new(text, Array.Empty<WebSource>(), true);
 }
@@ -52,6 +55,8 @@ public sealed class ChatCommands
         {
             new Command("rank", $"/rank [{RankServers.FlagList.Replace(", ", "|")}] <character>",
                 "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
+            new Command("ssc", "/ssc", "Copy \"Sacred Symbol/claim\" to the clipboard.", Copy("Sacred Symbol/claim")),
+            new Command("asc", "/asc", "Copy \"Arcane Symbol/claim\" to the clipboard.", Copy("Arcane Symbol/claim")),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
     }
@@ -144,6 +149,12 @@ public sealed class ChatCommands
         string list = string.Join("\n", _commands.Select(c => $"{c.Usage} — {c.Help}"));
         return Task.FromResult(CommandResult.Ok("Commands:\n" + list));
     }
+
+    /// <summary>Builds a no-argument command that puts a fixed string on the system clipboard. The handler is
+    /// pure — it just returns the text to copy (via <see cref="CommandResult.ClipboardText"/>) plus the line
+    /// the pet speaks; the say bar does the actual clipboard write since it owns a <c>TopLevel</c>.</summary>
+    private static Func<string, CancellationToken, Task<CommandResult>> Copy(string text)
+        => (_, _) => Task.FromResult(CommandResult.Ok($"Copied \"{text}\" to clipboard 📋", clipboardText: text));
 
     // ---- helpers -----------------------------------------------------------------
 
