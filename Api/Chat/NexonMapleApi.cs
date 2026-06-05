@@ -33,20 +33,27 @@ public sealed class NexonMapleApi
     /// <summary>A queryable MapleStory region: a stable <see cref="Id"/> (persisted + used in the secret
     /// id), a human <see cref="Label"/>, and the API <see cref="BasePath"/> its endpoints live under.
     /// <see cref="RequiresKey"/> is false for GMS, which has no Open API and uses the keyless public rankings
-    /// endpoint (<see cref="NexonGmsRankApi"/>) instead.</summary>
-    public sealed record Region(string Id, string Label, string BasePath, bool RequiresKey = true);
+    /// endpoint (<see cref="NexonGmsRankApi"/>) instead. <see cref="InfoSite"/> + <see cref="InfoUrlFormat"/>
+    /// give that region's community profile site for the <c>/rank</c> "check more info on …" link
+    /// (<see cref="InfoUrlFormat"/> has a single <c>{0}</c> for the URL-encoded character name).</summary>
+    public sealed record Region(string Id, string Label, string BasePath, bool RequiresKey = true,
+        string? InfoSite = null, string? InfoUrlFormat = null);
 
     /// <summary>The MapleStory servers <c>/rank</c> can query. The Open-API regions (KMS/SEA/TMS) each need
     /// their own key; GMS is keyless and is the default. GMS is one entry — its NA/EU split is chosen per
     /// call via the <c>/rank -na|-eu</c> flag (see <see cref="NexonGmsRankApi"/>).</summary>
     public static readonly IReadOnlyList<Region> Regions = new[]
     {
-        new Region("kms", "KMS (Korea)",  "https://open.api.nexon.com/maplestory/v1"),
-        new Region("sea", "SEA",          "https://open.api.nexon.com/maplestorysea/v1"),
-        new Region("tms", "TMS (Taiwan)", "https://open.api.nexon.com/maplestorytw/v1"),
+        new Region("kms", "KMS (Korea)",  "https://open.api.nexon.com/maplestory/v1",
+            InfoSite: "chuchu.gg",     InfoUrlFormat: "https://chuchu.gg/char/{0}"),
+        new Region("sea", "SEA",          "https://open.api.nexon.com/maplestorysea/v1",
+            InfoSite: "maple.gg",      InfoUrlFormat: "https://msea.maple.gg/u/{0}"),
+        new Region("tms", "TMS (Taiwan)", "https://open.api.nexon.com/maplestorytw/v1",
+            InfoSite: "maple-kit.com", InfoUrlFormat: "https://maple-kit.com/character/{0}"),
         // GMS has no Open API — this hits the public website ranking endpoint (no key). The trailing /na|/eu
         // sub-server is appended per call by NexonGmsRankApi based on the /rank flag, so BasePath omits it.
-        new Region("gms", "GMS", "https://www.nexon.com/api/maplestory/no-auth/ranking/v2", RequiresKey: false),
+        new Region("gms", "GMS", "https://www.nexon.com/api/maplestory/no-auth/ranking/v2", RequiresKey: false,
+            InfoSite: "MapleRanks",    InfoUrlFormat: "https://mapleranks.com/u/{0}"),
     };
 
     /// <summary>Resolve a persisted region id to its <see cref="Region"/> (falls back to the first/KMS).</summary>

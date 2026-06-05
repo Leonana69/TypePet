@@ -24,16 +24,19 @@ public static class SpeechBubble
     private const double TailW = 12, TailH = 9;
     private const double GapToPet = 6;
     private const double FontSize = 13;
-    private const double LinkGap = 5; // vertical space between the message text and the link line
+    private const double LinkGap = 5;  // vertical space between the message text and the link line
+    private const double ImgGap = 6;   // vertical space between the character image and the text
+    private const double ImgMax = 120; // the character canvas is scaled (never up) to fit within this box
 
     /// <summary>Draw <paramref name="text"/> in a bubble whose tail points at (<paramref name="anchorX"/>,
     /// <paramref name="topY"/>) — the top-center of the drawn pet — clamped within <paramref name="screen"/>.
-    /// When <paramref name="linkLabel"/> is non-empty, a clickable, underlined link line is drawn below the
-    /// text and its bounds (in the same logical coords as <paramref name="screen"/>) are returned so the
-    /// caller can hit-test clicks on it; otherwise null.</summary>
+    /// An optional <paramref name="image"/> (e.g. the character canvas) is drawn centered on top; when
+    /// <paramref name="linkLabel"/> is non-empty, a clickable, underlined link line is drawn below the text
+    /// and its bounds (in the same logical coords as <paramref name="screen"/>) are returned so the caller
+    /// can hit-test clicks on it; otherwise null.</summary>
     private const int MaxChars = 700; // a speech bubble shouldn't show a wall of text; long replies are clipped
 
-    public static MaplePet.Engine.Rect? Draw(DrawingContext ctx, string text, string? linkLabel,
+    public static MaplePet.Engine.Rect? Draw(DrawingContext ctx, string text, string? linkLabel, IImage? image,
         double anchorX, double topY, MaplePet.Engine.Rect screen)
     {
         text = Sanitize(text);
@@ -48,8 +51,17 @@ public static class SpeechBubble
             CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, FontSize, LinkBrush)
         { MaxTextWidth = MaxTextWidth };
 
-        double contentW = Math.Max(ft.Width, fl?.Width ?? 0);
-        double contentH = ft.Height + (fl is null ? 0 : LinkGap + fl.Height);
+        // Optional character image, scaled uniformly (never up) to fit an ImgMax box and centered on top.
+        double imgW = 0, imgH = 0;
+        if (image is not null && image.Size.Width > 0 && image.Size.Height > 0)
+        {
+            double s = Math.Min(1.0, Math.Min(ImgMax / image.Size.Width, ImgMax / image.Size.Height));
+            imgW = image.Size.Width * s;
+            imgH = image.Size.Height * s;
+        }
+
+        double contentW = Math.Max(Math.Max(ft.Width, fl?.Width ?? 0), imgW);
+        double contentH = (imgH > 0 ? imgH + ImgGap : 0) + ft.Height + (fl is null ? 0 : LinkGap + fl.Height);
         double w = Math.Ceiling(contentW) + PadX * 2;
         double h = Math.Ceiling(contentH) + PadY * 2;
 
@@ -95,16 +107,25 @@ public static class SpeechBubble
         }
         ctx.DrawGeometry(Fill, Border, bubble);
 
-        ctx.DrawText(ft, new Point(bx + PadX, by + PadY));
+        // Stack the content top→bottom: image (centered), then text, then the link line.
+        double y = by + PadY;
+        if (imgH > 0)
+        {
+            ctx.DrawImage(image!, new Rect(bx + (w - imgW) / 2, y, imgW, imgH));
+            y += imgH + ImgGap;
+        }
+        ctx.DrawText(ft, new Point(bx + PadX, y));
+        y += ft.Height;
 
         if (fl is null) return null;
-        double linkX = bx + PadX, linkY = by + PadY + ft.Height + LinkGap;
-        ctx.DrawText(fl, new Point(linkX, linkY));
+        y += LinkGap;
+        double linkX = bx + PadX;
+        ctx.DrawText(fl, new Point(linkX, y));
         // Underline it (FormattedText has no decoration property here), so it reads as a clickable link.
-        double underlineY = linkY + fl.Height - 1.5;
+        double underlineY = y + fl.Height - 1.5;
         ctx.DrawLine(LinkUnderline, new Point(linkX, underlineY), new Point(linkX + fl.Width, underlineY));
         // The clickable region (in the same logical coords as `screen`), handed back for hit-testing.
-        return new MaplePet.Engine.Rect(linkX, linkY, fl.Width, fl.Height);
+        return new MaplePet.Engine.Rect(linkX, y, fl.Width, fl.Height);
     }
 
     /// <summary>Make arbitrary text safe to render: drop control characters (stray ANSI/escape codes from

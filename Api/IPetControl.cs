@@ -56,8 +56,9 @@ public interface IPetControl
 
     /// <summary>Show a speech bubble over the pet for <paramref name="seconds"/> (default scales with
     /// text length). Optionally <paramref name="linkUrl"/> + <paramref name="linkLabel"/> add a clickable
-    /// link line to the bubble that opens the URL in the default browser (used by the <c>/rank</c> command).</summary>
-    Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null);
+    /// link line that opens the URL in the default browser, and <paramref name="imageUrl"/> shows an image
+    /// (e.g. the character canvas) atop the bubble — both used by the <c>/rank</c> command.</summary>
+    Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null);
 
     /// <summary>Raised when the worn character changes, so a transport can regenerate its tool schema
     /// (the available actions/expressions are character-specific).</summary>

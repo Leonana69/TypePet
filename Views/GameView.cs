@@ -19,6 +19,7 @@ public sealed class GameView : Control
     public CharacterAnimator? Animator { get; set; }
     public string? Speech { get; set; }          // active speech-bubble text (control API's Say), or null
     public string? SpeechLink { get; set; }      // optional clickable link label drawn in the bubble, or null
+    public Avalonia.Media.IImage? SpeechImage { get; set; } // optional character image drawn atop the bubble
     // The clickable link's bounds in logical overlay px, recomputed each Render (null when no link is drawn).
     // PetWindow reads this to publish a hit rect to the input layer.
     public MaplePet.Engine.Rect? SpeechLinkRect { get; private set; }
@@ -53,7 +54,7 @@ public sealed class GameView : Control
                     // Anchor the bubble at the top-center of the drawn pet (falls back to the physics box
                     // when footage didn't load).
                     double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
-                    SpeechLinkRect = SpeechBubble.Draw(context, Speech!, SpeechLink, pet.CenterX, topY,
+                    SpeechLinkRect = SpeechBubble.Draw(context, Speech!, SpeechLink, SpeechImage, pet.CenterX, topY,
                         new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
                 }
             }

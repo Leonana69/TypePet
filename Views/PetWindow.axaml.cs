@@ -38,6 +38,8 @@ public partial class PetWindow : Window
     private double _speechRemainingMs;  // countdown until the bubble clears
     private string? _speechLinkUrl;     // optional URL the bubble's link line opens (cleared with the bubble)
     private string? _speechLinkLabel;   // the bubble link's display label
+    private string? _speechImageUrl;    // optional character-image URL for the bubble (cleared with it)
+    private Avalonia.Media.IImage? _speechImage; // the loaded + center-cropped image (null until ready)
 
     /// <summary>The programmatic control surface for this pet (LLM / MCP). Available after
     /// <see cref="ControlReady"/> fires.</summary>
@@ -422,24 +424,43 @@ public partial class PetWindow : Window
         if (_speechRemainingMs > 0)
         {
             _speechRemainingMs -= dt * 1000.0;
-            if (_speechRemainingMs <= 0) { _speechText = null; _speechLinkUrl = null; _speechLinkLabel = null; }
+            if (_speechRemainingMs <= 0)
+            {
+                _speechText = null; _speechLinkUrl = null; _speechLinkLabel = null;
+                _speechImage = null; _speechImageUrl = null;
+            }
         }
         View.Speech = _speechText;
         View.SpeechLink = _speechLinkLabel;
+        View.SpeechImage = _speechImage;
 
         View.InvalidateVisual();
     }
 
     /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).
-    /// <paramref name="linkUrl"/>/<paramref name="linkLabel"/> optionally add a clickable link line to the
-    /// bubble; both are cleared when the bubble does (here or on timeout).</summary>
-    private void SetSpeech(string? text, double? seconds, string? linkUrl, string? linkLabel)
+    /// <paramref name="linkUrl"/>/<paramref name="linkLabel"/> optionally add a clickable link line and
+    /// <paramref name="imageUrl"/> an image (e.g. the character canvas) atop the bubble; all are cleared
+    /// when the bubble does (here or on timeout).</summary>
+    private void SetSpeech(string? text, double? seconds, string? linkUrl, string? linkLabel, string? imageUrl)
     {
         _speechText = string.IsNullOrWhiteSpace(text) ? null : text;
         _speechRemainingMs = _speechText is null ? 0 : (seconds is double s && s > 0 ? s * 1000.0 : 4000);
         bool hasLink = _speechText is not null && !string.IsNullOrWhiteSpace(linkUrl) && !string.IsNullOrWhiteSpace(linkLabel);
         _speechLinkUrl = hasLink ? linkUrl : null;
         _speechLinkLabel = hasLink ? linkLabel : null;
+
+        // Optional character image: cleared immediately, then loaded async (cached) and shown once ready.
+        _speechImage = null;
+        _speechImageUrl = _speechText is not null && !string.IsNullOrWhiteSpace(imageUrl) ? imageUrl : null;
+        if (_speechImageUrl is { } url) _ = LoadBubbleImageAsync(url);
+    }
+
+    /// <summary>Fetch the bubble's character image (cached) and show it — but only if a newer bubble hasn't
+    /// since changed the URL, so a slow load can't pop a stale image onto a different message.</summary>
+    private async System.Threading.Tasks.Task LoadBubbleImageAsync(string url)
+    {
+        var bmp = await MaplePet.Rendering.ImageCache.LoadAsync(url);
+        if (_speechImageUrl == url) _speechImage = MaplePet.Rendering.ImageCache.CropCharacterCanvas(bmp);
     }
 
     /// <summary>Open the active speech-bubble link in the default browser (raised by the input layer when

@@ -221,8 +221,8 @@ public sealed class SayBarWindow : Window
                 // The bubble link is ALWAYS shown; it's only made click-hittable while no focusable window is
                 // up (see PetWindow.TickInput), so it can't swallow presses meant for an open say bar.
                 double secs = cmd.Link is null ? ChatSpeechSeconds(ctext) : Math.Max(ChatSpeechSeconds(ctext), 12);
-                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title);
-                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link); _input.Focus(); }
+                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl);
+                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl); _input.Focus(); }
                 return;
             }
 
@@ -323,9 +323,27 @@ public sealed class SayBarWindow : Window
         ScrollToEnd();
     }
 
-    private void AddAssistantBubble(string text, IReadOnlyList<WebSource> sources, bool isError, WebSource? link = null)
+    private void AddAssistantBubble(string text, IReadOnlyList<WebSource> sources, bool isError,
+        WebSource? link = null, string? imageUrl = null)
     {
         var body = new StackPanel();
+
+        // Optional character image (e.g. /rank's canvas), shown atop the card and loaded async (cached).
+        if (!string.IsNullOrWhiteSpace(imageUrl))
+        {
+            var img = new Image
+            {
+                Stretch = Stretch.Uniform,
+                StretchDirection = StretchDirection.DownOnly, // match the bubble: clamp big images, never upscale
+                MaxWidth = 120,
+                MaxHeight = 120,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 6),
+            };
+            body.Children.Add(img);
+            LoadImageInto(img, imageUrl!);
+        }
+
         body.Children.Add(new SelectableTextBlock
         {
             Text = text,
@@ -378,6 +396,19 @@ public sealed class SayBarWindow : Window
 
     private void ScrollToEnd() =>
         Dispatcher.UIThread.Post(() => _historyScroller.Offset = new Vector(0, double.MaxValue), DispatcherPriority.Background);
+
+    /// <summary>Load <paramref name="url"/> (cached) and set it as the image's source once ready. Fire and
+    /// forget; failures leave the placeholder blank.</summary>
+    private static async void LoadImageInto(Image target, string url)
+    {
+        try
+        {
+            var bmp = await MaplePet.Rendering.ImageCache.LoadAsync(url);
+            var img = MaplePet.Rendering.ImageCache.CropCharacterCanvas(bmp);
+            if (img is not null) target.Source = img;
+        }
+        catch { /* ignore image failures */ }
+    }
 
     private void OpenUrl(string url)
     {

@@ -10,11 +10,14 @@ namespace MaplePet.Api.Chat;
 /// spoken by the pet (and shown in history when it's open), <see cref="Sources"/> are optional links shown
 /// in history, and <see cref="IsError"/> tints the history bubble. <see cref="Link"/> is a single primary
 /// link surfaced as a clickable button IN THE PET'S SPEECH BUBBLE too (the say bar passes it to Say); it's
-/// also typically included in <see cref="Sources"/> so it appears in history.</summary>
-public sealed record CommandResult(string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null)
+/// also typically included in <see cref="Sources"/> so it appears in history. <see cref="ImageUrl"/> is an
+/// optional image (e.g. the character canvas) shown in both the pet's bubble and the history card.</summary>
+public sealed record CommandResult(
+    string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null, string? ImageUrl = null)
 {
-    public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null, WebSource? link = null)
-        => new(text, sources ?? Array.Empty<WebSource>(), false, link);
+    public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null,
+        WebSource? link = null, string? imageUrl = null)
+        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl);
 
     public static CommandResult Error(string text) => new(text, Array.Empty<WebSource>(), true);
 }
@@ -105,12 +108,7 @@ public sealed class ChatCommands
             try
             {
                 var g = await _gms.GetRankAsync(rest, region.BasePath, server.Code, ct).ConfigureAwait(false);
-                // MapleRanks has a per-character page for GMS — offer it as a "check more info on" link in
-                // both the speech bubble and the history. It's NOT a citation, so it goes in Link (not the
-                // "Sources" list). GMS-only, since mapleranks covers GMS.
-                var link = new WebSource("Check more info on MapleRanks ↗",
-                    $"https://mapleranks.com/u/{Uri.EscapeDataString(g.Name)}", "MapleStory character profile");
-                return CommandResult.Ok(FormatGmsRank(g, server), link: link);
+                return CommandResult.Ok(FormatGmsRank(g, server), link: BuildInfoLink(region, g.Name), imageUrl: g.ImageUrl);
             }
             catch (NexonApiException ex)
             {
@@ -130,7 +128,9 @@ public sealed class ChatCommands
         try
         {
             var r = await _maple.GetRankAsync(rest, key!, region.Id, ct).ConfigureAwait(false);
-            return CommandResult.Ok(FormatRank(r));
+            // /character/basic returns a keyless static render URL (character_image, the character canvas)
+            // shown in the bubble + history; each server also has a community profile site for "more info".
+            return CommandResult.Ok(FormatRank(r), link: BuildInfoLink(region, r.Name), imageUrl: r.ImageUrl);
         }
         catch (NexonApiException ex)
         {
@@ -158,6 +158,16 @@ public sealed class ChatCommands
     }
 
     // ---- helpers -----------------------------------------------------------------
+
+    /// <summary>The per-server "check more info on …" link to that region's community profile site (chuchu.gg
+    /// for KMS, maple.gg for SEA, maple-kit.com for TMS, MapleRanks for GMS), or null if the region defines
+    /// none. Shown as a clickable line in the pet's bubble and the history card (not as a citation/source).</summary>
+    private static WebSource? BuildInfoLink(NexonMapleApi.Region region, string characterName)
+    {
+        if (region.InfoSite is not { } site || region.InfoUrlFormat is not { } fmt) return null;
+        string url = string.Format(fmt, Uri.EscapeDataString(characterName));
+        return new WebSource($"Check more info on {site} ↗", url, "MapleStory character profile");
+    }
 
     private CommandResult Unknown(string name)
     {
