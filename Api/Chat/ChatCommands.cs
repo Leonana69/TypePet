@@ -29,33 +29,29 @@ public sealed record CommandResult(
 /// shown the same way as a chat reply (the pet speaks it; it's added to history if the panel is open).
 /// Adding a command is a one-line edit to the table in the constructor.
 ///
-/// First command: <c>/rank &lt;character&gt;</c> — looks a MapleStory character up. The server is chosen in
-/// Settings: KMS/SEA/TMS go through the keyed Nexon Open API (<see cref="NexonMapleApi"/>); GMS (NA/EU) has
-/// no Open API and uses the keyless public rankings endpoint (<see cref="NexonGmsRankApi"/>), which also
-/// returns a true global rank position.
+/// First command: <c>/rank [-na|-eu|-kr|-sea|-tw] &lt;character&gt;</c> — looks a MapleStory character up. The
+/// server is picked per call by a leading flag (no setting); the flag decides the keyless source (see
+/// <see cref="RankServers"/>): <c>-na</c>/<c>-eu</c> = GMS via the public rankings endpoint
+/// (<see cref="NexonGmsRankApi"/>, default <c>-na</c>, with a true global rank), <c>-kr</c>/<c>-sea</c> =
+/// KMS/MSEA via the maple.gg profile scrape (<see cref="MapleGgScraper"/>), <c>-tw</c> = TMS via the
+/// keyless maple-kit proxy (<see cref="MapleKitApi"/>).
 /// </summary>
 public sealed class ChatCommands
 {
     /// <summary>The leading character that marks a message as a command.</summary>
     public const char Prefix = '/';
 
-    private readonly Func<string?> _nexonKey;
-    private readonly Func<string> _region;
-    private readonly NexonMapleApi _maple = new();
     private readonly NexonGmsRankApi _gms = new();
+    private readonly MapleGgScraper _mapleGg = new();
+    private readonly MapleKitApi _mapleKit = new();
     private readonly IReadOnlyList<Command> _commands;
 
-    /// <param name="nexonKey">Live accessor for the Nexon Open API key of the SELECTED region (read per
-    /// call, so a key/region edited in Settings applies immediately). Null/empty means "not configured".
-    /// Unused for GMS, which is keyless.</param>
-    /// <param name="region">Live accessor for the selected MapleStory region id (kms/sea/tms or gms).</param>
-    public ChatCommands(Func<string?> nexonKey, Func<string> region)
+    public ChatCommands()
     {
-        _nexonKey = nexonKey;
-        _region = region;
         _commands = new[]
         {
-            new Command("rank", "/rank [-na|-eu] <character>", "Look up a MapleStory character (server set in Settings): level/class/world — plus a global rank on GMS. On GMS, -na/-eu picks the region (default NA).", RankAsync),
+            new Command("rank", $"/rank [{RankServers.FlagList.Replace(", ", "|")}] <character>",
+                "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
     }
@@ -87,52 +83,43 @@ public sealed class ChatCommands
 
     private async Task<CommandResult> RankAsync(string args, CancellationToken ct)
     {
-        // An optional leading flag (e.g. "-eu Name") picks the GMS sub-server; when absent, `rest` is the
-        // whole argument. Names are alphanumeric, so a leading '-' is always a flag, never part of the name.
+        // A leading flag (e.g. "-kr Name") picks the server; with none, it defaults to -na (GMS NA). Names
+        // are alphanumeric/CJK, so a leading '-' is always a flag, never part of the name.
         var (flag, rest) = SplitLeadingFlag(args);
-        var region = NexonMapleApi.ResolveRegion(_region());
-
-        // GMS has no Open API: it uses the keyless public rankings endpoint and (uniquely) returns a true
-        // global rank position. Its NA/EU split is selected here by the -na/-eu flag (default NA).
-        if (!region.RequiresKey)
-        {
-            var server = NexonGmsRankApi.DefaultServer;
-            if (flag is not null)
-            {
-                var s = NexonGmsRankApi.ResolveServer(flag);
-                if (s is null) return CommandResult.Error($"Unknown flag \"-{flag}\" — use -na or -eu.");
-                server = s;
-            }
-            if (rest.Length == 0) return CommandResult.Error("Usage: /rank [-na|-eu] <character name>");
-
-            try
-            {
-                var g = await _gms.GetRankAsync(rest, region.BasePath, server.Code, ct).ConfigureAwait(false);
-                return CommandResult.Ok(FormatGmsRank(g, server), link: BuildInfoLink(region, g.Name), imageUrl: g.ImageUrl);
-            }
-            catch (NexonApiException ex)
-            {
-                return CommandResult.Error(ex.Message); // already user-facing
-            }
-        }
-
-        // Keyed Open-API path (KMS/SEA/TMS): a single endpoint, so the -na/-eu flag doesn't apply here.
-        if (flag is not null)
-            return CommandResult.Error($"The -{flag} flag only applies to GMS. Switch the server in Settings → MAPLESTORY.");
-        if (rest.Length == 0) return CommandResult.Error("Usage: /rank <character name>");
-
-        string? key = _nexonKey();
-        if (string.IsNullOrWhiteSpace(key))
-            return CommandResult.Error($"No {region.Label} Nexon API key set. Add it in Settings → MAPLESTORY to use /rank.");
+        var server = flag is null ? RankServers.Default : RankServers.Resolve(flag);
+        if (server is null)
+            return CommandResult.Error($"Unknown flag \"-{flag}\" — use {RankServers.FlagList}.");
+        if (rest.Length == 0)
+            return CommandResult.Error($"Usage: /rank [{RankServers.FlagList.Replace(", ", "|")}] <character name>");
 
         try
         {
-            var r = await _maple.GetRankAsync(rest, key!, region.Id, ct).ConfigureAwait(false);
-            // /character/basic returns a keyless static render URL (character_image, the character canvas)
-            // shown in the bubble + history; each server also has a community profile site for "more info".
-            return CommandResult.Ok(FormatRank(r), link: BuildInfoLink(region, r.Name), imageUrl: r.ImageUrl);
+            // Each source returns its own shape (and a keyless render image / profile link); dispatch by kind.
+            switch (server.Kind)
+            {
+                case RankSourceKind.Gms:
+                {
+                    // GMS uniquely returns a true global rank position; ServerCode is the na/eu sub-server.
+                    var g = await _gms.GetRankAsync(rest, server.DataUrl, server.ServerCode, ct).ConfigureAwait(false);
+                    return CommandResult.Ok(FormatGmsRank(g, server), link: BuildInfoLink(server, g.Name), imageUrl: g.ImageUrl);
+                }
+                case RankSourceKind.MapleGg:
+                {
+                    // KMS/MSEA: scrape the public maple.gg page (also the "more info" link + render image).
+                    var m = await _mapleGg.GetRankAsync(rest, server.DataUrl, ct).ConfigureAwait(false);
+                    return CommandResult.Ok(FormatMapleGgRank(m), link: BuildInfoLink(server, m.Name), imageUrl: m.ImageUrl);
+                }
+                case RankSourceKind.MapleKit:
+                {
+                    // TMS: the keyless maple-kit proxy returns the full Open-API profile in one call.
+                    var r = await _mapleKit.GetRankAsync(rest, server.DataUrl, ct).ConfigureAwait(false);
+                    return CommandResult.Ok(FormatRank(r), link: BuildInfoLink(server, r.Name), imageUrl: r.ImageUrl);
+                }
+                default:
+                    return CommandResult.Error("Unsupported server.");
+            }
         }
-        catch (NexonApiException ex)
+        catch (RankException ex)
         {
             return CommandResult.Error(ex.Message); // already user-facing
         }
@@ -159,14 +146,13 @@ public sealed class ChatCommands
 
     // ---- helpers -----------------------------------------------------------------
 
-    /// <summary>The per-server "check more info on …" link to that region's community profile site (chuchu.gg
-    /// for KMS, maple.gg for SEA, maple-kit.com for TMS, MapleRanks for GMS), or null if the region defines
-    /// none. Shown as a clickable line in the pet's bubble and the history card (not as a citation/source).</summary>
-    private static WebSource? BuildInfoLink(NexonMapleApi.Region region, string characterName)
+    /// <summary>The per-server "check more info on …" link to that server's community profile site (maple.gg
+    /// for KMS/MSEA, maple-kit.com for TMS, MapleRanks for GMS). Shown as a clickable line in the pet's bubble
+    /// and the history card (not as a citation/source).</summary>
+    private static WebSource? BuildInfoLink(RankServer server, string characterName)
     {
-        if (region.InfoSite is not { } site || region.InfoUrlFormat is not { } fmt) return null;
-        string url = string.Format(fmt, Uri.EscapeDataString(characterName));
-        return new WebSource($"Check more info on {site} ↗", url, "MapleStory character profile");
+        string url = string.Format(server.InfoUrlFormat, Uri.EscapeDataString(characterName));
+        return new WebSource($"Check more info on {server.InfoSite} ↗", url, "MapleStory character profile");
     }
 
     private CommandResult Unknown(string name)
@@ -176,7 +162,7 @@ public sealed class ChatCommands
         return CommandResult.Error($"{head} Try: {known}");
     }
 
-    private static string FormatRank(NexonMapleApi.CharacterRank r)
+    private static string FormatRank(MapleKitApi.CharacterRank r)
     {
         var lines = new List<string>
         {
@@ -190,14 +176,26 @@ public sealed class ChatCommands
         return string.Join("\n", lines);
     }
 
-    private static string FormatGmsRank(NexonGmsRankApi.GmsRank g, NexonGmsRankApi.Server server)
+    private static string FormatMapleGgRank(MapleGgScraper.MapleGgRank m)
+    {
+        var lines = new List<string>
+        {
+            $"{m.Name} · Lv.{m.Level}",
+            $"{m.Class} · {m.World}",
+        };
+        if (m.Guild is not null) lines.Add($"Guild: {m.Guild}");
+        if (m.Popularity is int pop) lines.Add($"Popularity {pop}");
+        return string.Join("\n", lines);
+    }
+
+    private static string FormatGmsRank(NexonGmsRankApi.GmsRank g, RankServer server)
     {
         string total = g.Total is long t ? $" of {t:N0}" : "";
         // Rank is the command's headline value and always present in a real response; if it's somehow
         // missing (degenerate API row), show the world without a bogus "#0" rather than a wrong-looking number.
         string rankLine = g.Rank > 0
-            ? $"GMS {server.Tag} Rank #{g.Rank:N0}{total} · {g.World}"
-            : $"GMS {server.Tag} · {g.World}";
+            ? $"{server.Label} Rank #{g.Rank:N0}{total} · {g.World}"
+            : $"{server.Label} · {g.World}";
         var lines = new List<string>
         {
             $"{g.Name} · Lv.{g.Level} {g.Job}",

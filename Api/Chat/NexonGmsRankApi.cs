@@ -9,11 +9,10 @@ using System.Threading.Tasks;
 namespace MaplePet.Api.Chat;
 
 /// <summary>
-/// A tiny, keyless client for Global MapleStory (GMS) rankings, used by <c>/rank</c> when the selected
-/// server is GMS-NA or GMS-EU. GMS is "very different" from the other regions: it has NO Nexon <i>Open</i>
-/// API (the <c>open.api.nexon.com</c> ocid-lookup endpoints in <see cref="NexonMapleApi"/> don't serve it),
-/// so there is no API key to configure. Instead its rankings come straight from the public website's
-/// backing endpoint:
+/// A tiny, keyless client for Global MapleStory (GMS) rankings, used by <c>/rank</c> for the <c>-na</c> /
+/// <c>-eu</c> flags (GMS North America / Europe). GMS is "very different" from the other servers: it has NO
+/// Nexon <i>Open</i> API (the <c>open.api.nexon.com</c> ocid-lookup endpoints don't serve it), so there is
+/// no API key to configure. Instead its rankings come straight from the public website's backing endpoint:
 ///
 ///   <c>GET https://www.nexon.com/api/maplestory/no-auth/ranking/v2/{na|eu}?type=overall&amp;id=weekly&amp;reboot_index=0&amp;character_name=…</c>
 ///
@@ -24,25 +23,6 @@ namespace MaplePet.Api.Chat;
 /// </summary>
 public sealed class NexonGmsRankApi
 {
-    /// <summary>A GMS sub-server: the API path <see cref="Code"/> (<c>na</c>/<c>eu</c>), a compact
-    /// <see cref="Tag"/> for display ("NA"/"EU"), and a human <see cref="Label"/>.</summary>
-    public sealed record Server(string Code, string Tag, string Label);
-
-    /// <summary>The GMS sub-servers, selected per <c>/rank</c> call via the <c>-na</c>/<c>-eu</c> flag.
-    /// North America is the default (no flag).</summary>
-    public static readonly IReadOnlyList<Server> Servers = new[]
-    {
-        new Server("na", "NA", "North America"),
-        new Server("eu", "EU", "Europe"),
-    };
-
-    /// <summary>The sub-server used when no flag is given.</summary>
-    public static Server DefaultServer => Servers[0];
-
-    /// <summary>Resolve a flag/code (e.g. "eu") to a <see cref="Server"/>, or null if it isn't one.</summary>
-    public static Server? ResolveServer(string? code)
-        => Servers.FirstOrDefault(s => s.Code == code);
-
     private static readonly HttpClient Http = CreateHttp();
 
     private static HttpClient CreateHttp()
@@ -76,7 +56,7 @@ public sealed class NexonGmsRankApi
     /// <summary>Look <paramref name="characterName"/> up in the GMS Overall (weekly) ranking. The endpoint
     /// is <paramref name="baseUrl"/> (…/ranking/v2) plus the <paramref name="serverCode"/> sub-server
     /// (<c>na</c>/<c>eu</c>). Matching is exact, mirroring the site's own search. Throws
-    /// <see cref="NexonApiException"/> with a user-facing message on any failure or when the character isn't
+    /// <see cref="RankException"/> with a user-facing message on any failure or when the character isn't
     /// ranked.</summary>
     public async Task<GmsRank> GetRankAsync(string characterName, string baseUrl, string serverCode, CancellationToken ct)
     {
@@ -88,7 +68,7 @@ public sealed class NexonGmsRankApi
         var rowTask = SearchAsync(serverUrl, characterName, ct);
         var totalTask = TryTotalAsync(serverUrl, ct);
 
-        JsonElement row = await rowTask.ConfigureAwait(false); // may throw NexonApiException (not found / API error)
+        JsonElement row = await rowTask.ConfigureAwait(false); // may throw RankException (not found / API error)
         long? total = await totalTask.ConfigureAwait(false);
 
         long rank = row.TryGetProperty("rank", out var rk) && rk.TryGetInt64(out var rv) ? rv : 0;
@@ -112,7 +92,7 @@ public sealed class NexonGmsRankApi
 
         if (!doc.RootElement.TryGetProperty("ranks", out var ranks) ||
             ranks.ValueKind != JsonValueKind.Array || ranks.GetArrayLength() == 0)
-            throw new NexonApiException($"Character \"{name}\" not found in the GMS rankings.");
+            throw new RankException($"Character \"{name}\" not found in the GMS rankings.");
 
         foreach (var r in ranks.EnumerateArray())
             if (r.TryGetProperty("isSearchTarget", out var t) && t.ValueKind == JsonValueKind.True)
@@ -124,7 +104,7 @@ public sealed class NexonGmsRankApi
         var first = ranks[0];
         if (string.Equals(Str(first, "characterName")?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase))
             return first.Clone();
-        throw new NexonApiException($"Character \"{name}\" not found in the GMS rankings.");
+        throw new RankException($"Character \"{name}\" not found in the GMS rankings.");
     }
 
     /// <summary>The total number of ranked characters (the leaderboard size, for "#N of T" context). Best
@@ -141,21 +121,21 @@ public sealed class NexonGmsRankApi
     }
 
     /// <summary>GET <paramref name="url"/> and return the parsed JSON (caller disposes). Transport failures
-    /// and non-2xx responses become a <see cref="NexonApiException"/> with a short, user-facing message.</summary>
+    /// and non-2xx responses become a <see cref="RankException"/> with a short, user-facing message.</summary>
     private static async Task<JsonDocument> GetAsync(string url, CancellationToken ct)
     {
         HttpResponseMessage resp;
         try { resp = await Http.GetAsync(url, ct).ConfigureAwait(false); }
-        catch (TaskCanceledException) { throw new NexonApiException("The GMS rankings API timed out — try again."); }
-        catch (HttpRequestException ex) { throw new NexonApiException($"Couldn't reach the GMS rankings API ({ex.Message})."); }
+        catch (TaskCanceledException) { throw new RankException("The GMS rankings API timed out — try again."); }
+        catch (HttpRequestException ex) { throw new RankException($"Couldn't reach the GMS rankings API ({ex.Message})."); }
 
         using (resp)
         {
             string body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode)
-                throw new NexonApiException($"The GMS rankings API request failed ({(int)resp.StatusCode}).");
+                throw new RankException($"The GMS rankings API request failed ({(int)resp.StatusCode}).");
             try { return JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body); }
-            catch { throw new NexonApiException("The GMS rankings API returned an unreadable response."); }
+            catch { throw new RankException("The GMS rankings API returned an unreadable response."); }
         }
     }
 

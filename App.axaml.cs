@@ -216,11 +216,9 @@ public partial class App : Application
         // thinking animation + spoken reply); the app only shows/hides it.
         if (_sayBar is null)
         {
-            // Slash commands run locally (no LLM); /rank reads the selected region + its Nexon key live
-            // from settings + the secret store (keys are stored per region).
-            _commands ??= new ChatCommands(
-                () => PlatformServices.SecretStore.Get(NexonMapleApi.SecretId(_settings?.MapleRegion ?? "gms")),
-                () => _settings?.MapleRegion ?? "gms");
+            // Slash commands run locally (no LLM); /rank picks its server per call via a flag (all keyless),
+            // so the command handler needs no settings or keys.
+            _commands ??= new ChatCommands();
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
                 () => BuildChatConfig() is not null, _commands);
             _sayBar.HideRequested += HideSayBar;
