@@ -216,8 +216,13 @@ public sealed class SayBarWindow : Window
                 var cmd = await _commands.RunAsync(text, CancellationToken.None);
                 StopThinking();
                 var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
-                _ = control?.Say(ctext, ChatSpeechSeconds(ctext));
-                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError); _input.Focus(); }
+                // A command link (e.g. /rank's MapleRanks page) shows as a clickable line in the pet's bubble
+                // (and, when open, in history). A bubble link gets a longer dwell so there's time to click it.
+                // The bubble link is ALWAYS shown; it's only made click-hittable while no focusable window is
+                // up (see PetWindow.TickInput), so it can't swallow presses meant for an open say bar.
+                double secs = cmd.Link is null ? ChatSpeechSeconds(ctext) : Math.Max(ChatSpeechSeconds(ctext), 12);
+                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title);
+                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link); _input.Focus(); }
                 return;
             }
 
@@ -318,7 +323,7 @@ public sealed class SayBarWindow : Window
         ScrollToEnd();
     }
 
-    private void AddAssistantBubble(string text, IReadOnlyList<WebSource> sources, bool isError)
+    private void AddAssistantBubble(string text, IReadOnlyList<WebSource> sources, bool isError, WebSource? link = null)
     {
         var body = new StackPanel();
         body.Children.Add(new SelectableTextBlock
@@ -328,19 +333,32 @@ public sealed class SayBarWindow : Window
             Foreground = isError ? FrostTheme.StatusError : FrostTheme.TextPrimary,
         });
 
+        // A primary "more info" link (e.g. /rank's MapleRanks page). It's an actionable destination, not a
+        // citation, so it's shown on its own — NOT under the "Sources" heading.
+        if (link is not null)
+        {
+            var more = new Button { Content = Trim(link.Title, link.Url), Margin = new Thickness(0, 6, 0, 0) };
+            more.Classes.Add("link");
+            more.HorizontalAlignment = HorizontalAlignment.Left;
+            more.HorizontalContentAlignment = HorizontalAlignment.Left;
+            var lurl = link.Url;
+            more.Click += (_, _) => OpenUrl(lurl);
+            body.Children.Add(more);
+        }
+
         if (sources.Count > 0)
         {
             var src = new StackPanel { Spacing = 2, Margin = new Thickness(0, 6, 0, 0) };
             src.Children.Add(new TextBlock { Text = "Sources", FontSize = 11, FontWeight = FontWeight.SemiBold, Foreground = FrostTheme.TextSecondary });
             foreach (var s in sources)
             {
-                var link = new Button { Content = Trim(s.Title, s.Url) };
-                link.Classes.Add("link");
-                link.HorizontalAlignment = HorizontalAlignment.Left;
-                link.HorizontalContentAlignment = HorizontalAlignment.Left;
+                var srcLink = new Button { Content = Trim(s.Title, s.Url) };
+                srcLink.Classes.Add("link");
+                srcLink.HorizontalAlignment = HorizontalAlignment.Left;
+                srcLink.HorizontalContentAlignment = HorizontalAlignment.Left;
                 var url = s.Url;
-                link.Click += (_, _) => OpenUrl(url);
-                src.Children.Add(link);
+                srcLink.Click += (_, _) => OpenUrl(url);
+                src.Children.Add(srcLink);
             }
             body.Children.Add(src);
         }

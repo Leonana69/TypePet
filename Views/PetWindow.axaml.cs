@@ -36,6 +36,8 @@ public partial class PetWindow : Window
 
     private string? _speechText;        // active speech bubble (control API's Say), drawn over the pet
     private double _speechRemainingMs;  // countdown until the bubble clears
+    private string? _speechLinkUrl;     // optional URL the bubble's link line opens (cleared with the bubble)
+    private string? _speechLinkLabel;   // the bubble link's display label
 
     /// <summary>The programmatic control surface for this pet (LLM / MCP). Available after
     /// <see cref="ControlReady"/> fires.</summary>
@@ -223,7 +225,8 @@ public partial class PetWindow : Window
             OnDragBegin: _ => _pet?.BeginDrag(),
             OnDragMove: c => _pet?.DragTo(c),
             OnDragEnd: () => _pet?.EndDrag(),
-            OnSayRequested: RequestSayInput));
+            OnSayRequested: RequestSayInput,
+            OnLinkActivated: OpenSpeechLink));
 
         // Global hotkey that pops up the say-input bar from anywhere (skipped where unsupported — the
         // pet can always be double-clicked to open it instead).
@@ -301,7 +304,21 @@ public partial class PetWindow : Window
     {
         if (_input is null) return;
         bool visible = TryPetHitBoxLogical(out double l, out double t, out double r, out double b);
-        _input.Tick(_screen, visible, l, t, r, b);
+        var pet = visible
+            ? new MaplePet.Platform.Abstractions.HitRect(true, l, t, r, b)
+            : MaplePet.Platform.Abstractions.HitRect.None;
+
+        // The bubble link's clickable box (computed by the renderer last frame, logical px). The link line is
+        // always DRAWN; we only publish it as a hit target when:
+        //  - the authoritative UI-thread URL is set (cleared synchronously by SetSpeech/timeout), so a stale
+        //    renderer rect is never published once the link is gone (else the hook swallows an empty click);
+        //  - no focusable window is up (SuppressOverlayTopmost), so the rect can't swallow a press meant for
+        //    an open say bar that overlaps the bubble (history shows the same link there to click instead).
+        var link = (_speechLinkUrl is not null && !SuppressOverlayTopmost && View.SpeechLinkRect is { } lr)
+            ? new MaplePet.Platform.Abstractions.HitRect(true, lr.Left, lr.Top, lr.Right, lr.Bottom)
+            : MaplePet.Platform.Abstractions.HitRect.None;
+
+        _input.Tick(_screen, pet, link);
     }
 
     private void PollWorld()
@@ -405,18 +422,33 @@ public partial class PetWindow : Window
         if (_speechRemainingMs > 0)
         {
             _speechRemainingMs -= dt * 1000.0;
-            if (_speechRemainingMs <= 0) _speechText = null;
+            if (_speechRemainingMs <= 0) { _speechText = null; _speechLinkUrl = null; _speechLinkLabel = null; }
         }
         View.Speech = _speechText;
+        View.SpeechLink = _speechLinkLabel;
 
         View.InvalidateVisual();
     }
 
-    /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).</summary>
-    private void SetSpeech(string? text, double? seconds)
+    /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).
+    /// <paramref name="linkUrl"/>/<paramref name="linkLabel"/> optionally add a clickable link line to the
+    /// bubble; both are cleared when the bubble does (here or on timeout).</summary>
+    private void SetSpeech(string? text, double? seconds, string? linkUrl, string? linkLabel)
     {
         _speechText = string.IsNullOrWhiteSpace(text) ? null : text;
         _speechRemainingMs = _speechText is null ? 0 : (seconds is double s && s > 0 ? s * 1000.0 : 4000);
+        bool hasLink = _speechText is not null && !string.IsNullOrWhiteSpace(linkUrl) && !string.IsNullOrWhiteSpace(linkLabel);
+        _speechLinkUrl = hasLink ? linkUrl : null;
+        _speechLinkLabel = hasLink ? linkLabel : null;
+    }
+
+    /// <summary>Open the active speech-bubble link in the default browser (raised by the input layer when
+    /// the user clicks the bubble's link line). Guarded so a stale click can't open a cleared URL.</summary>
+    private void OpenSpeechLink()
+    {
+        if (_speechText is null || _speechLinkUrl is not { Length: > 0 } url) return;
+        try { TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(new Uri(url)); }
+        catch { /* ignore bad URLs */ }
     }
 
     /// <summary>

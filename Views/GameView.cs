@@ -18,6 +18,10 @@ public sealed class GameView : Control
     public CharacterSprites? Sprites { get; set; }
     public CharacterAnimator? Animator { get; set; }
     public string? Speech { get; set; }          // active speech-bubble text (control API's Say), or null
+    public string? SpeechLink { get; set; }      // optional clickable link label drawn in the bubble, or null
+    // The clickable link's bounds in logical overlay px, recomputed each Render (null when no link is drawn).
+    // PetWindow reads this to publish a hit rect to the input layer.
+    public MaplePet.Engine.Rect? SpeechLinkRect { get; private set; }
     public bool ShowDebug { get; set; } = false; // driven by Settings.ShowOverlay via PetWindow
 
     public GameView()
@@ -33,6 +37,7 @@ public sealed class GameView : Control
         // The whole frame is guarded: this runs in Avalonia's render pass (the game loop), so an
         // exception here — e.g. text shaping a pathological speech-bubble glyph — would otherwise be
         // unhandled and force-close the app. A dropped frame is far better than a crash.
+        SpeechLinkRect = null; // recomputed below only when a link line is actually drawn
         try
         {
             if (ShowDebug && Geometry is { } geo && World is { } world)
@@ -48,7 +53,7 @@ public sealed class GameView : Control
                     // Anchor the bubble at the top-center of the drawn pet (falls back to the physics box
                     // when footage didn't load).
                     double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
-                    SpeechBubble.Draw(context, Speech!, pet.CenterX, topY,
+                    SpeechLinkRect = SpeechBubble.Draw(context, Speech!, SpeechLink, pet.CenterX, topY,
                         new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
                 }
             }

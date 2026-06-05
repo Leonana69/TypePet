@@ -14,7 +14,9 @@ public static class SpeechBubble
 {
     private static readonly IBrush Fill = new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE)); // light gray
     private static readonly IBrush TextBrush = new SolidColorBrush(Colors.Black);
+    private static readonly IBrush LinkBrush = new SolidColorBrush(Color.FromRgb(0x14, 0x5C, 0xC4)); // link blue
     private static readonly IPen Border = new Pen(new SolidColorBrush(Colors.Black), 1);
+    private static readonly IPen LinkUnderline = new Pen(LinkBrush, 1);
 
     private const double MaxTextWidth = 240;
     private const double PadX = 10, PadY = 7;
@@ -22,21 +24,34 @@ public static class SpeechBubble
     private const double TailW = 12, TailH = 9;
     private const double GapToPet = 6;
     private const double FontSize = 13;
+    private const double LinkGap = 5; // vertical space between the message text and the link line
 
     /// <summary>Draw <paramref name="text"/> in a bubble whose tail points at (<paramref name="anchorX"/>,
-    /// <paramref name="topY"/>) — the top-center of the drawn pet — clamped within <paramref name="screen"/>.</summary>
+    /// <paramref name="topY"/>) — the top-center of the drawn pet — clamped within <paramref name="screen"/>.
+    /// When <paramref name="linkLabel"/> is non-empty, a clickable, underlined link line is drawn below the
+    /// text and its bounds (in the same logical coords as <paramref name="screen"/>) are returned so the
+    /// caller can hit-test clicks on it; otherwise null.</summary>
     private const int MaxChars = 700; // a speech bubble shouldn't show a wall of text; long replies are clipped
 
-    public static void Draw(DrawingContext ctx, string text, double anchorX, double topY, MaplePet.Engine.Rect screen)
+    public static MaplePet.Engine.Rect? Draw(DrawingContext ctx, string text, string? linkLabel,
+        double anchorX, double topY, MaplePet.Engine.Rect screen)
     {
         text = Sanitize(text);
-        if (string.IsNullOrEmpty(text)) return;
+        if (string.IsNullOrEmpty(text)) return null;
 
         var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
             Typeface.Default, FontSize, TextBrush) { MaxTextWidth = MaxTextWidth };
 
-        double w = Math.Ceiling(ft.Width) + PadX * 2;
-        double h = Math.Ceiling(ft.Height) + PadY * 2;
+        // Optional link line (its own underlined, blue FormattedText below the message).
+        string link = Sanitize(linkLabel ?? "");
+        FormattedText? fl = string.IsNullOrEmpty(link) ? null : new FormattedText(link,
+            CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface.Default, FontSize, LinkBrush)
+        { MaxTextWidth = MaxTextWidth };
+
+        double contentW = Math.Max(ft.Width, fl?.Width ?? 0);
+        double contentH = ft.Height + (fl is null ? 0 : LinkGap + fl.Height);
+        double w = Math.Ceiling(contentW) + PadX * 2;
+        double h = Math.Ceiling(contentH) + PadY * 2;
 
         // Prefer above the pet (tail pointing down). If it would clip the top edge, place it below.
         bool below = topY - GapToPet - TailH - h < screen.Top + 4;
@@ -81,6 +96,15 @@ public static class SpeechBubble
         ctx.DrawGeometry(Fill, Border, bubble);
 
         ctx.DrawText(ft, new Point(bx + PadX, by + PadY));
+
+        if (fl is null) return null;
+        double linkX = bx + PadX, linkY = by + PadY + ft.Height + LinkGap;
+        ctx.DrawText(fl, new Point(linkX, linkY));
+        // Underline it (FormattedText has no decoration property here), so it reads as a clickable link.
+        double underlineY = linkY + fl.Height - 1.5;
+        ctx.DrawLine(LinkUnderline, new Point(linkX, underlineY), new Point(linkX + fl.Width, underlineY));
+        // The clickable region (in the same logical coords as `screen`), handed back for hit-testing.
+        return new MaplePet.Engine.Rect(linkX, linkY, fl.Width, fl.Height);
     }
 
     /// <summary>Make arbitrary text safe to render: drop control characters (stray ANSI/escape codes from

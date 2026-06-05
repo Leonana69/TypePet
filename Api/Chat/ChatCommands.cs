@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 namespace MaplePet.Api.Chat;
 
 /// <summary>The outcome of a slash command, displayed exactly like a chat reply: <see cref="Text"/> is
-/// spoken by the pet (and shown in history when it's open), <see cref="Sources"/> are optional links,
-/// and <see cref="IsError"/> tints the history bubble.</summary>
-public sealed record CommandResult(string Text, IReadOnlyList<WebSource> Sources, bool IsError)
+/// spoken by the pet (and shown in history when it's open), <see cref="Sources"/> are optional links shown
+/// in history, and <see cref="IsError"/> tints the history bubble. <see cref="Link"/> is a single primary
+/// link surfaced as a clickable button IN THE PET'S SPEECH BUBBLE too (the say bar passes it to Say); it's
+/// also typically included in <see cref="Sources"/> so it appears in history.</summary>
+public sealed record CommandResult(string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null)
 {
-    public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null)
-        => new(text, sources ?? Array.Empty<WebSource>(), false);
+    public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null, WebSource? link = null)
+        => new(text, sources ?? Array.Empty<WebSource>(), false, link);
 
     public static CommandResult Error(string text) => new(text, Array.Empty<WebSource>(), true);
 }
@@ -103,7 +105,12 @@ public sealed class ChatCommands
             try
             {
                 var g = await _gms.GetRankAsync(rest, region.BasePath, server.Code, ct).ConfigureAwait(false);
-                return CommandResult.Ok(FormatGmsRank(g, server));
+                // MapleRanks has a per-character page for GMS — offer it as a "check more info on" link in
+                // both the speech bubble and the history. It's NOT a citation, so it goes in Link (not the
+                // "Sources" list). GMS-only, since mapleranks covers GMS.
+                var link = new WebSource("Check more info on MapleRanks ↗",
+                    $"https://mapleranks.com/u/{Uri.EscapeDataString(g.Name)}", "MapleStory character profile");
+                return CommandResult.Ok(FormatGmsRank(g, server), link: link);
             }
             catch (NexonApiException ex)
             {

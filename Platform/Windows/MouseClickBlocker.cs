@@ -27,6 +27,10 @@ public sealed class MouseClickBlocker : IDisposable
     // Pet's clickable rect in physical screen px, published from the UI thread each tick.
     private volatile bool _enabled;
     private volatile int _left, _top, _right, _bottom;
+    // The speech-bubble link's clickable rect (physical px); a press here is swallowed too, so the click
+    // opens the link instead of reaching the window behind.
+    private volatile bool _linkEnabled;
+    private volatile int _ll, _lt, _lr, _lb;
     private volatile bool _leftDown; // physical left-button state seen by the hook (even when swallowed)
     private volatile bool _swallowedDown; // latch: we ate the down, so eat the matching up
 
@@ -51,6 +55,14 @@ public sealed class MouseClickBlocker : IDisposable
         _enabled = enabled;
     }
 
+    /// <summary>Publish the speech-bubble link's clickable rect (physical px). When disabled, no press
+    /// over it is eaten.</summary>
+    public void SetLinkRect(bool enabled, int left, int top, int right, int bottom)
+    {
+        _ll = left; _lt = top; _lr = right; _lb = bottom;
+        _linkEnabled = enabled;
+    }
+
     /// <summary>Forget any in-flight swallowed press so the NEXT button-up is passed through instead of
     /// eaten. Used when the overlay is hidden mid-press (a fullscreen app took over): otherwise the
     /// latch would swallow a release that belongs to the app behind us.</summary>
@@ -67,12 +79,17 @@ public sealed class MouseClickBlocker : IDisposable
                 {
                     _leftDown = true;
                     var data = *(MSLLHOOKSTRUCT*)lParam.Value;
-                    if ((data.flags & PInvoke.LLMHF_INJECTED) == 0 && _enabled
+                    bool injected = (data.flags & PInvoke.LLMHF_INJECTED) != 0;
+                    bool overPet = _enabled
                         && data.pt.X >= _left && data.pt.X < _right
-                        && data.pt.Y >= _top && data.pt.Y < _bottom)
+                        && data.pt.Y >= _top && data.pt.Y < _bottom;
+                    bool overLink = _linkEnabled
+                        && data.pt.X >= _ll && data.pt.X < _lr
+                        && data.pt.Y >= _lt && data.pt.Y < _lb;
+                    if (!injected && (overPet || overLink))
                     {
                         _swallowedDown = true;
-                        return (LRESULT)1; // eat the press on the pet so the window behind doesn't get it
+                        return (LRESULT)1; // eat the press on the pet/link so the window behind doesn't get it
                     }
                 }
                 else if (msg == PInvoke.WM_LBUTTONUP)
