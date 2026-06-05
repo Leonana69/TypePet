@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
+using MaplePet.Platform.Abstractions;
 
 namespace MaplePet.Platform.Windows;
 
@@ -17,8 +18,11 @@ namespace MaplePet.Platform.Windows;
 /// and a held-latch makes it fire once per physical press rather than on every auto-repeat. Only the
 /// single configured key is inspected; no keystrokes are logged or stored.
 /// </summary>
-public sealed class HotkeyListener : IDisposable
+public sealed class HotkeyListener : IGlobalHotkey
 {
+    /// <summary>The Windows low-level keyboard hook is always available.</summary>
+    public bool IsSupported => true;
+
     private readonly HOOKPROC _proc; // kept alive so the GC can't collect the native thunk
     private UnhookWindowsHookExSafeHandle? _hook;
     private FreeLibrarySafeHandle? _module;

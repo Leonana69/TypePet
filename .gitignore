@@ -3,5 +3,8 @@ obj/
 *.user
 .vs/
 
+# Build output (publish payloads + the assembled macOS .app bundle)
+artifacts/
+
 # User-imported pet characters (runtime store; read from disk, not committed)
 Assets/Characters/

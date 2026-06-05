@@ -1,7 +1,8 @@
 using System;
 using Microsoft.Win32;
+using MaplePet.Platform.Abstractions;
 
-namespace MaplePet.Platform;
+namespace MaplePet.Platform.Windows;
 
 /// <summary>
 /// "Start with Windows" support, backed by the per-user Run key
@@ -9,16 +10,19 @@ namespace MaplePet.Platform;
 /// the Settings UI reads <see cref="IsEnabled"/> on open and calls <see cref="SetEnabled"/> on toggle.
 /// All operations are best-effort and swallow failures (a locked-down machine just can't auto-start).
 /// </summary>
-public static class StartupRegistration
+public sealed class WindowsStartupAtLogin : IStartupAtLogin
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "MaplePet";
+
+    /// <summary>The Run key is always writable on Windows (best-effort), so this is always supported.</summary>
+    public bool IsSupported => true;
 
     /// <summary>The executable to launch at login (the running host exe, quoted by the caller).</summary>
     private static string? ExePath => Environment.ProcessPath;
 
     /// <summary>True if MaplePet is currently registered to start at login.</summary>
-    public static bool IsEnabled()
+    public bool IsEnabled()
     {
         try
         {
@@ -33,7 +37,7 @@ public static class StartupRegistration
 
     /// <summary>Add or remove the Run-key entry. Returns false if the change couldn't be applied
     /// (e.g. the exe path is unknown or the registry write was blocked).</summary>
-    public static bool SetEnabled(bool enabled)
+    public bool SetEnabled(bool enabled)
     {
         try
         {

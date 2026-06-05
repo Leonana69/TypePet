@@ -2,9 +2,9 @@
 
 **Version 1.0.0** · see [`CHANGELOG.md`](CHANGELOG.md)
 
-A desktop pet for Windows that lives on a transparent, click-through, always-on-top
-overlay and walks along your taskbar. The "level geometry" (platforms + ladders) is
-derived in real time from the windows currently open on your desktop.
+A desktop pet for **Windows and macOS** that lives on a transparent, click-through, always-on-top
+overlay and walks along your taskbar (on macOS: the bottom of the screen / the Dock). The "level
+geometry" (platforms + ladders) is derived in real time from the windows currently open on your desktop.
 
 See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and milestones.
 
@@ -32,13 +32,27 @@ Not yet implemented: attack animations (the footage already carries swing/stab/s
 
 ## Requirements
 
-- Windows 10/11, x64
+- Windows 10/11 (x64) **or** macOS 13+ (Apple Silicon or Intel)
 - .NET 10 SDK
+
+The project multi-targets `net10.0-windows` (the Win32 layer, via CsWin32) and `net10.0` (the portable
+head that runs on macOS). `dotnet build`/`run` on a multi-target project need a `-f`; pick the head for
+your OS. `Directory.Build.props` sets `EnableWindowsTargeting=true` so the Windows head also restores on
+a non-Windows host (it just can't *run* there).
 
 ## Run
 
+**Windows:**
 ```powershell
-dotnet run --project MaplePet.csproj
+dotnet run --project MaplePet.csproj -f net10.0-windows
+```
+
+**macOS:**
+```bash
+dotnet run --project MaplePet.csproj -f net10.0
+# or build a double-clickable, ad-hoc-signed app bundle (no Apple account needed):
+./packaging/macos/build-macos-bundle.sh        # produces artifacts/MaplePet.app
+open artifacts/MaplePet.app
 ```
 
 You'll see your detected windows outlined, the derived platforms/ladders drawn on top,
@@ -50,8 +64,8 @@ in its console).
 
 Smoke test (auto-closes after N seconds, useful for CI):
 
-```powershell
-dotnet run --project MaplePet.csproj -- --smoke 3
+```bash
+dotnet run --project MaplePet.csproj -f net10.0 -- --smoke 3      # (-f net10.0-windows on Windows)
 ```
 
 ## Configuration
@@ -81,7 +95,24 @@ Swap the rectangle for an image / sprite-sheet frame there; the controller alrea
 
 ## Architecture
 
-Everything OS-specific sits behind `IWindowTracker` (`Platform/Windows/WindowsWindowTracker.cs`,
-via CsWin32). The `Engine/` code (types, world model, physics, state machine, screen-space
-conversion) is pure and portable — a future macOS port only needs a new tracker
-(`Platform/MacOS/`).
+Every OS-specific concern sits behind a small set of interfaces in `Platform/Abstractions/`
+(`IWindowTracker`, `IOverlayEffects`, `IPetInput`, `IGlobalHotkey`, `ISingleInstance`,
+`IStartupAtLogin`, `IAppPaths`, `ITrayGlyphs`), resolved by the `Platform/PlatformServices` factory —
+the one place that names the per-OS types. `Engine/` (types, world model, physics, state machine,
+screen-space conversion), `Rendering/`, `Api/`, and `Views/` are shared and contain no
+`OperatingSystem.IsWindows()` branches.
+
+- **Windows** (`Platform/Windows/`, compiled only under `net10.0-windows`): Win32 via CsWin32 — window
+  enumeration (DWM bounds), a click-through layered overlay, a polled cursor + low-level mouse hook for
+  the grab, a keyboard-hook hotkey, a named-mutex single-instance guard, and the HKCU Run key.
+- **macOS** (`Platform/Mac/`, compiled only under `net10.0`): plain P/Invoke to CoreGraphics /
+  CoreFoundation / AppKit (`objc_msgSend`) and Carbon — window enumeration via
+  `CGWindowListCopyWindowInfo` (permission-free), an `NSWindow` overlay floated across every Space at
+  screen-saver level, a click-through grab that toggles `ignoresMouseEvents` while the cursor is over the
+  pet (native Avalonia pointer events drive the drag), a Carbon `RegisterEventHotKey` hotkey
+  (permission-free), a file-backed named-mutex single-instance guard, and `SMAppService` start-at-login.
+  The whole macOS feature set needs **no TCC permissions**.
+
+CI (`.github/workflows/build.yml`) builds each head on its native runner and uploads the Windows exe and
+the macOS `.app` bundle. `Platform/Mac/MacDiagnostics.cs` adds dev-only `--mac-windump` /
+`--mac-windows-all` flags for inspecting the captured world.

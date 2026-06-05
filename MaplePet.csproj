@@ -1,28 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <!-- Windows head: the Win32 layer pins this to net10.0-windows. The shared Engine/
-         Rendering/Views code stays source-portable for a future net10.0-macos head. -->
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Two heads: the Windows head pins the Win32 layer to net10.0-windows; the portable head
+         (net10.0) carries Engine/Rendering/Views/Api + the macOS platform impls, and also runs on the
+         dev Mac. `dotnet run`/`build` on a multi-target project need `-f` — iterate with `-f net10.0`
+         on macOS, `-f net10.0-windows` on Windows. CI builds each head on its native runner. -->
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <!-- CsWin32 needs a concrete architecture; several APIs (GetWindowLongPtr,
-         SHAppBarMessage, APPBARDATA) cannot be generated for AnyCPU. -->
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets/Program/icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <!-- App version — the single source of truth. Bump these on release (keep the three in step) and
-       add a CHANGELOG.md entry. <Version> drives InformationalVersion, which AppInfo reads at runtime
-       to show "v1.0.0" in the Settings "About" row and the tray tooltip; AssemblyVersion/FileVersion
-       and the metadata below feed the exe's Win32 file-properties (Details tab). -->
+  <!-- ============================ WINDOWS HEAD ============================ -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <OutputType>WinExe</OutputType>            <!-- no console window on Windows -->
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+    <!-- CsWin32 needs a concrete architecture; several APIs (GetWindowLongPtr,
+         SHAppBarMessage, APPBARDATA) cannot be generated for AnyCPU. -->
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationManifest>app.manifest</ApplicationManifest>     <!-- PerMonitorV2 DPI -->
+    <ApplicationIcon>Assets/Program/icon.ico</ApplicationIcon>  <!-- PE icon -->
+  </PropertyGroup>
+
+  <!-- ===================== PORTABLE (macOS / Linux) HEAD ================== -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <OutputType>Exe</OutputType>
+    <DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+    <!-- AnyCPU so it builds/runs on Apple Silicon (arm64) and Intel alike; the published artifact is
+         made RID-specific via `dotnet publish -r osx-arm64`. -->
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <!-- App version — the single source of truth. Bump these on release (keep the three in step), add a
+       CHANGELOG.md entry, and the macOS bundle's Info.plist version is injected from <Version>. -->
   <PropertyGroup>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -32,24 +46,17 @@
     <Copyright>Copyright © 2026</Copyright>
   </PropertyGroup>
 
+  <!-- Bundled assets (icons + the built-in DefaultCharacter), both heads. The user character store and
+       loose import/export zips stay out of the bundle (read from disk at runtime). -->
   <ItemGroup>
-    <!-- Bundle the built-in footage (DefaultCharacter, footage), but NOT the user character store
-         (read from disk at runtime) or loose import/export zips — embedding those would bloat the
-         assembly with data the code never reads via avares://. -->
-    <!-- icon.ico is both embedded in the exe (<ApplicationIcon>) AND bundled as an Avalonia resource:
-         the window/tray icons load it via avares:// so Win32 can pick a purpose-authored frame per
-         size. The user character store / loose zips stay out of the bundle (read from disk). -->
     <AvaloniaResource Include="Assets/**" Exclude="Assets/Characters/**;Assets/*.zip" />
   </ItemGroup>
 
+  <!-- Cross-platform packages, both heads. -->
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.17" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
-    <!-- CsWin32 generates the Win32 P/Invoke bindings at build time from NativeMethods.txt -->
-    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.275">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <!-- Local MCP tool server (LLM control of the pet). The .AspNetCore package hosts it over
          Streamable HTTP and pulls in the ASP.NET Core shared framework referenced below. -->
     <PackageReference Include="ModelContextProtocol" Version="1.3.0" />
@@ -60,8 +67,22 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- Windows-only build inputs: CsWin32 generates the Win32 P/Invoke bindings from NativeMethods.txt. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.275">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <AdditionalFiles Include="Platform/Windows/NativeMethods.txt" />
+  </ItemGroup>
+
+  <!-- Per-OS source partitioning: the SDK globs all *.cs, so exclude the off-platform folder from each
+       head. Platform/Windows/** only compiles under -windows (CsWin32 types); Platform/Mac/** only
+       under net10.0 (AppKit/CoreGraphics interop). -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
+    <Compile Remove="Platform/Windows/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <Compile Remove="Platform/Mac/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>

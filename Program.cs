@@ -33,14 +33,28 @@ internal static class Program
             return 0;
         }
 
+#if MACOS
+        // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
+        if (Array.IndexOf(args, "--mac-windump") >= 0)
+        {
+            MaplePet.Platform.Mac.MacDiagnostics.DumpWorld();
+            return 0;
+        }
+        if (Array.IndexOf(args, "--mac-windows-all") >= 0)
+        {
+            MaplePet.Platform.Mac.MacDiagnostics.DumpAllWindows();
+            return 0;
+        }
+#endif
+
         // Enforce a single running pet for the normal interactive launch. Dev/test invocations
         // (--render-poses, --smoke) are exempt: they're short-lived and shouldn't be blocked by — or
         // register as — the live instance.
         bool interactiveRun = AppState.RenderPosesDir is null && AppState.SmokeSeconds <= 0;
-        MaplePet.Platform.SingleInstance? instance = null;
+        MaplePet.Platform.Abstractions.ISingleInstance? instance = null;
         if (interactiveRun)
         {
-            instance = MaplePet.Platform.SingleInstance.Acquire();
+            instance = MaplePet.Platform.PlatformServices.AcquireSingleInstance();
             if (!instance.IsOwner)
             {
                 instance.SignalOwner(); // poke the already-running pet to acknowledge, then bow out

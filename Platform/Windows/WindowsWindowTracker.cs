@@ -6,7 +6,7 @@ using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
 using MaplePet.Engine;
-using MaplePet.Platform;
+using MaplePet.Platform.Abstractions;
 using ERect = MaplePet.Engine.Rect;
 
 namespace MaplePet.Platform.Windows;

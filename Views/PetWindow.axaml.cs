@@ -8,7 +8,7 @@ using Avalonia.Threading;
 using MaplePet.Api;
 using MaplePet.Engine;
 using MaplePet.Platform;
-using MaplePet.Platform.Windows;
+using MaplePet.Platform.Abstractions;
 using MaplePet.Rendering;
 
 namespace MaplePet.Views;
@@ -23,10 +23,10 @@ public partial class PetWindow : Window
     private readonly CharacterStore _store;
     private readonly GameLoop _loop;
     private DispatcherTimer? _pollTimer;
-    private DispatcherTimer? _topmostTimer; // re-asserts the overlay's topmost z-order (see ApplyClickThrough)
 
+    private IPlatformServices? _plat; // the OS-specific service bundle (window tracker, overlay, input, hotkey)
+    private IOverlayEffects? _overlay; // click-through + topmost z-order
     private IWindowTracker? _tracker;
-    private WindowsWindowTracker? _winTracker;
     private ScreenSpace _screen = new(0, 0, 1);
     private World? _world;
     private PetController? _pet;
@@ -45,23 +45,11 @@ public partial class PetWindow : Window
     /// <see cref="OnOpened"/>), so the app can start the control transport against a live facade.</summary>
     public event Action? ControlReady;
 
-    private nint _hwnd;
     private bool _overlayHidden; // true while the overlay is hidden behind a fullscreen app
-    private bool _lmbPrev;     // left button state on the previous tick
     private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
     private readonly Random _rng = new(); // picks the per-drag face expression
-    private MouseClickBlocker? _clickBlocker; // eats the grab click so it doesn't hit the window behind
-    private HotkeyListener? _hotkey;          // global keyboard hook that opens the say-input bar
-
-    // Click/double-click synthesis on the (click-through) pet — derived from the polled drag edges,
-    // since the overlay never receives Avalonia pointer events.
-    private long _downTickMs;     // when the current press on the pet began
-    private Vec2 _downCursor;     // cursor at that press, to tell an in-place click from a drag
-    private bool _movedThisPress; // the pointer ever moved past the click threshold during this press
-    private long _lastClickUpMs;  // when the previous in-place click released (for double-click pairing)
-    private Vec2 _lastClickPos;
-    private const double ClickMaxMoveLogicalPx = 6; // a press+release that moves less than this is a "click"
-    private const long ClickMaxHoldMs = 600;        // ...and is released within this long (else it's a hold)
+    private IPetInput? _input;                // drag/click gestures (Windows: polled cursor + click hook)
+    private IGlobalHotkey? _hotkey;           // global hotkey that opens the say-input bar (may be unsupported)
 
     /// <summary>Raised (on the UI thread) when the user asks to open the say-input bar — by
     /// double-clicking the pet or pressing the configured global hotkey.</summary>
@@ -69,7 +57,11 @@ public partial class PetWindow : Window
 
     /// <summary>While true, the overlay stops re-asserting its topmost z-order, so a focusable window
     /// opened above it (the say-input bar) isn't pushed behind the pet. Set by the app.</summary>
-    public bool SuppressOverlayTopmost { get; set; }
+    public bool SuppressOverlayTopmost
+    {
+        get => _overlay?.SuppressTopmost ?? false;
+        set { if (_overlay is not null) _overlay.SuppressTopmost = value; }
+    }
 
     /// <summary>True while the overlay is hidden behind a fullscreen app — the game loop is frozen, so
     /// nothing draws and the speech-bubble countdown doesn't tick. The app checks this before arming a
@@ -79,7 +71,9 @@ public partial class PetWindow : Window
 
     // Exists only so Avalonia's runtime XAML loader can reach this window's resource; the
     // app always constructs it via the overload below (with the shared instances).
-    public PetWindow() : this(Settings.Load(Path.Combine(AppContext.BaseDirectory, "settings.json")), new CharacterStore()) { }
+    public PetWindow() : this(
+        Settings.Load(PlatformServices.AppPaths.SettingsPath),
+        new CharacterStore(PlatformServices.AppPaths.CharactersRoot)) { }
 
     public PetWindow(Settings settings, CharacterStore store)
     {
@@ -97,8 +91,7 @@ public partial class PetWindow : Window
         base.OnOpened(e);
 
         LayoutOverlay();
-        SetupTracker();
-        ApplyClickThrough();
+        SetupPlatform();
 
         _pet = new PetController(_cfg, new Vec2(30, 38));
         // Keep the pet clear of the screen edges (it's drawn tall, above its feet): don't roam
@@ -150,8 +143,8 @@ public partial class PetWindow : Window
     {
         _loop.Stop();
         _pollTimer?.Stop();
-        _topmostTimer?.Stop();
-        _clickBlocker?.Dispose();
+        _overlay?.Dispose();
+        _input?.Dispose();
         _hotkey?.Dispose();
         _sprites?.Dispose();
         base.OnClosed(e);
@@ -204,137 +197,42 @@ public partial class PetWindow : Window
         _screen = new ScreenSpace(minX, minY, scale);
     }
 
-    private void SetupTracker()
+    /// <summary>
+    /// Resolve the OS platform services (window tracker, overlay effects, input, hotkey) and wire them
+    /// to the pet. The factory picks the Windows or macOS bundle; PetWindow speaks only the abstractions
+    /// and logical pixels, so there are no OS branches here. The pet is constructed just after this, so
+    /// the input callbacks read the <c>_pet</c> field lazily.
+    /// </summary>
+    private void SetupPlatform()
     {
-        if (OperatingSystem.IsWindows())
+        _plat = PlatformServices.Create(this);
+        _tracker = _plat.WindowTracker;
+        _overlay = _plat.OverlayEffects;
+        _input = _plat.Input;
+        _hotkey = _plat.Hotkey;
+
+        // Make the overlay click-through and pin it to the top of the z-order (the impl owns any
+        // periodic re-assert). On a missing native handle this no-ops; in practice it's valid here.
+        nint handle = TryGetPlatformHandle()?.Handle ?? 0;
+        _overlay.ConfigureOverlay(handle);
+
+        // Drag/click are delivered as gestures (Windows polls a cursor + low-level mouse hook because
+        // the overlay is permanently click-through and never gets Avalonia pointer events; macOS toggles
+        // click-through and uses native pointer events).
+        _input.Start(new PetInputCallbacks(
+            OnDragBegin: _ => _pet?.BeginDrag(),
+            OnDragMove: c => _pet?.DragTo(c),
+            OnDragEnd: () => _pet?.EndDrag(),
+            OnSayRequested: RequestSayInput));
+
+        // Global hotkey that pops up the say-input bar from anywhere (skipped where unsupported — the
+        // pet can always be double-clicked to open it instead).
+        if (_hotkey.IsSupported)
         {
-            _winTracker = new WindowsWindowTracker();
-            _tracker = _winTracker;
-        }
-        else
-        {
-            _tracker = new MaplePet.Platform.MacOS.MacWindowTracker();
-        }
-    }
-
-    private void ApplyClickThrough()
-    {
-        var handle = TryGetPlatformHandle();
-        if (handle is null || handle.Handle == IntPtr.Zero) return;
-
-        if (OperatingSystem.IsWindows())
-        {
-            _hwnd = handle.Handle;
-            WindowsInterop.MakeClickThrough(_hwnd);
-            if (_winTracker is not null)
-                _winTracker.ExcludeHwnd = _hwnd;
-
-            // The overlay stays click-through (so it never occludes video); this low-level hook
-            // swallows the left click only when it lands on the pet, so grabbing the pet doesn't
-            // also click the window behind it.
-            _clickBlocker = new MouseClickBlocker();
-            _clickBlocker.Install();
-
-            // Global hotkey that pops up the say-input bar from anywhere. Installed on the UI thread
-            // next to the mouse hook so its callback is delivered here too; the configured chord comes
-            // from settings (and is re-applied live via SetSayHotkey).
-            _hotkey = new HotkeyListener();
             _hotkey.Triggered += RequestSayInput;
             _hotkey.Install();
             SetSayHotkey(_cfg.SayInputHotkey);
-
-            // Keep the pet above other topmost windows. Avalonia sets WS_EX_TOPMOST once, but
-            // activating a topmost app (e.g. a borderless-fullscreen game) raises it above us within
-            // the topmost band, and this overlay never takes focus to recover. Re-assert a couple of
-            // times a second; it's invisible (no move/size/activate) and a no-op under true exclusive
-            // fullscreen, where DWM isn't compositing the desktop to that display anyway.
-            _topmostTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-            _topmostTimer.Tick += (_, _) => { if (!SuppressOverlayTopmost && !_overlayHidden) WindowsInterop.RaiseToTop(_hwnd); };
-            _topmostTimer.Start();
         }
-    }
-
-    /// <summary>
-    /// Poll the global cursor + left mouse button to drive dragging. The overlay stays permanently
-    /// click-through (so it never occludes hardware-accelerated video below it — making it
-    /// interactive would black the video out). The grab click is instead "caught" by a low-level
-    /// mouse hook (<see cref="MouseClickBlocker"/>) that eats the press/release only when it lands on
-    /// the pet, so it doesn't reach the window behind. Dragging itself is driven by this poll.
-    /// </summary>
-    private void UpdateInput()
-    {
-        if (_hwnd == 0 || _pet is null || !OperatingSystem.IsWindows()) return;
-
-        // Use the hook's button state: a click swallowed by the hook (over the pet) isn't seen by
-        // GetAsyncKeyState, so the poll would miss the press and never start a drag.
-        bool lmb = _clickBlocker?.LeftButtonDown ?? WindowsInterop.IsLeftButtonDown();
-        bool overPet = TryCursorLogical(out var cursor) && OverPet(cursor);
-
-        if (!_pet.IsDragging && lmb && !_lmbPrev && overPet)
-        {
-            _downTickMs = Environment.TickCount64; // press time + point, to tell an in-place click from a drag
-            _downCursor = cursor;
-            _movedThisPress = false;
-            _pet.BeginDrag();
-        }
-
-        if (_pet.IsDragging)
-        {
-            if (lmb)
-            {
-                if (TryCursorLogical(out var c))
-                {
-                    if (Dist(c, _downCursor) > ClickMaxMoveLogicalPx) _movedThisPress = true;
-                    _pet.DragTo(c);
-                }
-            }
-            else
-            {
-                if (TryCursorLogical(out var up)) DetectDoubleClick(up);
-                _pet.EndDrag();
-            }
-        }
-        _lmbPrev = lmb;
-    }
-
-    /// <summary>
-    /// On releasing the pet, decide whether it was an in-place click (barely moved) and, if a second
-    /// such click lands within the OS double-click window, fire <see cref="SayInputRequested"/>. The
-    /// overlay is click-through so this is the only signal we have — a drag (moved past the threshold)
-    /// resets the pairing so it never counts as a click.
-    /// </summary>
-    private void DetectDoubleClick(Vec2 up)
-    {
-        long now = Environment.TickCount64;
-        // A click is a press+release that never moved past the threshold and wasn't a long hold;
-        // a drag (moved, e.g. one that loops back near its start) or a deliberate hold is not.
-        bool isClick = !_movedThisPress
-            && Dist(up, _downCursor) <= ClickMaxMoveLogicalPx
-            && now - _downTickMs <= ClickMaxHoldMs;
-        if (!isClick)
-        {
-            _lastClickUpMs = 0;
-            return;
-        }
-
-        if (_lastClickUpMs != 0
-            && now - _lastClickUpMs <= WindowsInterop.DoubleClickTimeMs()
-            && Dist(up, _lastClickPos) <= ClickMaxMoveLogicalPx * 2)
-        {
-            _lastClickUpMs = 0; // consume the pair
-            RequestSayInput();
-        }
-        else
-        {
-            _lastClickUpMs = now; // first click of a potential pair
-            _lastClickPos = up;
-        }
-    }
-
-    private static double Dist(Vec2 a, Vec2 b)
-    {
-        double dx = a.X - b.X, dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     /// <summary>Apply a hotkey gesture (e.g. "Ctrl+Alt+Space") to the global listener. Called on
@@ -342,7 +240,7 @@ public partial class PetWindow : Window
     /// disables the hotkey rather than binding a bare key system-wide.</summary>
     public void SetSayHotkey(string gesture)
     {
-        if (_hotkey is null) return; // not on Windows, or the hook isn't installed
+        if (_hotkey is null || !_hotkey.IsSupported) return; // no global hotkey on this platform
         if (HotkeyGesture.IsBindable(gesture)
             && HotkeyGesture.TryParse(gesture, out var mods, out var key)
             && HotkeyGesture.KeyToVirtualKey(key) is int vk)
@@ -367,22 +265,10 @@ public partial class PetWindow : Window
     private void RequestSayInput()
         => Dispatcher.UIThread.Post(() => SayInputRequested?.Invoke());
 
-    private bool TryCursorLogical(out Vec2 logical)
-    {
-        logical = default;
-        if (!WindowsInterop.TryGetCursorPos(out int px, out int py)) return false;
-        logical = new Vec2((px - _screen.OriginX) / _screen.Scale, (py - _screen.OriginY) / _screen.Scale);
-        return true;
-    }
-
-    private bool OverPet(Vec2 p)
-        => TryPetHitBoxLogical(out double l, out double t, out double r, out double b)
-           && p.X >= l && p.X <= r && p.Y >= t && p.Y <= b;
-
     /// <summary>
     /// The pet's clickable box in logical (overlay) px. Matches the drawn character: centered on
     /// CenterX, rising HeightAboveFeet above the feet (well past the small physics box); falls back to
-    /// the physics box when footage didn't load. Used for both hover hit-testing and the click hook.
+    /// the physics box when footage didn't load. Published to the platform input layer each tick.
     /// </summary>
     private bool TryPetHitBoxLogical(out double left, out double top, out double right, out double bottom)
     {
@@ -407,27 +293,27 @@ public partial class PetWindow : Window
         return true;
     }
 
-    /// <summary>Tell the click hook where the pet is, in physical screen px (inverse of TryCursorLogical).</summary>
-    private void PublishPetHitBox()
+    /// <summary>Drive the platform input layer for this tick: hand it the pet's current clickable box
+    /// (logical px) so it can poll the cursor/button (Windows) or toggle click-through (macOS), and
+    /// raise drag/click gestures. Called at the top of <see cref="OnTick"/>, before physics moves the
+    /// pet, so the poll sees the same position the original inline poll did.</summary>
+    private void TickInput()
     {
-        if (_clickBlocker is null) return;
-        if (TryPetHitBoxLogical(out double l, out double t, out double r, out double b))
-        {
-            _clickBlocker.SetPetRect(true,
-                (int)Math.Floor(l * _screen.Scale + _screen.OriginX),
-                (int)Math.Floor(t * _screen.Scale + _screen.OriginY),
-                (int)Math.Ceiling(r * _screen.Scale + _screen.OriginX),
-                (int)Math.Ceiling(b * _screen.Scale + _screen.OriginY));
-        }
-        else
-        {
-            _clickBlocker.SetPetRect(false, 0, 0, 0, 0);
-        }
+        if (_input is null) return;
+        bool visible = TryPetHitBoxLogical(out double l, out double t, out double r, out double b);
+        _input.Tick(_screen, visible, l, t, r, b);
     }
 
     private void PollWorld()
     {
         if (_tracker is null) return;
+
+        // Keep the coordinate origin pinned to the overlay's ACTUAL on-screen position. macOS clamps an
+        // (unbundled) top-level below the menu bar, so the realized position differs from the requested
+        // (minX,minY) and isn't reported via PositionChanged; aligning the origin with it keeps the pet
+        // on the window edges the tracker reports. On Windows the overlay isn't moved, so Position equals
+        // (minX,minY) and this is a no-op.
+        _screen = new ScreenSpace(Position.X, Position.Y, _screen.Scale);
 
         // Hide the pet while a borderless / exclusive-fullscreen app (a game or video) is foreground,
         // so it never sits on top of it. Re-checked every poll, so the pet returns the moment the user
@@ -472,13 +358,11 @@ public partial class PetWindow : Window
             // swallowed press (so a button-up meant for the fullscreen app behind isn't eaten), and reset
             // the per-drag input edges so a stale drag can't resume when we show again.
             if (_pet?.IsDragging == true) _pet.EndDrag();
-            _clickBlocker?.SetPetRect(false, 0, 0, 0, 0);
-            _clickBlocker?.ResetSwallow();
-            _lmbPrev = false;
+            _input?.CancelActiveGesture();
             if (_wasDragging) { _wasDragging = false; _animator?.SetTransientExpression(null); }
 
             _loop.Stop();
-            if (OperatingSystem.IsWindows()) WindowsInterop.Hide(_hwnd);
+            _overlay?.Hide();
         }
         else
         {
@@ -488,18 +372,14 @@ public partial class PetWindow : Window
             LayoutOverlay();
             if (_pet is not null) { _pet.RoamMaxY = Height - 150; _pet.RoamMinY = 150; }
 
-            if (OperatingSystem.IsWindows())
-            {
-                WindowsInterop.ShowNoActivate(_hwnd);
-                WindowsInterop.RaiseToTop(_hwnd);
-            }
+            _overlay?.ShowNoActivate();
             _loop.Start();
         }
     }
 
     private void OnTick(double dt)
     {
-        UpdateInput();
+        TickInput(); // poll drag/click (Windows) or toggle click-through (macOS) + publish the pet hit box
         View.ShowDebug = _cfg.ShowOverlay; // live-toggled from Settings
         if (_pet is not null && _world is not null)
         {
@@ -529,7 +409,6 @@ public partial class PetWindow : Window
         }
         View.Speech = _speechText;
 
-        PublishPetHitBox(); // keep the click hook's pet rect current
         View.InvalidateVisual();
     }
 
