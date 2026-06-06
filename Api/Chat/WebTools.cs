@@ -130,9 +130,14 @@ public sealed class WebTools
 
     // ---- web_fetch ---------------------------------------------------------------
 
-    public async Task<string> RunFetchAsync(string argumentsJson, CancellationToken ct)
+    public Task<string> RunFetchAsync(string argumentsJson, CancellationToken ct)
+        => FetchReadableAsync(Arg(argumentsJson, "url"), ct);
+
+    /// <summary>Download a page and return its readable text — "Title: …", "Summary: …" (meta description),
+    /// then the body, capped. Static and keyless so the knowledge base (<see cref="KnowledgeBase"/>) reuses
+    /// the exact same fetch as the <c>web_fetch</c> tool. Best-effort: any failure returns a short message.</summary>
+    public static async Task<string> FetchReadableAsync(string url, CancellationToken ct)
     {
-        string url = Arg(argumentsJson, "url");
         if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             return "Invalid or missing URL.";
