@@ -373,7 +373,13 @@ public sealed class SayBarWindow : Window
 
             if (!chat)
             {
-                control?.Say(text);     // plain "say" — the pet repeats the text
+                // Chatbot off (or unconfigured): the pet just repeats the text. Once in a while nudge the
+                // user that a real reply is waiting behind the setting — only 30% of the time, so it stays a
+                // gentle hint rather than nagging on every line.
+                var say = Random.Shared.NextDouble() < 0.30
+                    ? $"{text}\n(enable chatbot in the settings to make me reply)"
+                    : text;
+                control?.Say(say);      // plain "say" — the pet repeats the text
                 HideRequested?.Invoke();
                 return;
             }
