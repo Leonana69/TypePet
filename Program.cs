@@ -40,6 +40,14 @@ internal static class Program
             return 0;
         }
 
+        // Dev-only: smoke-test the MapleStory knowledge base (RAG). Needs Avalonia's asset loader for the
+        // bundled catalog, so set up without starting the UI. Optional query: --rag-test "<question>".
+        if (Array.IndexOf(args, "--rag-test") >= 0)
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            return MaplePet.Api.Chat.RagTest.Run(ParseOption(args, "--rag-test"));
+        }
+
 #if MACOS
         // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
         if (Array.IndexOf(args, "--mac-windump") >= 0)

@@ -36,6 +36,7 @@ public sealed class Settings
     public List<ProviderProfile> Providers { get; set; } = new(); // configured LLM providers (seeded on first run)
     public string ActiveProviderId { get; set; } = "";        // which profile the chat uses (a Providers[].Id)
     public bool EnableWebSearch { get; set; } = true;         // keyless DuckDuckGo web_search + web_fetch tools
+    public bool EnableMapleKnowledge { get; set; } = true;    // curated MapleStory reference sites (maple_lookup) — keyless RAG
     public bool ChatHistoryVisible { get; set; } = true;      // input bar shows the conversation-history panel
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.

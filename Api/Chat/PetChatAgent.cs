@@ -11,7 +11,7 @@ namespace MaplePet.Api.Chat;
 /// <summary>Everything needed to run one chat turn against the active provider. Rebuilt per send by the
 /// app from current settings + the secret store, so a provider quick-switch or key edit takes effect on
 /// the next message.</summary>
-public sealed record ChatSessionConfig(IChatBackend Backend, string Model, int MaxTokens, WebTools? Web);
+public sealed record ChatSessionConfig(IChatBackend Backend, string Model, int MaxTokens, WebTools? Web, KnowledgeBase? Knowledge = null);
 
 /// <summary>The result of a chat turn: the assistant's answer text and any web sources it cited.</summary>
 public sealed record ChatResult(string Text, IReadOnlyList<WebSource> Sources, bool IsError = false);
@@ -57,14 +57,17 @@ public sealed class PetChatAgent
         try { caps = await _pet.GetCapabilities(); } catch { /* pet may not be ready; proceed text-only */ }
 
         bool webOn = cfg.Web is not null;
+        var kb = cfg.Knowledge;
+        bool kbOn = kb is not null && kb.HasSources;
         var tools = new List<ChatToolDef>();
         if (cfg.Backend.SupportsTools && caps is not null)
         {
             tools.AddRange(_petTools.BuildTools(caps));
             if (webOn) { tools.Add(cfg.Web!.SearchDefinition); tools.Add(cfg.Web!.FetchDefinition); }
+            if (kbOn) tools.Add(kb!.LookupDefinition);
         }
 
-        string system = BuildSystemPrompt(caps, webOn);
+        string system = BuildSystemPrompt(caps, webOn, kbOn ? kb!.SystemPromptDigest() : null);
         _history.Add(ChatMessage.User(userText));
 
         var sources = new List<WebSource>();
@@ -102,6 +105,13 @@ public sealed class PetChatAgent
                             _history.Add(ChatMessage.ToolResult(call.Id, text));
                         }
                     }
+                    else if (kbOn && kb!.Handles(call.Name))
+                    {
+                        StatusChanged?.Invoke("Checking MapleStory guides…");
+                        var (text, src) = await kb.RunLookupAsync(call.ArgumentsJson, ct);
+                        sources.AddRange(src);
+                        _history.Add(ChatMessage.ToolResult(call.Id, text));
+                    }
                     else if (_petTools.Handles(call.Name))
                     {
                         var result = await _petTools.DispatchAsync(call);
@@ -134,7 +144,7 @@ public sealed class PetChatAgent
         return sources.Where(s => !string.IsNullOrEmpty(s.Url) && seen.Add(s.Url)).ToList();
     }
 
-    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn)
+    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn, string? mapleDigest)
     {
         var name = caps?.CharacterName ?? "MaplePet";
         var sb = new StringBuilder();
@@ -153,6 +163,16 @@ public sealed class PetChatAgent
         }
         else
             sb.AppendLine("- You have no web access right now, so answer from your own knowledge and say so if the question needs live data.");
+
+        if (!string.IsNullOrWhiteSpace(mapleDigest))
+        {
+            sb.AppendLine("MAPLESTORY KNOWLEDGE:");
+            sb.AppendLine("- For MapleStory class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), prefer the curated reference sites below over a generic web search — use the maple_lookup tool.");
+            sb.AppendLine("- First call maple_lookup with just a `query` to get the ranked sources and their URL templates (a source in the question's language is preferred), then call it again with a concrete `url` you build from a template to read the page.");
+            sb.AppendLine("- The question's language decides the source: a Korean question prefers a Korean site. Map class names to the English URL slug yourself (e.g. 히어로 → hero).");
+            sb.AppendLine("Available MapleStory sources:");
+            sb.AppendLine(mapleDigest);
+        }
 
         if (caps is not null)
         {
