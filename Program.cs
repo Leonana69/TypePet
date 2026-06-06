@@ -56,6 +56,15 @@ internal static class Program
             return MaplePet.Views.MarkupTest.Run();
         }
 
+        // Dev-only: validate the user command library + merged registry headlessly, and optionally run one
+        // command. Needs Avalonia's asset loader (bundled avares image refs / seeding). Usage:
+        // --commands-test ["<name>"].
+        if (Array.IndexOf(args, "--commands-test") >= 0)
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            return MaplePet.Api.Chat.CommandTest.Run(ParseOption(args, "--commands-test"));
+        }
+
         // Dev-only: print exactly what web_fetch / maple_lookup would extract from a page (incl. annotated
         // link targets). Pure HTTP + HTML parse, no Avalonia. Usage: --fetch-test "<url>".
         if (ParseOption(args, "--fetch-test") is string fetchUrl)

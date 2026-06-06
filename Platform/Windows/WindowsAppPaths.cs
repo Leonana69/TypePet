@@ -15,4 +15,5 @@ public sealed class WindowsAppPaths : IAppPaths
     public string DataRoot => AppContext.BaseDirectory;
     public string SettingsPath => Path.Combine(DataRoot, "settings.json");
     public string CharactersRoot => CharacterStore.ResolveDefaultRoot();
+    public string CommandsRoot => CommandStore.ResolveDefaultRoot();
 }

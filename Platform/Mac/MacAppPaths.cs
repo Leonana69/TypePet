@@ -16,6 +16,7 @@ public sealed class MacAppPaths : IAppPaths
     public string DataRoot { get; }
     public string SettingsPath => Path.Combine(DataRoot, "settings.json");
     public string CharactersRoot { get; }
+    public string CommandsRoot { get; }
 
     public MacAppPaths()
     {
@@ -23,11 +24,13 @@ public sealed class MacAppPaths : IAppPaths
         {
             DataRoot = Path.Combine(AppSupportRoot(), "MaplePet");
             CharactersRoot = Path.Combine(DataRoot, "Characters");
+            CommandsRoot = Path.Combine(DataRoot, "Commands");
         }
         else
         {
             DataRoot = AppContext.BaseDirectory;
             CharactersRoot = CharacterStore.ResolveDefaultRoot();
+            CommandsRoot = CommandStore.ResolveDefaultRoot();
         }
     }
 

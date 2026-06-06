@@ -76,6 +76,11 @@ public sealed class SayBarWindow : Window
         _chatConfigured = chatConfigured;
         _commands = commands;
 
+        // Hot-reload: when the command library changes on disk, refresh an open '/' dropdown. (Typing
+        // already re-reads the live list, so this only matters while the menu is showing.)
+        _commands.CommandsChanged += OnCommandsChanged;
+        Closed += (_, _) => _commands.CommandsChanged -= OnCommandsChanged;
+
         // Frosted-glass plumbing (borderless acrylic, DWM round/shadow on Win11).
         Title = "MaplePet";
         SystemDecorations = SystemDecorations.Full;
@@ -269,6 +274,10 @@ public sealed class SayBarWindow : Window
     // ---- command dropdown --------------------------------------------------------
 
     private bool MenuOpen => _commandMenuHost.IsVisible;
+
+    /// <summary>Refresh an open dropdown after the command library hot-reloads (added/removed/edited).</summary>
+    private void OnCommandsChanged() =>
+        Dispatcher.UIThread.Post(() => { if (MenuOpen) UpdateCommandMenu(); });
 
     /// <summary>Refresh the '/' command dropdown for the current input. It shows only while the user is still
     /// typing the command NAME — i.e. the first character is '/' and no space has been typed yet (a space

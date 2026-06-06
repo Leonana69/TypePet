@@ -17,4 +17,7 @@ public interface IAppPaths
 
     /// <summary>Root directory for the user's imported characters.</summary>
     string CharactersRoot { get; }
+
+    /// <summary>Root directory for the user's installed commands (the hot-reloaded skill library).</summary>
+    string CommandsRoot { get; }
 }

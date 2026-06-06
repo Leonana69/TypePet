@@ -18,6 +18,8 @@ public partial class App : Application
 {
     private Settings? _settings;
     private CharacterStore? _store;
+    private CommandStore? _commandStore;        // the user command library (hot-reloaded skill library)
+    private CommandWatcher? _commandWatcher;    // watches the library and rebuilds the registry on change
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
@@ -64,6 +66,17 @@ public partial class App : Application
                 _settings.CurrentCharacterId = CharacterStore.DefaultId;
                 _settings.Save();
             }
+
+            // The user command library (the hot-reloaded "skill" library). Built eagerly — before the say
+            // bar's first open — so commands dropped into the folder register immediately and the watcher
+            // can rebuild the registry live. First run seeds the bundled starter commands; the watcher
+            // marshals its rebuild onto the UI thread (the registry's snapshot is read by the say bar).
+            _commandStore = new CommandStore(paths.CommandsRoot);
+            SeedBundledCommands(_commandStore.Root);
+            _commands = BuildCommands();
+            _commandWatcher = new CommandWatcher(_commandStore.Root,
+                () => Avalonia.Threading.Dispatcher.UIThread.Post(() => _commands?.Rebuild()));
+            desktop.Exit += (_, _) => _commandWatcher?.Dispose();
 
             _petWindow = new PetWindow(_settings, _store);
             desktop.MainWindow = _petWindow;
@@ -122,6 +135,9 @@ public partial class App : Application
         var charactersItem = new NativeMenuItem("Characters…") { Icon = glyphs.Render(TrayGlyph.Contact, accent) };
         charactersItem.Click += (_, _) => ShowCharacters();
 
+        var commandsItem = new NativeMenuItem("Commands…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
+        commandsItem.Click += (_, _) => ShowCommands();
+
         var settingsItem = new NativeMenuItem("Settings…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
@@ -132,6 +148,7 @@ public partial class App : Application
         menu.Items.Add(_wearingItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(charactersItem);
+        menu.Items.Add(commandsItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
@@ -176,11 +193,12 @@ public partial class App : Application
 
     private void ShowSettings() => ShowConfig(ConfigTab.Settings);
     private void ShowCharacters() => ShowConfig(ConfigTab.Characters);
+    private void ShowCommands() => ShowConfig(ConfigTab.Commands);
 
     /// <summary>Open (or re-focus) the single config window on the requested tab.</summary>
     private void ShowConfig(ConfigTab tab)
     {
-        if (_settings is null || _store is null) return;
+        if (_settings is null || _store is null || _commandStore is null) return;
         if (_configWindow is not null)
         {
             _configWindow.Select(tab);
@@ -199,7 +217,9 @@ public partial class App : Application
         {
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename
         });
-        _configWindow = new ConfigWindow(charactersView, settingsView);
+        // Toggling/deleting a command persists to settings and rebuilds the live registry at once.
+        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild());
+        _configWindow = new ConfigWindow(charactersView, commandsView, settingsView);
         _configWindow.Select(tab);
         _configWindow.Closed += (_, _) => _configWindow = null;
         _configWindow.Show();
@@ -218,11 +238,10 @@ public partial class App : Application
         if (_sayBar is null)
         {
             // Slash commands run locally; most need no LLM (/rank picks its server per call via a flag, all
-            // keyless). The exception is /fortune, which calls the active chat provider — so it's handed the
-            // same "chatbot enabled?" + "provider configured?" probes the say bar uses, plus the pet control
-            // (it reads the character's expressions and makes the pet wear the one the oracle divines).
-            _commands ??= new ChatCommands(
-                () => _settings?.EnableChatbot ?? false, BuildChatConfig, () => _petWindow?.Control);
+            // keyless). The exception is /fortune, which calls the active chat provider. The registry merges
+            // these built-ins with the user's command library; it's built eagerly at startup (so dropped
+            // commands register before the first open), with a fallback here for safety.
+            _commands ??= BuildCommands();
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
                 () => BuildChatConfig() is not null, _commands);
             _sayBar.HideRequested += HideSayBar;
@@ -255,6 +274,47 @@ public partial class App : Application
     {
         _sayBar?.Hide();
         if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
+    }
+
+    /// <summary>Build the slash-command registry: the built-ins (/rank, /fortune, /clear, /help) merged
+    /// with the enabled user commands from <see cref="_commandStore"/>. The same probes the say bar uses
+    /// are forwarded so /fortune and prompt-kind commands can reach the active provider, plus the live pet
+    /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild).</summary>
+    private ChatCommands BuildCommands() => new(
+        () => _settings?.EnableChatbot ?? false,
+        BuildChatConfig,
+        () => _petWindow?.Control,
+        _commandStore,
+        () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
+        () => _settings?.EnableUserScripts ?? true);
+
+    /// <summary>On first run (an empty library), copy the bundled starter commands out of the app bundle
+    /// (<c>avares://MaplePet/Assets/Commands/**</c>) into the writable commands root. A non-empty root —
+    /// already seeded, or the repo's own <c>Assets/Commands</c> in a dev run — is left untouched, so user
+    /// edits are never clobbered. Best-effort: a failure just leaves the library empty.</summary>
+    private static void SeedBundledCommands(string root)
+    {
+        try
+        {
+            if (Directory.Exists(root) && Directory.EnumerateDirectories(root).Any()) return;
+            Directory.CreateDirectory(root);
+
+            const string marker = "/Assets/Commands/";
+            foreach (var asset in Avalonia.Platform.AssetLoader.GetAssets(
+                         new Uri("avares://MaplePet/Assets/Commands/"), null))
+            {
+                int idx = asset.AbsolutePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0) continue;
+                string rel = asset.AbsolutePath[(idx + marker.Length)..];     // e.g. cmd_ssc/command.md
+                if (rel.Length == 0) continue;
+                string dest = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                using var s = Avalonia.Platform.AssetLoader.Open(asset);
+                using var fs = File.Create(dest);
+                s.CopyTo(fs);
+            }
+        }
+        catch { /* best effort; the user can still drop commands in manually */ }
     }
 
     /// <summary>Resolve the active provider into a chat session config (backend + model + web search),

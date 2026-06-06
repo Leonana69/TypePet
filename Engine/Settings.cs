@@ -41,6 +41,10 @@ public sealed class Settings
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
 
+    // ---- User command library (the hot-reloaded skill library) -------------------------------------
+    public List<string> DisabledCommandIds { get; set; } = new(); // installed commands the user turned OFF (by CommandStore id)
+    public bool EnableUserScripts { get; set; } = true;           // allow kind:script commands (sandboxed JS); off disables them all
+
     // The /rank chat command picks its MapleStory server per call via a leading flag (-na/-eu/-kr/-sea/-tw,
     // default -na) — see RankServers — so the server is no longer a persisted setting.
 
@@ -111,6 +115,8 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(SpriteSheet)) SpriteSheet = d.SpriteSheet;
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
+
+        DisabledCommandIds ??= new();
 
         // ---- chatbot ----
         Providers ??= new();
