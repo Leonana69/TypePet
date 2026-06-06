@@ -43,7 +43,9 @@
     <FileVersion>1.0.0.0</FileVersion>
     <Product>MaplePet</Product>
     <Description>A desktop pet that walks along your taskbar.</Description>
-    <Copyright>Copyright © 2026</Copyright>
+    <Authors>leonana69</Authors>
+    <Copyright>Copyright © 2026 leonana69</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
 
   <!-- Bundled assets (icons + the built-in DefaultCharacter), both heads. The user character store and

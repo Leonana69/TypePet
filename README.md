@@ -116,3 +116,11 @@ screen-space conversion), `Rendering/`, `Api/`, and `Views/` are shared and cont
 CI (`.github/workflows/build.yml`) builds each head on its native runner and uploads the Windows exe and
 the macOS `.app` bundle. `Platform/Mac/MacDiagnostics.cs` adds dev-only `--mac-windump` /
 `--mac-windows-all` flags for inspecting the captured world.
+
+## License
+
+MaplePet's **source code** is free software: you can redistribute it and/or modify it under the terms of
+the **GNU General Public License, version 3 or (at your option) any later version** — see [`LICENSE`](LICENSE).
+It is distributed WITHOUT ANY WARRANTY; see the license for details.
+
+Copyright © 2026 leonana69 and contributors.
