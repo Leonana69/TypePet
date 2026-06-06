@@ -25,8 +25,11 @@ public static class SpeechBubble
     private const double GapToPet = 6;
     private const double FontSize = 13;
     private const double LinkGap = 5;  // vertical space between the message text and the link line
-    private const double ImgGap = 6;   // vertical space between the character image and the text
-    private const double ImgMax = 120; // the character canvas is scaled (never up) to fit within this box
+    private const double ImgGap = 6;   // vertical space between the image and the text
+    // Images are scaled DOWN to fit this box and NEVER up, so the cap can be generous without bloating small
+    // images: a /rank character canvas stays ~100px (its native crop), while a larger guide image (/esfera,
+    // 417px) shows close to full size so its detail stays legible.
+    private const double ImgMax = 420;
 
     /// <summary>Draw <paramref name="text"/> in a bubble whose tail points at (<paramref name="anchorX"/>,
     /// <paramref name="topY"/>) — the top-center of the drawn pet — clamped within <paramref name="screen"/>.

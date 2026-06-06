@@ -57,8 +57,11 @@ public interface IPetControl
     /// <summary>Show a speech bubble over the pet for <paramref name="seconds"/> (default scales with
     /// text length). Optionally <paramref name="linkUrl"/> + <paramref name="linkLabel"/> add a clickable
     /// link line that opens the URL in the default browser, and <paramref name="imageUrl"/> shows an image
-    /// (e.g. the character canvas) atop the bubble — both used by the <c>/rank</c> command.</summary>
-    Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null);
+    /// (e.g. the character canvas) atop the bubble — both used by the <c>/rank</c> command. When
+    /// <paramref name="freezeMovement"/> is true the pet holds still (stops wandering) for as long as this
+    /// bubble is shown, resuming when it's dismissed (the slash commands use this so a result stays put to
+    /// read); it still falls if its surface vanishes and can still be dragged.</summary>
+    Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null, bool freezeMovement = false);
 
     /// <summary>Raised when the worn character changes, so a transport can regenerate its tool schema
     /// (the available actions/expressions are character-specific).</summary>

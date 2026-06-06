@@ -29,7 +29,7 @@ public sealed class PetControlService : IPetControl
     private readonly Func<World?> _world;
     private readonly Func<MaplePet.Engine.Rect> _bounds;
     private readonly Func<(string id, string name)> _character;
-    private readonly Action<string?, double?, string?, string?, string?> _setSpeech; // text, seconds, linkUrl, linkLabel, imageUrl
+    private readonly Action<string?, double?, string?, string?, string?, bool> _setSpeech; // text, seconds, linkUrl, linkLabel, imageUrl, freezeMovement
 
     /// <summary>Picks the random attack stance for attack actions. Control commands all marshal onto the
     /// UI thread, so a single shared Random needs no synchronization.</summary>
@@ -44,7 +44,7 @@ public sealed class PetControlService : IPetControl
     public PetControlService(
         Func<PetController?> pet, Func<CharacterAnimator?> animator, Func<CharacterSprites?> sprites,
         Func<World?> world, Func<MaplePet.Engine.Rect> bounds, Func<(string id, string name)> character,
-        Action<string?, double?, string?, string?, string?> setSpeech)
+        Action<string?, double?, string?, string?, string?, bool> setSpeech)
     {
         _pet = pet;
         _animator = animator;
@@ -186,14 +186,14 @@ public sealed class PetControlService : IPetControl
         return Logged("ReleaseControl", ControlResult.Success("returned to autonomous mode"));
     });
 
-    public Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null) => OnUi(() =>
+    public Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null, bool freezeMovement = false) => OnUi(() =>
     {
         if (string.IsNullOrWhiteSpace(text)) return ControlResult.Reject("text is empty");
         double secs = seconds is double s && s > 0 ? s : DefaultSpeechSeconds(text);
         // A link is only meaningful with both a URL and a visible label; otherwise drop it.
         bool hasLink = !string.IsNullOrWhiteSpace(linkUrl) && !string.IsNullOrWhiteSpace(linkLabel);
         _setSpeech(text, secs, hasLink ? linkUrl : null, hasLink ? linkLabel : null,
-            string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl);
+            string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl, freezeMovement);
         return Logged($"Say(\"{Truncate(text)}\")", ControlResult.Success());
     });
 

@@ -13,14 +13,15 @@ namespace MaplePet.Api.Chat;
 /// also typically included in <see cref="Sources"/> so it appears in history. <see cref="ImageUrl"/> is an
 /// optional image (e.g. the character canvas) shown in both the pet's bubble and the history card.
 /// <see cref="ClipboardText"/>, when set, is written to the system clipboard by the say bar (which owns a
-/// <c>TopLevel</c>); the command stays UI-free and only carries the text to copy.</summary>
+/// <c>TopLevel</c>); the command stays UI-free and only carries the text to copy. <see cref="HoldSeconds"/>
+/// overrides how long the pet holds the result bubble (and stays still) — null uses the say bar's default.</summary>
 public sealed record CommandResult(
     string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null, string? ImageUrl = null,
-    string? ClipboardText = null)
+    string? ClipboardText = null, double? HoldSeconds = null)
 {
     public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null,
-        WebSource? link = null, string? imageUrl = null, string? clipboardText = null)
-        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl, clipboardText);
+        WebSource? link = null, string? imageUrl = null, string? clipboardText = null, double? holdSeconds = null)
+        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl, clipboardText, holdSeconds);
 
     public static CommandResult Error(string text) => new(text, Array.Empty<WebSource>(), true);
 }
@@ -49,6 +50,10 @@ public sealed class ChatCommands
     private readonly MapleKitApi _mapleKit = new();
     private readonly IReadOnlyList<Command> _commands;
 
+    /// <summary>UI-facing metadata for every registered command (name, usage, help), in declared order.
+    /// Used by the say bar to populate its '/' command dropdown; the handler delegates stay private.</summary>
+    public IReadOnlyList<CommandInfo> Commands { get; }
+
     public ChatCommands()
     {
         _commands = new[]
@@ -57,8 +62,10 @@ public sealed class ChatCommands
                 "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
             new Command("ssc", "/ssc", "Copy \"Sacred Symbol/claim\" to the clipboard.", Copy("Sacred Symbol/claim")),
             new Command("asc", "/asc", "Copy \"Arcane Symbol/claim\" to the clipboard.", Copy("Arcane Symbol/claim")),
+            new Command("esfera", "/esfera", "Show the Esfera guide image.", EsferaAsync),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
+        Commands = _commands.Select(c => new CommandInfo(c.Name, c.Usage, c.Help)).ToArray();
     }
 
     /// <summary>True if <paramref name="text"/> is a slash command (first non-space character is '/').</summary>
@@ -156,6 +163,14 @@ public sealed class ChatCommands
     private static Func<string, CancellationToken, Task<CommandResult>> Copy(string text)
         => (_, _) => Task.FromResult(CommandResult.Ok($"Copied \"{text}\" to clipboard 📋", clipboardText: text));
 
+    /// <summary>The bundled Esfera guide image, shown by <c>/esfera</c>. An <c>avares:</c> app-resource URI
+    /// (not a network URL) that the image cache loads straight from the bundle; both the pet's speech bubble
+    /// and the history card display it (whole, not center-cropped — see <c>ImageCache.IsBundledAsset</c>).</summary>
+    private const string EsferaImage = "avares://MaplePet/Assets/Program/esfera.png";
+
+    private Task<CommandResult> EsferaAsync(string args, CancellationToken ct)
+        => Task.FromResult(CommandResult.Ok("Esfera guide", imageUrl: EsferaImage, holdSeconds: 120));
+
     // ---- helpers -----------------------------------------------------------------
 
     /// <summary>The per-server "check more info on …" link to that server's community profile site (maple.gg
@@ -229,6 +244,10 @@ public sealed class ChatCommands
         filled = Math.Clamp(filled, 0, width);
         return $"EXP {new string('█', filled)}{new string('░', width - filled)} {pct:0.00}%";
     }
+
+    /// <summary>Public, read-only view of a command for the say bar's dropdown — the same name, usage, and
+    /// help as <see cref="Command"/>, but without the handler delegate.</summary>
+    public sealed record CommandInfo(string Name, string Usage, string Help);
 
     private sealed record Command(
         string Name, string Usage, string Help, Func<string, CancellationToken, Task<CommandResult>> Run);

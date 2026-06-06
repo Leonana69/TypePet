@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
 namespace MaplePet.Rendering;
 
 /// <summary>
-/// Downloads small remote images (the MapleStory character canvas the <c>/rank</c> command shows) and
-/// decodes them to an Avalonia <see cref="Bitmap"/>, cached by URL so the same avatar is fetched once and
-/// reused by both the chat-history card and the pet's speech bubble. Only PERMANENT failures (a 4xx like
-/// 404) cache as null; transient errors (timeout/5xx/connectivity) stay uncached so a later call retries.
-/// Bitmaps are small (e.g. 96×96 PNGs) and kept for the process lifetime.
+/// Loads small images for the chat/command UI and decodes them to an Avalonia <see cref="Bitmap"/>, cached
+/// by URL so each one is fetched once and reused by both the chat-history card and the pet's speech bubble.
+/// Two sources: remote http(s) images (the MapleStory character canvas the <c>/rank</c> command shows) and
+/// bundled <c>avares://</c> app resources (e.g. the <c>/esfera</c> guide image). Only PERMANENT failures (a
+/// 4xx like 404, or any bundled-asset failure) cache as null; transient remote errors (timeout/5xx/
+/// connectivity) stay uncached so a later call retries. Bitmaps are small and kept for the process lifetime.
 /// </summary>
 public static class ImageCache
 {
@@ -31,12 +33,28 @@ public static class ImageCache
     }
 
     /// <summary>Return the decoded bitmap for <paramref name="url"/> (cached), or null if it can't be loaded.
-    /// Safe to call repeatedly and concurrently — calls for the same URL share a single download.</summary>
+    /// Accepts a remote http(s) URL or a bundled <c>avares://</c> app-resource URI. Safe to call repeatedly
+    /// and concurrently — calls for the same URL share a single load.</summary>
     public static Task<Bitmap?> LoadAsync(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return Task.FromResult<Bitmap?>(null);
         if (Cache.TryGetValue(url, out var cached)) return Task.FromResult(cached);
-        return InFlight.GetOrAdd(url, DownloadAsync);
+        return InFlight.GetOrAdd(url, LoadFactoryAsync);
+    }
+
+    /// <summary>True for an Avalonia embedded-resource URI (a bundled app asset, e.g.
+    /// <c>avares://MaplePet/Assets/…</c>) as opposed to a remote image. Bundled images are shown whole;
+    /// only remote character canvases get center-cropped (see <see cref="CropCharacterCanvas"/>).</summary>
+    public static bool IsBundledAsset(string? url)
+        => url is not null && url.StartsWith("avares://", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Load an image for a speech bubble / history card and prepare it for display: remote character
+    /// canvases (from <c>/rank</c>) are center-cropped to drop their wide transparent margin; bundled app
+    /// images (from <c>/esfera</c>) are shown whole. Cached like <see cref="LoadAsync"/>; null if unloadable.</summary>
+    public static async Task<IImage?> LoadBubbleImageAsync(string? url)
+    {
+        var bmp = await LoadAsync(url).ConfigureAwait(false);
+        return IsBundledAsset(url) ? (IImage?)bmp : CropCharacterCanvas(bmp);
     }
 
     /// <summary>The center square (in px) a character render is cropped to. Both the GMS and Open API canvases
@@ -55,24 +73,35 @@ public static class ImageCache
         return new CroppedBitmap(src, new PixelRect((w - cw) / 2, (h - ch) / 2, cw, ch));
     }
 
-    private static async Task<Bitmap?> DownloadAsync(string url)
+    private static async Task<Bitmap?> LoadFactoryAsync(string url)
     {
         try
         {
             // Another caller may have cached this between LoadAsync's check and this factory running.
             if (Cache.TryGetValue(url, out var hit)) return hit;
-            byte[] bytes = await Http.GetByteArrayAsync(url).ConfigureAwait(false);
-            using var ms = new MemoryStream(bytes);
-            var bmp = new Bitmap(ms);
+            Bitmap bmp;
+            if (IsBundledAsset(url))
+            {
+                // Embedded app resource: decoded straight from the bundle, no network.
+                using var s = AssetLoader.Open(new Uri(url));
+                bmp = new Bitmap(s);
+            }
+            else
+            {
+                byte[] bytes = await Http.GetByteArrayAsync(url).ConfigureAwait(false);
+                using var ms = new MemoryStream(bytes);
+                bmp = new Bitmap(ms);
+            }
             Cache[url] = bmp;
             return bmp;
         }
         catch (Exception ex)
         {
-            // Only negatively-cache PERMANENT failures (a 4xx such as 404 won't fix itself). Transient errors
-            // — timeouts, 5xx, DNS/connectivity blips, a truncated download — are left UNcached so a later
-            // /rank retries, instead of the avatar being dead for the whole (days-long) process lifetime.
-            if (ex is HttpRequestException { StatusCode: { } sc } && (int)sc is >= 400 and < 500)
+            // Negatively-cache only PERMANENT failures, so they don't re-fail for the whole (days-long)
+            // process lifetime: a bundled asset that won't load (missing/renamed/corrupt) never will, and a
+            // remote 4xx (e.g. 404) won't fix itself. Transient remote errors — timeouts, 5xx, DNS blips, a
+            // truncated download — are left UNcached so a later /rank retries.
+            if (IsBundledAsset(url) || (ex is HttpRequestException { StatusCode: { } sc } && (int)sc is >= 400 and < 500))
                 Cache[url] = null;
             return null;
         }

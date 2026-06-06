@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -35,6 +37,7 @@ public sealed class SayBarWindow : Window
     private const double BarWidth = 600;
     private const double BottomMarginLogical = 120;
     private const double HistoryMaxHeight = 320;
+    private const double CommandHoldSeconds = 12; // default time a command result holds the pet still (overridable per command)
 
     private static readonly string[] ThinkFrames = { "•", "• •", "• • •" };
 
@@ -49,9 +52,14 @@ public sealed class SayBarWindow : Window
     private readonly ScrollViewer _historyScroller;
     private readonly Border _historyHost;
     private readonly Button _toggle;
+    private readonly ListBox _commandMenu;
+    private readonly Border _commandMenuHost;
 
     private bool _everActivated;
     private bool _busy;
+    // True once the user has arrowed into the command dropdown — Enter then accepts the highlighted command
+    // instead of submitting (so typing a full command and pressing Enter still runs it). Reset on every edit.
+    private bool _menuNavigated;
     private DispatcherTimer? _thinkTimer;
     private int _thinkFrame;
 
@@ -100,6 +108,50 @@ public sealed class SayBarWindow : Window
         };
         _historyHost = new Border { Child = _historyScroller, IsVisible = false };
 
+        // --- command dropdown (above the input, shown while typing a '/' command name) ---
+        _commandMenu = new ListBox
+        {
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(4),
+            MaxHeight = 240, // scrolls if the command list ever outgrows the bar
+            ItemTemplate = new FuncDataTemplate<ChatCommands.CommandInfo>((ci, _) =>
+            {
+                var sp = new StackPanel { Spacing = 1 };
+                sp.Children.Add(new TextBlock
+                {
+                    Text = ci.Usage,
+                    FontWeight = FontWeight.SemiBold,
+                    FontSize = 13,
+                    Foreground = FrostTheme.TextPrimary,
+                });
+                sp.Children.Add(new TextBlock
+                {
+                    Text = ci.Help,
+                    FontSize = 11,
+                    Foreground = FrostTheme.TextSecondary,
+                    TextWrapping = TextWrapping.Wrap,
+                });
+                return sp;
+            }, supportsRecycling: true),
+        };
+        // A click/tap on a row accepts it (selection updates on press, before this fires).
+        _commandMenu.Tapped += (_, _) =>
+        {
+            if (_commandMenu.SelectedItem is ChatCommands.CommandInfo ci) AcceptCommand(ci);
+        };
+        var menuStack = new StackPanel { Margin = new Thickness(14, 10, 14, 2) };
+        menuStack.Children.Add(new TextBlock
+        {
+            Text = "Commands",
+            FontSize = 11,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = FrostTheme.TextSecondary,
+            Margin = new Thickness(8, 0, 0, 4),
+        });
+        menuStack.Children.Add(_commandMenu);
+        _commandMenuHost = new Border { Child = menuStack, IsVisible = false };
+
         // --- input row ---
         _input = new TextBox
         {
@@ -111,6 +163,7 @@ public sealed class SayBarWindow : Window
         };
         _input.Classes.Add("sayInput");
         _input.KeyDown += OnInputKeyDown;
+        _input.TextChanged += (_, _) => UpdateCommandMenu();
 
         _toggle = new Button { VerticalAlignment = VerticalAlignment.Center, IsVisible = cfg.EnableChatbot };
         _toggle.Classes.Add("ghost");
@@ -145,8 +198,10 @@ public sealed class SayBarWindow : Window
 
         var dock = new DockPanel();
         DockPanel.SetDock(row, Dock.Bottom);
+        DockPanel.SetDock(_commandMenuHost, Dock.Bottom); // sits directly above the input, under any history
         dock.Children.Add(row);
-        dock.Children.Add(_historyHost);
+        dock.Children.Add(_commandMenuHost);
+        dock.Children.Add(_historyHost); // last = fills the remaining top space
 
         var acrylic = new ExperimentalAcrylicBorder
         {
@@ -179,13 +234,94 @@ public sealed class SayBarWindow : Window
         _toggle.IsVisible = _cfg.EnableChatbot; // reflect a settings change since last open
         PositionAtBottomCenter();
         _input.Focus();
+        UpdateCommandMenu(); // reflect any text left over from a previous open
         Dispatcher.UIThread.Post(() => _everActivated = true);
     }
 
     private void OnInputKeyDown(object? sender, KeyEventArgs e)
     {
+        // While the command dropdown is up it owns the arrow/Tab/Esc keys (and Enter once you've arrowed
+        // into it), so it behaves like an autocomplete instead of moving the caret or dismissing the bar.
+        if (MenuOpen)
+        {
+            switch (e.Key)
+            {
+                case Key.Down: MoveMenuSelection(1); e.Handled = true; return;
+                case Key.Up: MoveMenuSelection(-1); e.Handled = true; return;
+                case Key.Tab:
+                    if (_commandMenu.SelectedItem is ChatCommands.CommandInfo tab) AcceptCommand(tab);
+                    e.Handled = true; // never let Tab move focus out of the bar while the menu is up
+                    return;
+                case Key.Escape: HideCommandMenu(); e.Handled = true; return;
+                case Key.Enter:
+                    // Accept the highlighted command only if the user actually navigated the list; otherwise
+                    // fall through so a typed-out command (e.g. "/ssc") still submits on Enter.
+                    if (_menuNavigated && _commandMenu.SelectedItem is ChatCommands.CommandInfo ent)
+                    { AcceptCommand(ent); e.Handled = true; return; }
+                    break;
+            }
+        }
+
         if (e.Key == Key.Enter) { Submit(); e.Handled = true; }
         else if (e.Key == Key.Escape) { HideRequested?.Invoke(); e.Handled = true; }
+    }
+
+    // ---- command dropdown --------------------------------------------------------
+
+    private bool MenuOpen => _commandMenuHost.IsVisible;
+
+    /// <summary>Refresh the '/' command dropdown for the current input. It shows only while the user is still
+    /// typing the command NAME — i.e. the first character is '/' and no space has been typed yet (a space
+    /// means the name is settled and arguments are being entered). The list is filtered by the typed prefix.</summary>
+    private void UpdateCommandMenu()
+    {
+        _menuNavigated = false; // any edit drops out of keyboard-navigation mode
+        var text = _input.Text ?? "";
+        if (text.Length == 0 || text[0] != ChatCommands.Prefix || text.Contains(' '))
+        {
+            HideCommandMenu();
+            return;
+        }
+
+        string token = text[1..];
+        var matches = _commands.Commands
+            .Where(c => c.Name.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (matches.Count == 0)
+        {
+            HideCommandMenu();
+            return;
+        }
+
+        _commandMenu.ItemsSource = matches;
+        _commandMenu.SelectedIndex = 0;
+        _commandMenuHost.IsVisible = true;
+    }
+
+    private void HideCommandMenu()
+    {
+        _commandMenuHost.IsVisible = false;
+        _menuNavigated = false;
+    }
+
+    private void MoveMenuSelection(int delta)
+    {
+        int count = _commandMenu.ItemCount;
+        if (count == 0) return;
+        int i = Math.Clamp(_commandMenu.SelectedIndex + delta, 0, count - 1);
+        _commandMenu.SelectedIndex = i;
+        _commandMenu.ScrollIntoView(i);
+        _menuNavigated = true;
+    }
+
+    /// <summary>Fill the bar with the chosen command and a trailing space (ready for arguments; the space
+    /// also dismisses the menu), keep focus in the input, and put the caret at the end.</summary>
+    private void AcceptCommand(ChatCommands.CommandInfo cmd)
+    {
+        _input.Text = $"{ChatCommands.Prefix}{cmd.Name} ";
+        _input.CaretIndex = _input.Text.Length;
+        HideCommandMenu();
+        _input.Focus();
     }
 
     // async void — MUST NOT let any exception escape, or it crashes the process. The whole body is guarded.
@@ -220,11 +356,14 @@ public sealed class SayBarWindow : Window
                 if (!string.IsNullOrEmpty(cmd.ClipboardText)) await SetClipboardAsync(cmd.ClipboardText);
                 var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
                 // A command link (e.g. /rank's MapleRanks page) shows as a clickable line in the pet's bubble
-                // (and, when open, in history). A bubble link gets a longer dwell so there's time to click it.
-                // The bubble link is ALWAYS shown; it's only made click-hittable while no focusable window is
-                // up (see PetWindow.TickInput), so it can't swallow presses meant for an open say bar.
-                double secs = cmd.Link is null ? ChatSpeechSeconds(ctext) : Math.Max(ChatSpeechSeconds(ctext), 12);
-                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl);
+                // (and, when open, in history). The bubble link is ALWAYS shown; it's only made click-hittable
+                // while no focusable window is up (see PetWindow.TickInput), so it can't swallow presses meant
+                // for an open say bar.
+                // Command results hold the pet still (freezeMovement) so they stay put to read — until the user
+                // pokes the pet or this per-command timer elapses (default CommandHoldSeconds; /esfera asks for
+                // longer to read its guide).
+                double secs = cmd.HoldSeconds ?? CommandHoldSeconds;
+                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
                 if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl); _input.Focus(); }
                 return;
             }
@@ -331,15 +470,17 @@ public sealed class SayBarWindow : Window
     {
         var body = new StackPanel();
 
-        // Optional character image (e.g. /rank's canvas), shown atop the card and loaded async (cached).
+        // Optional image (a /rank character canvas, or a /esfera guide), shown atop the card and loaded async
+        // (cached). DownOnly means the cap only shrinks oversized images (the guide) — a small avatar stays
+        // its native size — so this matches the speech bubble's ImgMax.
         if (!string.IsNullOrWhiteSpace(imageUrl))
         {
             var img = new Image
             {
                 Stretch = Stretch.Uniform,
-                StretchDirection = StretchDirection.DownOnly, // match the bubble: clamp big images, never upscale
-                MaxWidth = 120,
-                MaxHeight = 120,
+                StretchDirection = StretchDirection.DownOnly, // clamp big images, never upscale
+                MaxWidth = 420,
+                MaxHeight = 420,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 0, 0, 6),
             };
@@ -400,14 +541,13 @@ public sealed class SayBarWindow : Window
     private void ScrollToEnd() =>
         Dispatcher.UIThread.Post(() => _historyScroller.Offset = new Vector(0, double.MaxValue), DispatcherPriority.Background);
 
-    /// <summary>Load <paramref name="url"/> (cached) and set it as the image's source once ready. Fire and
-    /// forget; failures leave the placeholder blank.</summary>
+    /// <summary>Load <paramref name="url"/> (cached, remote or bundled) and set it as the image's source once
+    /// ready. Fire and forget; failures leave the placeholder blank.</summary>
     private static async void LoadImageInto(Image target, string url)
     {
         try
         {
-            var bmp = await MaplePet.Rendering.ImageCache.LoadAsync(url);
-            var img = MaplePet.Rendering.ImageCache.CropCharacterCanvas(bmp);
+            var img = await MaplePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
             if (img is not null) target.Source = img;
         }
         catch { /* ignore image failures */ }

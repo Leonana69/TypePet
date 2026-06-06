@@ -57,6 +57,12 @@ public sealed class PetController
     /// mid-pose; cleared when the action ends, after which roaming resumes on the next idle.</summary>
     public bool RoamingSuspended { get; private set; }
 
+    /// <summary>When true the pet is held in place for a command speech bubble: it stays exactly where it is
+    /// — crucially including hanging on a ladder, instead of stepping off it — and neither roams nor follows
+    /// a route until released. An in-progress fall still completes (so it can't hang in mid-air). Set via
+    /// <see cref="Freeze"/>, cleared by <see cref="Unfreeze"/>.</summary>
+    public bool Frozen { get; private set; }
+
     /// <summary>The lowest feet-Y (logical px) the pet will roam to: targets on platforms below this
     /// are skipped, keeping the (tall) pet clear of the screen bottom. Set from the overlay;
     /// +infinity means no limit. The ground stays reachable for spawning/landing regardless.</summary>
@@ -115,6 +121,31 @@ public sealed class PetController
         if (world.Platforms.Count == 0) return;
 
         EnsureSpawn(world);
+
+        // Held still for a command bubble: stay put — including hanging on a ladder rather than stepping off
+        // it (a plain idle would lose support mid-rope and fall). But physics that would move the pet against
+        // its will still applies: if the window it's standing or hanging on is dragged away, it drops and
+        // (on landing) stands in the default pose — all while staying frozen until the bubble clears.
+        if (Frozen)
+        {
+            switch (State)
+            {
+                case PetState.Rope:
+                    // Ladder moved/closed out from under us -> fall, then stand where we land.
+                    if (Physics.FindLadderAt(world, _ropeX, FeetY, LadderXTol, SupportTol, _ropeDir) is null)
+                    { _standAfterLanding = true; BeginFall(); }
+                    break;
+                case PetState.Stand:
+                    // Platform moved/closed out from under us -> fall, then stand where we land.
+                    if (Physics.FindSupport(world, CenterX, FeetY, SupportTol) is null)
+                    { _standAfterLanding = true; BeginFall(); }
+                    break;
+                case PetState.Jump:
+                    UpdateJump(world, dt); // finish the fall, then stand (default pose) and hold
+                    break;
+            }
+            return;
+        }
 
         // Rebuild the nav graph only when the window geometry actually changed (or JumpHeight was
         // edited live, which changes which gaps are jumpable). A fresh World instance is produced
@@ -231,6 +262,25 @@ public sealed class PetController
 
     /// <summary>Stop any motion and stand idle where the pet currently is.</summary>
     public void StopAndIdle() => EnterStand();
+
+    /// <summary>Hold the pet exactly where it is while a command speech bubble is shown (see
+    /// <see cref="Frozen"/>): drop any route and stop progressing, but — unlike idling — DON'T step off a
+    /// ladder; a rope pet keeps hanging on it. A walking pet stands (it has support); one still airborne
+    /// finishes its fall and then holds where it lands. Cleared by <see cref="Unfreeze"/>.</summary>
+    public void Freeze()
+    {
+        Frozen = true;
+        _path = null;
+        _hasTarget = false;
+        _pendingReplan = false;
+        if (State == PetState.Walk) EnterStand();              // stop on the platform (it has support)
+        else if (State == PetState.Jump) _standAfterLanding = true; // finish falling, then hold on landing
+        // Stand / Rope: keep the current position and pose as-is (a laddered pet stays on the rope).
+    }
+
+    /// <summary>Release a <see cref="Freeze"/>: resume autonomous behaviour from wherever the pet is. A pet
+    /// left hanging on a ladder finishes climbing to its prior target, then idles and may roam again.</summary>
+    public void Unfreeze() => Frozen = false;
 
     /// <summary>Face left (-1) or right (+1). Ignored for 0.</summary>
     public void SetFacing(int dir)
