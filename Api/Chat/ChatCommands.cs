@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Platform;
+using MaplePet.Api;
 
 namespace MaplePet.Api.Chat;
 
@@ -27,7 +32,7 @@ public sealed record CommandResult(
 }
 
 /// <summary>
-/// Slash-command handling for the input bar. Commands are deterministic and run <b>without the LLM</b>
+/// Slash-command handling for the input bar. Most commands are deterministic and run <b>without the LLM</b>
 /// — so they work even when the chatbot is off or unconfigured. A message that begins with '/' is parsed
 /// into a command name + argument string and dispatched here; the <see cref="CommandResult"/> is then
 /// shown the same way as a chat reply (the pet speaks it; it's added to history if the panel is open).
@@ -39,6 +44,10 @@ public sealed record CommandResult(
 /// (<see cref="NexonGmsRankApi"/>, default <c>-na</c>, with a true global rank), <c>-kr</c>/<c>-sea</c> =
 /// KMS/MSEA via the maple.gg profile scrape (<see cref="MapleGgScraper"/>), <c>-tw</c> = TMS via the
 /// keyless maple-kit proxy (<see cref="MapleKitApi"/>).
+///
+/// The one exception to "no LLM" is <c>/fortune</c>, which asks the active chat provider to play a Maple
+/// World oracle — so it needs the chatbot enabled and a configured provider (injected as
+/// <c>chatEnabled</c> / <c>buildConfig</c>) and reports a friendly error if either is missing.
 /// </summary>
 public sealed class ChatCommands
 {
@@ -48,18 +57,32 @@ public sealed class ChatCommands
     private readonly NexonGmsRankApi _gms = new();
     private readonly MapleGgScraper _mapleGg = new();
     private readonly MapleKitApi _mapleKit = new();
+    private readonly Func<bool> _chatEnabled;
+    private readonly Func<ChatSessionConfig?> _buildConfig;
+    private readonly Func<IPetControl?> _pet;
     private readonly IReadOnlyList<Command> _commands;
 
     /// <summary>UI-facing metadata for every registered command (name, usage, help), in declared order.
     /// Used by the say bar to populate its '/' command dropdown; the handler delegates stay private.</summary>
     public IReadOnlyList<CommandInfo> Commands { get; }
 
-    public ChatCommands()
+    /// <param name="chatEnabled">Whether the chatbot is turned on (Settings → Chatbot). Only the LLM-backed
+    /// <c>/fortune</c> consults it; the keyless commands ignore it.</param>
+    /// <param name="buildConfig">Resolves the active provider into a ready chat session (backend + model +
+    /// key), or null when nothing usable is configured — used by <c>/fortune</c> to call the model.</param>
+    /// <param name="pet">The live pet control, or null when not ready. <c>/fortune</c> reads its available
+    /// expressions (to offer the model) and makes the pet wear the one the oracle picks.</param>
+    public ChatCommands(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig, Func<IPetControl?> pet)
     {
+        _chatEnabled = chatEnabled;
+        _buildConfig = buildConfig;
+        _pet = pet;
         _commands = new[]
         {
             new Command("rank", $"/rank [{RankServers.FlagList.Replace(", ", "|")}] <character>",
                 "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
+            new Command("fortune", "/fortune [name]",
+                "Have the Maple World oracle read your daily luck (needs the chatbot enabled + configured).", FortuneAsync),
             new Command("ssc", "/ssc", "Copy \"Sacred Symbol/claim\" to the clipboard.", Copy("Sacred Symbol/claim")),
             new Command("asc", "/asc", "Copy \"Arcane Symbol/claim\" to the clipboard.", Copy("Arcane Symbol/claim")),
             new Command("esfera", "/esfera", "Show the Esfera guide image.", EsferaAsync),
@@ -149,6 +172,161 @@ public sealed class ChatCommands
         string token = sp < 0 ? s : s[..sp];
         string rest = sp < 0 ? "" : s[(sp + 1)..].Trim();
         return (token.TrimStart('-').ToLowerInvariant(), rest);
+    }
+
+    /// <summary>The bundled fortune-teller system prompt (an <c>avares:</c> app resource compiled into the
+    /// assembly). Read on demand via <see cref="LoadFortunePrompt"/>; placeholders are filled per call.</summary>
+    private const string FortunePromptUri = "avares://MaplePet/Assets/Program/Prompts/fortune_teller.md";
+
+    /// <summary>How long the fortune (speech bubble + the matching pet expression) stays on screen.</summary>
+    private const double FortuneHoldSeconds = 60;
+
+    /// <summary>The luck tiers the oracle can roll, weighted MapleStory-style: ordinary days are common, a
+    /// boom day stings now and then, and a Legendary jackpot is rare. The SYSTEM rolls this (not the model)
+    /// — the prompt states the tier is "provided by the system" so the reply just narrates the result.</summary>
+    private static readonly (string Tier, int Weight)[] LuckTiers =
+    {
+        ("Boom", 10), ("Rare", 35), ("Epic", 30), ("Unique", 18), ("Legendary", 7),
+    };
+
+    /// <summary>Per-tier face candidates, tried in order as a fallback when the model didn't name a usable
+    /// expression. Filtered against the character's actual expressions, so names it lacks are skipped — these
+    /// are the common MapleStory face names, but any that don't exist for the worn character are ignored.</summary>
+    private static readonly Dictionary<string, string[]> TierExpressions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Boom"] = new[] { "despair", "cry", "troubled", "pain", "stunned", "hit" },
+        ["Rare"] = new[] { "blink", "hum", "smile" },
+        ["Epic"] = new[] { "smile", "hum", "cheers" },
+        ["Unique"] = new[] { "cheers", "love", "glitter", "smile" },
+        ["Legendary"] = new[] { "cheers", "glitter", "shine", "love", "wink", "smile" },
+    };
+
+    /// <summary><c>/fortune [name]</c> — the one LLM-backed command. It asks the active chat provider to
+    /// read the user's daily MapleStory "luck" using the bundled oracle persona. Unlike the keyless
+    /// commands it requires the chatbot ON and a configured provider, so it checks both up front and
+    /// returns a friendly error if either is missing. The luck tier is rolled here (not by the model); the
+    /// oracle also picks a facial expression from the worn character's set, which the pet then wears for as
+    /// long as the spoken fortune is held. An optional argument names the Mapler (defaults to "Mapler").</summary>
+    private async Task<CommandResult> FortuneAsync(string args, CancellationToken ct)
+    {
+        if (!_chatEnabled())
+            return CommandResult.Error("🔮 The crystal ball is dark — enable the chatbot in Settings → Chatbot to read your fortune.");
+
+        var cfg = _buildConfig();
+        if (cfg is null)
+            return CommandResult.Error("🔮 No chat provider is configured — add an API key in Settings → Chatbot to read your fortune.");
+
+        string? template = LoadFortunePrompt();
+        if (template is null)
+            return CommandResult.Error("Couldn't load the fortune-teller prompt.");
+
+        // The oracle picks a face for the pet to wear, so it can only choose from what THIS character
+        // supports. Read the live capability snapshot (best-effort: the pet may not be ready yet).
+        var pet = _pet();
+        IReadOnlyList<string> expressions = Array.Empty<string>();
+        if (pet is not null)
+        {
+            try { expressions = (await pet.GetCapabilities()).Expressions.Select(e => e.Name).ToArray(); }
+            catch { /* pet not ready — carry on without a chosen expression */ }
+        }
+
+        string tier = RollLuckTier();
+        string name = args.Trim();
+        if (name.Length == 0) name = "Mapler";
+
+        string system = template
+            .Replace("{{luck_tier}}", tier)
+            .Replace("{{user_name}}", name)
+            .Replace("{{date}}", DateTime.Now.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture))
+            .Replace("{{expressions}}", expressions.Count > 0 ? string.Join(", ", expressions) : "(none)");
+
+        // One-shot call: the persona lives entirely in the system prompt and we offer no tools, so the model
+        // just returns the fortune text (no agent loop needed).
+        var req = new ChatRequest(
+            system,
+            new[] { ChatMessage.User("Read my fortune for today.") },
+            Array.Empty<ChatToolDef>(),
+            cfg.Model,
+            cfg.MaxTokens);
+
+        ChatTurn turn = await cfg.Backend.SendAsync(req, ct).ConfigureAwait(false);
+
+        // The reply leads with an "Expression: <name>" line. Pull it out (and ALWAYS strip it so it never
+        // shows in the spoken bubble), then fall back to a tier-appropriate face if the model omitted it or
+        // named one this character lacks.
+        var (chosen, text) = ExtractExpression(turn.Text ?? "", expressions);
+        chosen ??= FallbackExpression(tier, expressions);
+        if (text.Length == 0)
+            return CommandResult.Error("🔮 The oracle is silent right now — try again in a moment.");
+
+        // Make the pet physically wear the divined mood for as long as the fortune is shown.
+        if (pet is not null && chosen is not null)
+            _ = pet.Expression(chosen, FortuneHoldSeconds);
+
+        // Hold the fortune on screen for a minute so the whole reading can be savoured.
+        return CommandResult.Ok(text, holdSeconds: FortuneHoldSeconds);
+    }
+
+    /// <summary>Pick a luck tier by weight (see <see cref="LuckTiers"/>).</summary>
+    private static string RollLuckTier()
+    {
+        int total = LuckTiers.Sum(t => t.Weight);
+        int roll = Random.Shared.Next(total);
+        foreach (var (tier, weight) in LuckTiers)
+        {
+            if (roll < weight) return tier;
+            roll -= weight;
+        }
+        return LuckTiers[0].Tier; // unreachable: roll is always < total
+    }
+
+    /// <summary>Split the model's reply into (chosen expression, spoken text). It finds a line like
+    /// <c>Expression: smile</c> anywhere in the reply, removes it from the spoken text regardless, and
+    /// returns the named expression only when it matches one the character actually has (case-insensitive,
+    /// so the stray directive never leaks into the bubble even if the name is unknown).</summary>
+    private static (string? expression, string text) ExtractExpression(string raw, IReadOnlyCollection<string> available)
+    {
+        var kept = new List<string>();
+        string? picked = null;
+        foreach (var line in raw.Replace("\r\n", "\n").Split('\n'))
+        {
+            var m = Regex.Match(line, @"^\s*expression\s*[:=]\s*(.+?)\s*$", RegexOptions.IgnoreCase);
+            if (picked is null && m.Success)
+            {
+                string val = m.Groups[1].Value.Trim().Trim('[', ']', '"', '\'', '*', '.');
+                picked = available.FirstOrDefault(n => string.Equals(n, val, StringComparison.OrdinalIgnoreCase));
+                continue; // drop the machine-readable line whether or not the name was valid
+            }
+            kept.Add(line);
+        }
+        return (picked, string.Join("\n", kept).Trim());
+    }
+
+    /// <summary>Pick a face matching the tier from <see cref="TierExpressions"/>, falling back to "smile" or
+    /// any available expression. Null only when the character exposes no expressions at all.</summary>
+    private static string? FallbackExpression(string tier, IReadOnlyCollection<string> available)
+    {
+        if (available.Count == 0) return null;
+        if (TierExpressions.TryGetValue(tier, out var prefs))
+            foreach (var p in prefs)
+            {
+                var m = available.FirstOrDefault(n => string.Equals(n, p, StringComparison.OrdinalIgnoreCase));
+                if (m is not null) return m;
+            }
+        return available.FirstOrDefault(n => string.Equals(n, "smile", StringComparison.OrdinalIgnoreCase))
+               ?? available.First();
+    }
+
+    /// <summary>Read the bundled fortune-teller prompt template, or null if it can't be loaded.</summary>
+    private static string? LoadFortunePrompt()
+    {
+        try
+        {
+            using var s = AssetLoader.Open(new Uri(FortunePromptUri));
+            using var r = new StreamReader(s);
+            return r.ReadToEnd();
+        }
+        catch { return null; }
     }
 
     private Task<CommandResult> HelpAsync(string args, CancellationToken ct)

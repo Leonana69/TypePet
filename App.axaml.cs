@@ -216,9 +216,12 @@ public partial class App : Application
         // thinking animation + spoken reply); the app only shows/hides it.
         if (_sayBar is null)
         {
-            // Slash commands run locally (no LLM); /rank picks its server per call via a flag (all keyless),
-            // so the command handler needs no settings or keys.
-            _commands ??= new ChatCommands();
+            // Slash commands run locally; most need no LLM (/rank picks its server per call via a flag, all
+            // keyless). The exception is /fortune, which calls the active chat provider — so it's handed the
+            // same "chatbot enabled?" + "provider configured?" probes the say bar uses, plus the pet control
+            // (it reads the character's expressions and makes the pet wear the one the oracle divines).
+            _commands ??= new ChatCommands(
+                () => _settings?.EnableChatbot ?? false, BuildChatConfig, () => _petWindow?.Control);
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
                 () => BuildChatConfig() is not null, _commands);
             _sayBar.HideRequested += HideSayBar;
