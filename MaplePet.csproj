@@ -94,6 +94,13 @@
     <Compile Remove="Platform/Mac/**/*.cs" />
   </ItemGroup>
 
+  <!-- Dev tooling that lives in the repo but is NOT part of the app: tools/chargen is the standalone
+       generator that draws the original default character (its own csproj + Main). Keep its sources out
+       of the app compile so the SDK's **/*.cs glob doesn't pull in a second entry point. -->
+  <ItemGroup>
+    <Compile Remove="tools/**/*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
