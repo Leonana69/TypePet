@@ -155,6 +155,10 @@ public sealed class WebTools
             string title = Collapse(doc.Title ?? "");
             string desc = MetaDescription(doc);
 
+            // Plain text drops <a> hrefs, so a link like "Class Discord" loses its real invite URL and the
+            // model guesses one. Fold the target into the text ("Class Discord (https://discord.gg/…)") first.
+            AnnotateLinks(doc, uri);
+
             foreach (var el in doc.QuerySelectorAll("script, style, noscript, nav, footer, header, aside, form, svg"))
                 el.Remove();
             string body = Collapse(doc.Body?.TextContent ?? "");
@@ -205,6 +209,35 @@ public sealed class WebTools
     {
         var m = doc.QuerySelector("meta[name='description']") ?? doc.QuerySelector("meta[property='og:description']");
         return Collapse(m?.GetAttribute("content") ?? "");
+    }
+
+    /// <summary>Fold each EXTERNAL link's target into its anchor text as "text (href)", so the plain-text
+    /// extraction keeps real URLs (Discord invites, wikis, videos) instead of just the words. Internal
+    /// same-site links are left alone — they're navigational noise and the model can construct those itself.
+    /// Absolute http(s) only; each target annotated once; capped so a link farm can't flood the output.</summary>
+    private static void AnnotateLinks(IDocument doc, Uri pageUri)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int annotated = 0;
+        foreach (var a in doc.QuerySelectorAll("a[href]"))
+        {
+            if (annotated >= 40) break;
+            if (!Uri.TryCreate(a.GetAttribute("href"), UriKind.Absolute, out var lu)) continue;
+            if (lu.Scheme != Uri.UriSchemeHttp && lu.Scheme != Uri.UriSchemeHttps) continue;
+            if (SameHost(lu.Host, pageUri.Host)) continue;                            // skip internal links
+            string text = Collapse(a.TextContent);
+            if (text.Length == 0) continue;                                           // image-only / empty
+            if (text.Contains(lu.Host, StringComparison.OrdinalIgnoreCase)) continue; // text already shows the URL
+            if (!seen.Add(lu.AbsoluteUri)) continue;                                  // annotate each target once
+            a.TextContent = $"{text} ({lu.AbsoluteUri})";
+            annotated++;
+        }
+    }
+
+    private static bool SameHost(string a, string b)
+    {
+        static string N(string h) => h.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? h[4..] : h;
+        return string.Equals(N(a), N(b), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Collapse(string s) => string.IsNullOrEmpty(s) ? "" : Regex.Replace(s, @"\s+", " ").Trim();

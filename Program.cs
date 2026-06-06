@@ -56,6 +56,15 @@ internal static class Program
             return MaplePet.Views.MarkupTest.Run();
         }
 
+        // Dev-only: print exactly what web_fetch / maple_lookup would extract from a page (incl. annotated
+        // link targets). Pure HTTP + HTML parse, no Avalonia. Usage: --fetch-test "<url>".
+        if (ParseOption(args, "--fetch-test") is string fetchUrl)
+        {
+            try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
+            Console.WriteLine(MaplePet.Api.Chat.WebTools.FetchReadableAsync(fetchUrl, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
+            return 0;
+        }
+
 #if MACOS
         // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
         if (Array.IndexOf(args, "--mac-windump") >= 0)

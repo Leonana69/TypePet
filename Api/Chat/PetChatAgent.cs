@@ -153,6 +153,7 @@ public sealed class PetChatAgent
         sb.AppendLine();
         sb.AppendLine("HOW TO REPLY:");
         sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet AND shown in the chat. Keep it concise and conversational — a sentence or two when you can. You may use **bold** or *italic* for light emphasis and include links/URLs (the chat shows them as clickable); avoid headings, bullet lists, tables, and code blocks.");
+        sb.AppendLine("- If you mention a link or URL, copy it EXACTLY as it appears in the page or search result — never invent or guess invite codes, IDs, or slugs. If the page doesn't show the URL, say so instead of making one up.");
         sb.AppendLine("- React with your body using the tools: set_expression / do_action to emote, face / walk_to / move_to to move. Pick what fits the mood (happy → smile/cheers; bad news → troubled; success → an action). Don't overdo it — usually one expression and maybe one action per reply.");
         if (searchOn)
         {
