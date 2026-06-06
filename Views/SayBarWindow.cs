@@ -354,6 +354,9 @@ public sealed class SayBarWindow : Window
                 // A command can ask for text to be put on the clipboard (e.g. /ssc, /asc). The write is a UI
                 // concern (needs a TopLevel), so the command only carries the text and the say bar copies it.
                 if (!string.IsNullOrEmpty(cmd.ClipboardText)) await SetClipboardAsync(cmd.ClipboardText);
+                // /clear wipes the conversation: reset the agent's context AND the visible bubbles (including
+                // the "/clear" line just added above). The say bar owns both, so the command only flags intent.
+                if (cmd.ClearHistory) { _agent()?.Reset(); ClearHistory(); }
                 var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
                 // A command link (e.g. /rank's MapleRanks page) shows as a clickable line in the pet's bubble
                 // (and, when open, in history). The bubble link is ALWAYS shown; it's only made click-hittable
@@ -364,7 +367,12 @@ public sealed class SayBarWindow : Window
                 // longer to read its guide).
                 double secs = cmd.HoldSeconds ?? CommandHoldSeconds;
                 _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
-                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl); _input.Focus(); }
+                if (keepOpen)
+                {
+                    // After /clear the history is intentionally empty — don't re-add a bubble for the result.
+                    if (!cmd.ClearHistory) AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl);
+                    _input.Focus();
+                }
                 return;
             }
 
@@ -453,6 +461,14 @@ public sealed class SayBarWindow : Window
         _historyHost.IsVisible = _cfg.ChatHistoryVisible && _history.Children.Count > 0;
 
     private void UpdateToggleGlyph() => _toggle.Content = _cfg.ChatHistoryVisible ? "⌄" : "⌃";
+
+    /// <summary>Wipe all conversation bubbles (used by <c>/clear</c>). The agent's own context is reset
+    /// separately by the caller; this just empties the visible panel, which then collapses itself.</summary>
+    private void ClearHistory()
+    {
+        _history.Children.Clear();
+        UpdateHistoryVisibility();
+    }
 
     // ---- message bubbles ---------------------------------------------------------
 

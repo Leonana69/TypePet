@@ -19,14 +19,18 @@ namespace MaplePet.Api.Chat;
 /// optional image (e.g. the character canvas) shown in both the pet's bubble and the history card.
 /// <see cref="ClipboardText"/>, when set, is written to the system clipboard by the say bar (which owns a
 /// <c>TopLevel</c>); the command stays UI-free and only carries the text to copy. <see cref="HoldSeconds"/>
-/// overrides how long the pet holds the result bubble (and stays still) — null uses the say bar's default.</summary>
+/// overrides how long the pet holds the result bubble (and stays still) — null uses the say bar's default.
+/// <see cref="ClearHistory"/>, when true (<c>/clear</c>), tells the say bar to wipe the conversation — both
+/// the visible history bubbles and the chat agent's context — after speaking this result; like the clipboard
+/// write, the command only carries the intent because the say bar owns the history and the agent.</summary>
 public sealed record CommandResult(
     string Text, IReadOnlyList<WebSource> Sources, bool IsError, WebSource? Link = null, string? ImageUrl = null,
-    string? ClipboardText = null, double? HoldSeconds = null)
+    string? ClipboardText = null, double? HoldSeconds = null, bool ClearHistory = false)
 {
     public static CommandResult Ok(string text, IReadOnlyList<WebSource>? sources = null,
-        WebSource? link = null, string? imageUrl = null, string? clipboardText = null, double? holdSeconds = null)
-        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl, clipboardText, holdSeconds);
+        WebSource? link = null, string? imageUrl = null, string? clipboardText = null, double? holdSeconds = null,
+        bool clearHistory = false)
+        => new(text, sources ?? Array.Empty<WebSource>(), false, link, imageUrl, clipboardText, holdSeconds, clearHistory);
 
     public static CommandResult Error(string text) => new(text, Array.Empty<WebSource>(), true);
 }
@@ -86,6 +90,7 @@ public sealed class ChatCommands
             new Command("ssc", "/ssc", "Copy \"Sacred Symbol/claim\" to the clipboard.", Copy("Sacred Symbol/claim")),
             new Command("asc", "/asc", "Copy \"Arcane Symbol/claim\" to the clipboard.", Copy("Arcane Symbol/claim")),
             new Command("esfera", "/esfera", "Show the Esfera guide image.", EsferaAsync),
+            new Command("clear", "/clear", "Clear the chat history and start a fresh conversation.", ClearAsync),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
         Commands = _commands.Select(c => new CommandInfo(c.Name, c.Usage, c.Help)).ToArray();
@@ -334,6 +339,12 @@ public sealed class ChatCommands
         string list = string.Join("\n", _commands.Select(c => $"{c.Usage} — {c.Help}"));
         return Task.FromResult(CommandResult.Ok("Commands:\n" + list));
     }
+
+    /// <summary><c>/clear</c> — start a fresh conversation. The command itself is pure: it just sets
+    /// <see cref="CommandResult.ClearHistory"/>; the say bar does the actual wipe (visible bubbles + the chat
+    /// agent's context), since it owns both. Works whether or not the chatbot is on.</summary>
+    private static Task<CommandResult> ClearAsync(string args, CancellationToken ct)
+        => Task.FromResult(CommandResult.Ok("🧹 Chat history cleared.", clearHistory: true));
 
     /// <summary>Builds a no-argument command that puts a fixed string on the system clipboard. The handler is
     /// pure — it just returns the text to copy (via <see cref="CommandResult.ClipboardText"/>) plus the line
