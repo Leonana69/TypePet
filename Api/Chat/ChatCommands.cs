@@ -372,7 +372,7 @@ public sealed class ChatCommands
     {
         var lines = new List<string> { $"{r.Name} · Lv.{r.Level} · {r.Class}" };
         if (r.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add(r.World);
+        lines.Add($"World: {r.World}");
         lines.Add(r.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
         if (r.Guild is not null) lines.Add($"Guild: {r.Guild}");
         if (r.UnionLevel is int ul && ul > 0)
@@ -387,7 +387,7 @@ public sealed class ChatCommands
     {
         var lines = new List<string> { $"{m.Name} · Lv.{m.Level} · {m.Class}" };
         if (m.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add(m.World);
+        lines.Add($"World: {m.World}");
         lines.Add(m.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
         if (m.Guild is not null) lines.Add($"Guild: {m.Guild}");
         if (m.LegionLevel is int legion && legion > 0) lines.Add($"Legion Lv.{legion:N0}");
@@ -403,7 +403,7 @@ public sealed class ChatCommands
         };
         // EXP progress through the current level, as a text bar (omitted at the level cap, where it's null).
         if (g.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add(g.World);
+        lines.Add($"World: {g.World}");
         // Rank is the command's headline and GMS's unique offering (the other servers don't expose a global
         // rank). If it's somehow missing (degenerate row), show the server alone rather than a bogus "#0".
         lines.Add(g.Rank > 0 ? $"{server.Label} · Rank #{g.Rank:N0}" : server.Label);
