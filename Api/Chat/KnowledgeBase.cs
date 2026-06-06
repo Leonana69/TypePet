@@ -210,8 +210,9 @@ public sealed class KnowledgeBase
         string lang = DetectLanguage(query);
         var sb = new StringBuilder();
         sb.AppendLine($"Question language: {lang}. Sources are ranked below — a {lang} source is preferred. " +
-                      "Pick one, build a concrete URL from its template (map class names to the English slug), " +
-                      "then call maple_lookup again with that `url` to read the page.");
+                      "Do NOT answer from this directory alone: pick the top source, build a concrete `url` from " +
+                      "its template (map the class name to the English slug), then call maple_lookup AGAIN with " +
+                      "that `url` to fetch the page — and answer the user from what that page says.");
         sb.AppendLine();
         sb.Append(Directory(Rank(query, lang)));
         return (sb.ToString().TrimEnd(), Array.Empty<WebSource>());

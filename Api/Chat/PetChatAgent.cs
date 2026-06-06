@@ -167,9 +167,10 @@ public sealed class PetChatAgent
         if (!string.IsNullOrWhiteSpace(mapleDigest))
         {
             sb.AppendLine("MAPLESTORY KNOWLEDGE:");
-            sb.AppendLine("- For MapleStory class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), prefer the curated reference sites below over a generic web search — use the maple_lookup tool.");
-            sb.AppendLine("- First call maple_lookup with just a `query` to get the ranked sources and their URL templates (a source in the question's language is preferred), then call it again with a concrete `url` you build from a template to read the page.");
-            sb.AppendLine("- The question's language decides the source: a Korean question prefers a Korean site. Map class names to the English URL slug yourself (e.g. 히어로 → hero).");
+            sb.AppendLine("- For MapleStory class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), use the maple_lookup tool to read the curated reference sites below instead of answering from memory or a generic search.");
+            sb.AppendLine("- Two steps, and you MUST do BOTH: (1) call maple_lookup with a `query` to get the ranked sources + URL templates (a source in the question's language is preferred); (2) build a concrete `url` from a template and call maple_lookup AGAIN to actually fetch and read that page. Never stop after step 1 — a directory of links is not an answer.");
+            sb.AppendLine("- Then ANSWER the question directly from what the page says: name the actual skills/values (e.g. the top recommended link skills and their pick rates) in a sentence or two, in the user's language, and mention the source briefly. NEVER reply with only a link, a generic closer, or 'go check the site' — pulling the answer out of the page is your job.");
+            sb.AppendLine("- The question's language decides the source: a Korean question prefers a Korean site. Map the class name to the English URL slug yourself (e.g. 히어로 → hero, 아란 → aran).");
             sb.AppendLine("Available MapleStory sources:");
             sb.AppendLine(mapleDigest);
         }
