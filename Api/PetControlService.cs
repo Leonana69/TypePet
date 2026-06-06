@@ -29,14 +29,22 @@ public sealed class PetControlService : IPetControl
     private readonly Func<World?> _world;
     private readonly Func<MaplePet.Engine.Rect> _bounds;
     private readonly Func<(string id, string name)> _character;
-    private readonly Action<string?, double?> _setSpeech;
+    private readonly Action<string?, double?, string?, string?, string?, bool> _setSpeech; // text, seconds, linkUrl, linkLabel, imageUrl, freezeMovement
+
+    /// <summary>Picks the random attack stance for attack actions. Control commands all marshal onto the
+    /// UI thread, so a single shared Random needs no synchronization.</summary>
+    private readonly Random _rng = new();
+
+    /// <summary>Every commanded gesture plays at least this many cycles, so a quick one-shot pose
+    /// (a swing, a heal) is clearly visible rather than flashing past in a single pass.</summary>
+    private const int MinActionCycles = 2;
 
     public event Action? CapabilitiesChanged;
 
     public PetControlService(
         Func<PetController?> pet, Func<CharacterAnimator?> animator, Func<CharacterSprites?> sprites,
         Func<World?> world, Func<MaplePet.Engine.Rect> bounds, Func<(string id, string name)> character,
-        Action<string?, double?> setSpeech)
+        Action<string?, double?, string?, string?, string?, bool> setSpeech)
     {
         _pet = pet;
         _animator = animator;
@@ -61,17 +69,29 @@ public sealed class PetControlService : IPetControl
         var def = ActionRegistry.Resolve(action);
         if (def is null)
             return Logged($"DoAction({action})", ControlResult.Reject($"unknown action '{action}'. Available: {ActionNames(sprites)}"));
-        if (sprites?.GetPose(def.Pose) is null)
-            return Logged($"DoAction({action})", ControlResult.Unsupported($"this character has no '{def.Name}' animation. Available: {ActionNames(sprites)}"));
-        if (pet.IsDragging)
-            return Logged($"DoAction({action})", ControlResult.Reject("can't act while being dragged"));
-        if (def.RequiresGrounded && pet.State is not (PetState.Stand or PetState.Walk))
-            return Logged($"DoAction({action})", ControlResult.Reject($"'{def.Name}' needs the pet on the ground (currently {pet.State})"));
 
-        var m = ParseMode(mode, def.Mode);
+        // Attack actions have no fixed pose — pick one of the worn character's matching stances at
+        // random; ordinary actions use their declared pose. Either way it must exist on this character.
+        string? pose = def.IsAttack ? PickAttackPose(sprites, def.Attack) : def.Pose;
+        if (string.IsNullOrEmpty(pose) || sprites?.GetPose(pose) is null)
+            return Logged($"DoAction({def.Name})", ControlResult.Unsupported($"this character has no '{def.Name}' animation. Available: {ActionNames(sprites)}"));
+        if (pet.IsDragging)
+            return Logged($"DoAction({def.Name})", ControlResult.Reject("can't act while being dragged"));
+        if (def.RequiresGrounded && pet.State is not (PetState.Stand or PetState.Walk))
+            return Logged($"DoAction({def.Name})", ControlResult.Reject($"'{def.Name}' needs the pet on the ground (currently {pet.State})"));
+
         pet.SuspendRoaming();
         pet.StopAndIdle();
-        anim.SetAction(def.Pose, m);
+        if (def.IsAttack)
+        {
+            // Strike, then hold "alert" for a few seconds (the animator drives the sequence). A second
+            // attack within that window re-strikes and re-arms the alert; roaming resumes only once the
+            // whole sequence ends (the tick loop polls ActionJustCompleted).
+            anim.BeginAttack(pose);
+            return Logged($"DoAction({def.Name}:{pose})", ControlResult.Success($"attacking ({pose})"));
+        }
+        var m = ParseMode(mode, def.Mode);
+        anim.SetAction(pose, m, MinActionCycles);
         return Logged($"DoAction({def.Name},{m})", ControlResult.Success($"playing {def.Name}"));
     });
 
@@ -150,8 +170,9 @@ public sealed class PetControlService : IPetControl
 
     public Task<ControlResult> AcquireControl() => OnUi(() =>
     {
-        var pet = _pet();
+        var (pet, anim, _) = Live();
         if (pet is null) return ControlResult.Fail("pet not ready");
+        anim?.SetAction(null); // taking manual control clears any in-flight strike/alert pose + its timer
         pet.AcquireControl();
         return Logged("AcquireControl", ControlResult.Success("manual control acquired"));
     });
@@ -165,11 +186,14 @@ public sealed class PetControlService : IPetControl
         return Logged("ReleaseControl", ControlResult.Success("returned to autonomous mode"));
     });
 
-    public Task<ControlResult> Say(string text, double? seconds = null) => OnUi(() =>
+    public Task<ControlResult> Say(string text, double? seconds = null, string? linkUrl = null, string? linkLabel = null, string? imageUrl = null, bool freezeMovement = false) => OnUi(() =>
     {
         if (string.IsNullOrWhiteSpace(text)) return ControlResult.Reject("text is empty");
         double secs = seconds is double s && s > 0 ? s : DefaultSpeechSeconds(text);
-        _setSpeech(text, secs);
+        // A link is only meaningful with both a URL and a visible label; otherwise drop it.
+        bool hasLink = !string.IsNullOrWhiteSpace(linkUrl) && !string.IsNullOrWhiteSpace(linkLabel);
+        _setSpeech(text, secs, hasLink ? linkUrl : null, hasLink ? linkLabel : null,
+            string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl, freezeMovement);
         return Logged($"Say(\"{Truncate(text)}\")", ControlResult.Success());
     });
 
@@ -199,7 +223,7 @@ public sealed class PetControlService : IPetControl
         var actions = sprites is null
             ? new List<ActionInfo>()
             : ActionRegistry.All
-                .Where(a => sprites.GetPose(a.Pose) is not null)
+                .Where(a => IsAvailable(a, sprites))
                 .Select(a => new ActionInfo(a.Name, a.Mode == ActionMode.Hold, a.Description))
                 .ToList();
 
@@ -256,7 +280,41 @@ public sealed class PetControlService : IPetControl
 
     private static string ActionNames(CharacterSprites? s) => s is null
         ? ""
-        : string.Join(", ", ActionRegistry.All.Where(a => s.GetPose(a.Pose) is not null).Select(a => a.Name));
+        : string.Join(", ", ActionRegistry.All.Where(a => IsAvailable(a, s)).Select(a => a.Name));
+
+    /// <summary>True if the worn character can perform <paramref name="def"/>: for an attack action it
+    /// must have at least one matching stance; otherwise it must have the action's fixed pose.</summary>
+    private static bool IsAvailable(ActionDef def, CharacterSprites? sprites)
+    {
+        if (sprites is null) return false;
+        if (!def.IsAttack) return sprites.GetPose(def.Pose) is not null;
+        return def.Attack == AttackKind.Any
+            ? Attacks.Kinds.Any(k => HasAny(sprites, k))
+            : HasAny(sprites, def.Attack);
+    }
+
+    /// <summary>Whether the character has any stance for one attack kind.</summary>
+    private static bool HasAny(CharacterSprites sprites, AttackKind kind)
+        => Attacks.Variants(kind).Any(p => sprites.GetPose(p) is not null);
+
+    /// <summary>
+    /// Choose a random attack stance the worn character actually has for <paramref name="kind"/>. For
+    /// <see cref="AttackKind.Any"/> ("attack") it first picks uniformly among the attack KINDS the
+    /// character can do (stab/swing/shoot) — so the result isn't biased toward whichever kind has the
+    /// most variants — then a random variant within it. Returns null if no matching stance exists.
+    /// </summary>
+    private string? PickAttackPose(CharacterSprites? sprites, AttackKind kind)
+    {
+        if (sprites is null) return null;
+        if (kind == AttackKind.Any)
+        {
+            var kinds = Attacks.Kinds.Where(k => HasAny(sprites, k)).ToList();
+            if (kinds.Count == 0) return null;
+            kind = kinds[_rng.Next(kinds.Count)];
+        }
+        var pool = Attacks.Variants(kind).Where(p => sprites.GetPose(p) is not null).ToList();
+        return pool.Count == 0 ? null : pool[_rng.Next(pool.Count)];
+    }
 
     private static string ExpressionNames(CharacterSprites? s) => s is null
         ? ""

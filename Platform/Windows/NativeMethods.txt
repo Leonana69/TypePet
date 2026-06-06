@@ -6,6 +6,12 @@ GetWindowRect
 GetWindowTextLength
 GetClassName
 GetForegroundWindow
+SetForegroundWindow
+GetWindowThreadProcessId
+AttachThreadInput
+GetCurrentThreadId
+BringWindowToTop
+SetFocus
 MonitorFromWindow
 GetMonitorInfo
 MONITORINFO

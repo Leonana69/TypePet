@@ -1,5 +1,7 @@
 using System;
 using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
 
 namespace MaplePet;
@@ -22,6 +24,11 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Last-resort crash logging: a WinExe hides unhandled exceptions (the window just vanishes), so
+        // write them to <DataRoot>/crash.log for diagnosis. See the Windows-run troubleshooting notes.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => LogCrash("AppDomain", e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => { LogCrash("UnobservedTask", e.Exception); e.SetObserved(); };
+
         AppState.SmokeSeconds = ParseSmoke(args);
         AppState.RenderPosesDir = ParseOption(args, "--render-poses");
         AppState.RenderPosesFrom = ParseOption(args, "--render-from");
@@ -72,6 +79,17 @@ internal static class Program
         AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .LogToTrace();
+
+    /// <summary>Append an unhandled exception to <c>&lt;DataRoot&gt;/crash.log</c> (best effort).</summary>
+    private static void LogCrash(string source, Exception? ex)
+    {
+        try
+        {
+            var path = Path.Combine(MaplePet.Platform.PlatformServices.AppPaths.DataRoot, "crash.log");
+            File.AppendAllText(path, $"[{DateTime.Now:u}] {source}: {ex}\n\n");
+        }
+        catch { /* nothing more we can do */ }
+    }
 
     private static double ParseSmoke(string[] args)
     {

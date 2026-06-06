@@ -23,11 +23,11 @@ public sealed class PetTools
     public static Task<PetStatus> Describe(IPetControl pet) => pet.GetStatus();
 
     [McpServerTool(Name = "do_action")]
-    [Description("Play an action animation on the pet (e.g. prone, sit, alert, heal, fly, attack, stab). Use a name from 'capabilities'.")]
+    [Description("Play an action animation on the pet (e.g. prone, sit, alert, heal, fly, attack, stab, swing, shoot). 'attack' randomly stabs/swings/shoots with whatever the character carries, then stays alert briefly. Use a name from 'capabilities'.")]
     public static Task<ControlResult> DoAction(
         IPetControl pet,
         [Description("Action name from capabilities, e.g. 'prone' or 'attack'.")] string action,
-        [Description("'once' (play once) or 'hold' (stay until cleared); omit for the action's default.")] string? mode = null)
+        [Description("'once' (play once) or 'hold' (stay until cleared); omit for the action's default. Ignored for attack actions.")] string? mode = null)
         => pet.DoAction(action, mode);
 
     [McpServerTool(Name = "stop_action")]

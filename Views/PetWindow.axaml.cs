@@ -36,6 +36,11 @@ public partial class PetWindow : Window
 
     private string? _speechText;        // active speech bubble (control API's Say), drawn over the pet
     private double _speechRemainingMs;  // countdown until the bubble clears
+    private string? _speechLinkUrl;     // optional URL the bubble's link line opens (cleared with the bubble)
+    private string? _speechLinkLabel;   // the bubble link's display label
+    private string? _speechImageUrl;    // optional character-image URL for the bubble (cleared with it)
+    private Avalonia.Media.IImage? _speechImage; // the loaded + center-cropped image (null until ready)
+    private bool _speechFreeze;         // true while a command bubble is holding the pet still (resumes on clear/poke)
 
     /// <summary>The programmatic control surface for this pet (LLM / MCP). Available after
     /// <see cref="ControlReady"/> fires.</summary>
@@ -49,10 +54,10 @@ public partial class PetWindow : Window
     private bool _wasDragging; // drag state on the previous tick, to fire begin/end once per session
     private readonly Random _rng = new(); // picks the per-drag face expression
     private IPetInput? _input;                // drag/click gestures (Windows: polled cursor + click hook)
-    private IGlobalHotkey? _hotkey;           // global hotkey that opens the say-input bar (may be unsupported)
+    private IGlobalHotkey? _hotkey;           // global hotkey that opens the input bar (may be unsupported)
 
-    /// <summary>Raised (on the UI thread) when the user asks to open the say-input bar — by
-    /// double-clicking the pet or pressing the configured global hotkey.</summary>
+    /// <summary>Raised (on the UI thread) when the user asks to open the input bar — by double-clicking
+    /// the pet or pressing the configured global hotkey.</summary>
     public event Action? SayInputRequested;
 
     /// <summary>While true, the overlay stops re-asserting its topmost z-order, so a focusable window
@@ -220,10 +225,13 @@ public partial class PetWindow : Window
         // the overlay is permanently click-through and never gets Avalonia pointer events; macOS toggles
         // click-through and uses native pointer events).
         _input.Start(new PetInputCallbacks(
-            OnDragBegin: _ => _pet?.BeginDrag(),
+            // Poking (or grabbing) the pet dismisses a held command bubble and lets it move again; the grab
+            // then proceeds as normal. A non-command bubble is left untouched (only its own timeout clears it).
+            OnDragBegin: c => { DismissFrozenSpeech(); _pet?.BeginDrag(); },
             OnDragMove: c => _pet?.DragTo(c),
             OnDragEnd: () => _pet?.EndDrag(),
-            OnSayRequested: RequestSayInput));
+            OnSayRequested: RequestSayInput,
+            OnLinkActivated: OpenSpeechLink));
 
         // Global hotkey that pops up the say-input bar from anywhere (skipped where unsupported — the
         // pet can always be double-clicked to open it instead).
@@ -260,8 +268,8 @@ public partial class PetWindow : Window
     /// subsequent <see cref="SetSayHotkey"/>.</summary>
     public void SuspendSayHotkey() => _hotkey?.Disable();
 
-    /// <summary>Ask the app to open the say-input bar. Posted to the dispatcher so it never runs inline
-    /// on the keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
+    /// <summary>Ask the app to open the input bar. Posted to the dispatcher so it never runs inline on the
+    /// keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
     private void RequestSayInput()
         => Dispatcher.UIThread.Post(() => SayInputRequested?.Invoke());
 
@@ -301,7 +309,21 @@ public partial class PetWindow : Window
     {
         if (_input is null) return;
         bool visible = TryPetHitBoxLogical(out double l, out double t, out double r, out double b);
-        _input.Tick(_screen, visible, l, t, r, b);
+        var pet = visible
+            ? new MaplePet.Platform.Abstractions.HitRect(true, l, t, r, b)
+            : MaplePet.Platform.Abstractions.HitRect.None;
+
+        // The bubble link's clickable box (computed by the renderer last frame, logical px). The link line is
+        // always DRAWN; we only publish it as a hit target when:
+        //  - the authoritative UI-thread URL is set (cleared synchronously by SetSpeech/timeout), so a stale
+        //    renderer rect is never published once the link is gone (else the hook swallows an empty click);
+        //  - no focusable window is up (SuppressOverlayTopmost), so the rect can't swallow a press meant for
+        //    an open say bar that overlaps the bubble (history shows the same link there to click instead).
+        var link = (_speechLinkUrl is not null && !SuppressOverlayTopmost && View.SpeechLinkRect is { } lr)
+            ? new MaplePet.Platform.Abstractions.HitRect(true, lr.Left, lr.Top, lr.Right, lr.Bottom)
+            : MaplePet.Platform.Abstractions.HitRect.None;
+
+        _input.Tick(_screen, pet, link);
     }
 
     private void PollWorld()
@@ -385,7 +407,11 @@ public partial class PetWindow : Window
         {
             UpdateDragExpression(_pet.IsDragging); // react to the grab with a (held) random face
             _pet.Update(_world, dt);
-            _animator?.Update(_sprites, _pet.State, dt);
+            // While the pet is held still for a command bubble AND hanging on a ladder, freeze its climb
+            // animation (advance 0s) so it doesn't appear to climb in place. Other states animate normally:
+            // standing keeps its subtle idle, and a drop (its ladder/window was moved away) plays the fall.
+            double animDt = _pet.Frozen && _pet.State == PetState.Rope ? 0.0 : dt;
+            _animator?.Update(_sprites, _pet.State, animDt);
 
             // Arbitration between commanded actions and autonomy (precedence: drag > action > autonomy):
             if (_pet.IsDragging)
@@ -401,22 +427,84 @@ public partial class PetWindow : Window
             View.Pet = _pet;
         }
 
-        // Speech bubble lifetime.
+        // Speech bubble lifetime. When a command bubble's timer runs out it clears like any other — and, if
+        // it was holding the pet still, releases the hold so the pet resumes roaming.
         if (_speechRemainingMs > 0)
         {
             _speechRemainingMs -= dt * 1000.0;
-            if (_speechRemainingMs <= 0) _speechText = null;
+            if (_speechRemainingMs <= 0)
+            {
+                _speechText = null; _speechLinkUrl = null; _speechLinkLabel = null;
+                _speechImage = null; _speechImageUrl = null;
+                ApplySpeechFreeze(false); // release the hold if this was a command bubble
+            }
         }
         View.Speech = _speechText;
+        View.SpeechLink = _speechLinkLabel;
+        View.SpeechImage = _speechImage;
 
         View.InvalidateVisual();
     }
 
-    /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).</summary>
-    private void SetSpeech(string? text, double? seconds)
+    /// <summary>Set or clear the speech bubble (called by the control API's Say, on the UI thread).
+    /// <paramref name="linkUrl"/>/<paramref name="linkLabel"/> optionally add a clickable link line and
+    /// <paramref name="imageUrl"/> an image (e.g. the character canvas) atop the bubble; all are cleared
+    /// when the bubble does (here or on timeout). When <paramref name="freeze"/> is set (slash commands),
+    /// the pet holds still while the bubble is up — see <see cref="ApplySpeechFreeze"/>.</summary>
+    private void SetSpeech(string? text, double? seconds, string? linkUrl, string? linkLabel, string? imageUrl, bool freeze)
     {
         _speechText = string.IsNullOrWhiteSpace(text) ? null : text;
         _speechRemainingMs = _speechText is null ? 0 : (seconds is double s && s > 0 ? s * 1000.0 : 4000);
+        bool hasLink = _speechText is not null && !string.IsNullOrWhiteSpace(linkUrl) && !string.IsNullOrWhiteSpace(linkLabel);
+        _speechLinkUrl = hasLink ? linkUrl : null;
+        _speechLinkLabel = hasLink ? linkLabel : null;
+
+        // Optional character image: cleared immediately, then loaded async (cached) and shown once ready.
+        _speechImage = null;
+        _speechImageUrl = _speechText is not null && !string.IsNullOrWhiteSpace(imageUrl) ? imageUrl : null;
+        if (_speechImageUrl is { } url) _ = LoadBubbleImageAsync(url);
+
+        // Hold the pet still for a command bubble (and release it when a non-command bubble replaces it).
+        ApplySpeechFreeze(_speechText is not null && freeze);
+    }
+
+    /// <summary>Turn the pet's "hold still while a command bubble is up" on or off. On: the pet holds its
+    /// spot (staying on a ladder rather than dropping off it) and stops wandering, but can still be dragged.
+    /// Off: resume autonomous roaming. Idempotent. See <see cref="PetController.Freeze"/>.</summary>
+    private void ApplySpeechFreeze(bool freeze)
+    {
+        if (freeze == _speechFreeze) return;
+        _speechFreeze = freeze;
+        if (freeze) _pet?.Freeze();
+        else _pet?.Unfreeze();
+    }
+
+    /// <summary>Clear a command bubble that's holding the pet still and let it move again — invoked when the
+    /// user pokes/grabs the pet. A normal (non-frozen) bubble is left to its own timeout.</summary>
+    private void DismissFrozenSpeech()
+    {
+        if (!_speechFreeze) return;
+        _speechText = null; _speechLinkUrl = null; _speechLinkLabel = null;
+        _speechImage = null; _speechImageUrl = null;
+        _speechRemainingMs = 0;
+        ApplySpeechFreeze(false);
+    }
+
+    /// <summary>Fetch the bubble's image (cached, remote or bundled) and show it — but only if a newer bubble
+    /// hasn't since changed the URL, so a slow load can't pop a stale image onto a different message.</summary>
+    private async System.Threading.Tasks.Task LoadBubbleImageAsync(string url)
+    {
+        var img = await MaplePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
+        if (_speechImageUrl == url) _speechImage = img;
+    }
+
+    /// <summary>Open the active speech-bubble link in the default browser (raised by the input layer when
+    /// the user clicks the bubble's link line). Guarded so a stale click can't open a cleared URL.</summary>
+    private void OpenSpeechLink()
+    {
+        if (_speechText is null || _speechLinkUrl is not { Length: > 0 } url) return;
+        try { TopLevel.GetTopLevel(this)?.Launcher.LaunchUriAsync(new Uri(url)); }
+        catch { /* ignore bad URLs */ }
     }
 
     /// <summary>

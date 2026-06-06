@@ -8,3 +8,6 @@ artifacts/
 
 # User-imported pet characters (runtime store; read from disk, not committed)
 Assets/Characters/
+.claude
+api.txt
+Scripts/

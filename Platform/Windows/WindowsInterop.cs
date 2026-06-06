@@ -72,6 +72,37 @@ public static class WindowsInterop
         PInvoke.SetWindowLongPtr(h, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (nint)ex);
     }
 
+    /// <summary>
+    /// Force <paramref name="hwnd"/> to the foreground and give it keyboard focus, bypassing Windows'
+    /// foreground lock. When a GLOBAL HOTKEY fires while another app is active we are a background
+    /// process, and Windows then lets <c>SetForegroundWindow</c> only raise the window's taskbar button —
+    /// not actually focus it — so the say/chat bar would appear but swallow no typing. The standard
+    /// workaround is to briefly attach our input queue to the current foreground thread's, so the OS
+    /// treats the focus change as coming from the active app and honours it.
+    /// </summary>
+    public static void ForceForeground(nint hwnd)
+    {
+        if (hwnd == 0) return;
+        var target = (HWND)hwnd;
+
+        HWND fg = PInvoke.GetForegroundWindow();
+        uint thisThread = PInvoke.GetCurrentThreadId();
+        uint fgThread = fg == HWND.Null ? 0 : PInvoke.GetWindowThreadProcessId(fg, out uint _);
+
+        bool attached = fgThread != 0 && fgThread != thisThread
+                        && PInvoke.AttachThreadInput(thisThread, fgThread, true);
+        try
+        {
+            PInvoke.BringWindowToTop(target);
+            PInvoke.SetForegroundWindow(target);
+            PInvoke.SetFocus(target);
+        }
+        finally
+        {
+            if (attached) PInvoke.AttachThreadInput(thisThread, fgThread, false);
+        }
+    }
+
     /// <summary>Current cursor position in physical screen pixels.</summary>
     public static bool TryGetCursorPos(out int x, out int y)
     {

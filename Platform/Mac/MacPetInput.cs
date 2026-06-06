@@ -18,7 +18,8 @@ namespace MaplePet.Platform.Mac;
 /// </summary>
 public sealed class MacPetInput : IPetInput
 {
-    private const double HitMargin = 12; // become interactive a bit before the cursor reaches the box
+    private const double HitMargin = 12;        // become interactive a bit before the cursor reaches the box
+    private const double LinkClickMaxMove = 6;  // a link press+release that moves less than this is a "click"
 
     private readonly Window _window;
     private readonly IntPtr _win; // NSWindow
@@ -28,6 +29,10 @@ public sealed class MacPetInput : IPetInput
     private bool _interactive = true; // tracks "ignoresMouseEvents == false"; starts true so the first
                                       // SetInteractive(false) actually issues the click-through call
     private bool _dragging;
+    private HitRect _pet;             // the pet's clickable rect (logical px), updated each Tick
+    private HitRect _link;            // the speech-bubble link rect (logical px), updated each Tick
+    private bool _linkArmed;          // a press landed on the link; fire on the matching in-place release
+    private Vec2 _linkDownPos;        // cursor at that press, to tell an in-place click from a drag-off
 
     public MacPetInput(Window overlay)
     {
@@ -45,47 +50,93 @@ public sealed class MacPetInput : IPetInput
         SetInteractive(false); // click-through to start; Tick re-evaluates each frame
     }
 
-    public void Tick(ScreenSpace screen, bool petVisible, double left, double top, double right, double bottom)
+    public void Tick(ScreenSpace screen, HitRect pet, HitRect link)
     {
         _screen = screen;
+        _pet = pet;
+        _link = link;
         if (_win == IntPtr.Zero) return;
 
-        bool wantInteractive = _dragging; // mid-drag latch
-        if (!wantInteractive && petVisible && TryCursorLogical(out var c))
-            wantInteractive = c.X >= left - HitMargin && c.X <= right + HitMargin
-                           && c.Y >= top - HitMargin && c.Y <= bottom + HitMargin;
+        bool wantInteractive = _dragging || _linkArmed; // latch through an active drag OR link press
+        if (!wantInteractive && TryCursorLogical(out var c))
+            wantInteractive = Near(pet, c) || Near(link, c); // interactive over the pet OR the bubble link
         SetInteractive(wantInteractive);
     }
+
+    /// <summary>True when <paramref name="c"/> is within <paramref name="r"/> plus the hysteresis margin
+    /// (so the overlay flips interactive just before the cursor reaches the box).</summary>
+    private static bool Near(HitRect r, Vec2 c)
+        => r.Visible && c.X >= r.Left - HitMargin && c.X <= r.Right + HitMargin
+                     && c.Y >= r.Top - HitMargin && c.Y <= r.Bottom + HitMargin;
 
     public void CancelActiveGesture()
     {
         _dragging = false;
+        _linkArmed = false;
         SetInteractive(false); // back to click-through; PetWindow already ended the pet's drag
     }
 
+    // The pointer handlers are registered for Tunnel|Bubble + handledEventsToo, so each fires TWICE per
+    // physical event (the window is both the first tunnel target and the last bubble target). The drag path
+    // tolerates that (begin/move/end are idempotent); the link path must not double-open the URL, so it
+    // ARMS on press and fires once on release by clearing _linkArmed before invoking the callback — the
+    // second invocation then sees it disarmed and no-ops.
     private void OnPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(_window).Properties.IsLeftButtonPressed) return;
         var p = e.GetPosition(_window);
+        var pv = new Vec2(p.X, p.Y);
+
+        // A press on the bubble link arms it (the URL opens on the in-place release, so a press-and-drag-off
+        // cancels) and must NOT start a pet drag.
+        if (_link.Contains(pv))
+        {
+            _linkArmed = true;
+            _linkDownPos = pv;
+            e.Pointer.Capture(_window); // keep the release coming even if the interactive toggle flips
+            e.Handled = true;
+            return;
+        }
+
+        // Only start a drag when the press is actually over the pet (mirrors Windows' overPet && !overLink):
+        // the interactive zone extends a margin past the pet/link, so a press in that band must do nothing.
+        if (!_pet.Contains(pv)) return;
+
         e.Pointer.Capture(_window); // keep move/release coming even if the toggle flips mid-drag
         _dragging = true;
-        _cb.OnDragBegin(new Vec2(p.X, p.Y));
+        _cb.OnDragBegin(pv);
         if (e.ClickCount == 2) _cb.OnSayRequested();
     }
 
     private void OnMoved(object? sender, PointerEventArgs e)
     {
-        if (!_dragging) return;
+        if (!_dragging) return; // an armed link press ignores moves; the release decides whether it counts
         var p = e.GetPosition(_window);
         _cb.OnDragMove(new Vec2(p.X, p.Y));
     }
 
     private void OnReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_linkArmed)
+        {
+            _linkArmed = false; // disarm BEFORE firing, so the second (bubble-pass) invocation no-ops
+            e.Pointer.Capture(null);
+            var p = e.GetPosition(_window);
+            var pv = new Vec2(p.X, p.Y);
+            if (_link.Contains(pv) && Dist(pv, _linkDownPos) <= LinkClickMaxMove) _cb.OnLinkActivated();
+            e.Handled = true;
+            return;
+        }
         if (!_dragging) return;
         _dragging = false;
         e.Pointer.Capture(null);
         _cb.OnDragEnd();
+    }
+
+    private static double Dist(Vec2 a, Vec2 b)
+    {
+        double dx = a.X - b.X, dy = a.Y - b.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     private bool TryCursorLogical(out Vec2 logical)

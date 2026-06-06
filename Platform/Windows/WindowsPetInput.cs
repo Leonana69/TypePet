@@ -22,6 +22,11 @@ public sealed class WindowsPetInput : IPetInput
     private bool _dragging;     // a grab is in progress (mirrors the pet's drag state, our source of truth)
     private bool _lmbPrev;      // left button state on the previous tick
 
+    private HitRect _link;          // the speech-bubble link rect (logical px), published each tick
+    private bool _linkArmed;        // a press landed on the link; waiting for an in-place release to activate
+    private Vec2 _linkDownCursor;   // cursor at that press, to tell an in-place click from a drag-off
+    private long _lastLinkFireMs;   // when the link last opened, to debounce a double-click into one open
+
     // Click/double-click synthesis on the (click-through) pet, derived from the polled drag edges.
     private long _downTickMs;     // when the current press on the pet began
     private Vec2 _downCursor;     // cursor at that press, to tell an in-place click from a drag
@@ -37,29 +42,34 @@ public sealed class WindowsPetInput : IPetInput
         _clickBlocker.Install();
     }
 
-    public void Tick(ScreenSpace screen, bool petVisible, double left, double top, double right, double bottom)
+    public void Tick(ScreenSpace screen, HitRect pet, HitRect link)
     {
         _screen = screen;
+        _link = link;
 
-        // 1. Publish the pet's clickable rect to the hook in physical screen px (inverse of the
-        //    cursor->logical conversion), so a grab click landing on the pet is swallowed.
-        if (petVisible)
-            _clickBlocker.SetPetRect(true,
-                (int)Math.Floor(left * _screen.Scale + _screen.OriginX),
-                (int)Math.Floor(top * _screen.Scale + _screen.OriginY),
-                (int)Math.Ceiling(right * _screen.Scale + _screen.OriginX),
-                (int)Math.Ceiling(bottom * _screen.Scale + _screen.OriginY));
+        // 1. Publish the pet + link clickable rects to the hook in physical screen px (inverse of the
+        //    cursor->logical conversion), so a press landing on either is swallowed (never reaches the
+        //    window behind).
+        if (pet.Visible)
+            _clickBlocker.SetPetRect(true, PxL(pet.Left), PxT(pet.Top), PxR(pet.Right), PxB(pet.Bottom));
         else
             _clickBlocker.SetPetRect(false, 0, 0, 0, 0);
 
+        if (link.Visible)
+            _clickBlocker.SetLinkRect(true, PxL(link.Left), PxT(link.Top), PxR(link.Right), PxB(link.Bottom));
+        else
+            _clickBlocker.SetLinkRect(false, 0, 0, 0, 0);
+
         // 2. Poll the cursor + button to drive dragging. Use the hook's button state: a click swallowed
-        //    by the hook (over the pet) isn't seen by GetAsyncKeyState, so the poll would miss the press.
+        //    by the hook (over the pet/link) isn't seen by GetAsyncKeyState, so the poll would miss the press.
         bool lmb = _clickBlocker.LeftButtonDown;
         bool haveCursor = TryCursorLogical(out var cursor);
-        bool overPet = petVisible && haveCursor
-            && cursor.X >= left && cursor.X <= right && cursor.Y >= top && cursor.Y <= bottom;
+        bool overPet = pet.Visible && haveCursor
+            && cursor.X >= pet.Left && cursor.X <= pet.Right && cursor.Y >= pet.Top && cursor.Y <= pet.Bottom;
+        bool overLink = haveCursor && link.Contains(cursor);
 
-        if (!_dragging && lmb && !_lmbPrev && overPet)
+        // Pet drag start. The link takes precedence, so clicking it never grabs/moves the pet.
+        if (!_dragging && lmb && !_lmbPrev && overPet && !overLink)
         {
             _downTickMs = Environment.TickCount64; // press time + point, to tell an in-place click from a drag
             _downCursor = cursor;
@@ -85,17 +95,46 @@ public sealed class WindowsPetInput : IPetInput
                 _cb.OnDragEnd();
             }
         }
+        else
+        {
+            // Link click: a single in-place press+release on the bubble link opens its URL. A debounce
+            // after firing folds a double-click (two press+releases) into a single open.
+            if (!_linkArmed && lmb && !_lmbPrev && overLink
+                && Environment.TickCount64 - _lastLinkFireMs > WindowsInterop.DoubleClickTimeMs())
+            {
+                _linkArmed = true;
+                _linkDownCursor = cursor;
+            }
+            else if (_linkArmed && !lmb)
+            {
+                if (overLink && haveCursor && Dist(cursor, _linkDownCursor) <= ClickMaxMoveLogicalPx)
+                {
+                    _cb.OnLinkActivated();
+                    _lastLinkFireMs = Environment.TickCount64;
+                }
+                _linkArmed = false;
+            }
+        }
         _lmbPrev = lmb;
     }
+
+    // Logical overlay px -> physical screen px (the hook works in physical px). Floor lefts/tops, ceil
+    // rights/bottoms so the swallowed rect fully covers the drawn region.
+    private int PxL(double v) => (int)Math.Floor(v * _screen.Scale + _screen.OriginX);
+    private int PxT(double v) => (int)Math.Floor(v * _screen.Scale + _screen.OriginY);
+    private int PxR(double v) => (int)Math.Ceiling(v * _screen.Scale + _screen.OriginX);
+    private int PxB(double v) => (int)Math.Ceiling(v * _screen.Scale + _screen.OriginY);
 
     public void CancelActiveGesture()
     {
         // Drop the click hook's swallowed-press latch (so a button-up meant for a fullscreen app behind
         // us isn't eaten) and forget the per-drag input edges so a stale drag can't resume on re-show.
         _clickBlocker.SetPetRect(false, 0, 0, 0, 0);
+        _clickBlocker.SetLinkRect(false, 0, 0, 0, 0);
         _clickBlocker.ResetSwallow();
         _lmbPrev = false;
         _dragging = false;
+        _linkArmed = false;
     }
 
     /// <summary>

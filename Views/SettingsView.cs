@@ -1,10 +1,14 @@
 using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using MaplePet.Api.Chat;
 using MaplePet.Engine;
 using MaplePet.Platform;
 
@@ -20,11 +24,15 @@ namespace MaplePet.Views;
 /// </summary>
 public sealed class SettingsView : UserControl
 {
+    private const double FieldHeight = 34; // shared height so the provider/model/key fields line up
+
     private readonly Settings _cfg;
     // (true)=suspend the live global hotkey while a capture is in progress; (false)=re-arm it afterwards.
     private readonly Action<bool>? _onHotkeyCapture;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort;
-    private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen;
+    private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen, _chatbot, _webSearch;
+    private readonly ComboBox _provider;
+    private readonly Panel _providerHost;
     private readonly Button _hotkeyBtn;
     private string _hotkeyText = "";    // the persisted gesture, mirrored into _cfg by ApplyLive
     private string _hotkeyBefore = "";  // button text to restore if a capture is cancelled
@@ -56,14 +64,6 @@ public sealed class SettingsView : UserControl
         rows.Children.Add(NumberRow("Gravity", "px / second²", cfg.Gravity, 1, 10000, 50, out _gravity));
 
         rows.Children.Add(Divider());
-        rows.Children.Add(Section("SAY INPUT"));
-        // Show a hand-edited/invalid persisted gesture as unset rather than as a fake-active binding.
-        _hotkeyText = HotkeyGesture.IsBindable(cfg.SayInputHotkey) ? cfg.SayInputHotkey : "";
-        _hotkeyBtn = HotkeyButton(_hotkeyText);
-        rows.Children.Add(Row("Open hotkey",
-            "Global shortcut to pop up the say box · you can also double-click the pet", _hotkeyBtn));
-
-        rows.Children.Add(Divider());
         rows.Children.Add(Section("ADVANCED · TAKES EFFECT NEXT LAUNCH"));
         rows.Children.Add(NumberRow("Target FPS", "frames / second", cfg.TargetFps, 15, 240, 5, out _fps));
         rows.Children.Add(NumberRow("World poll", "Hz · how often window geometry is re-read",
@@ -77,6 +77,39 @@ public sealed class SettingsView : UserControl
             "Expose the pet on a local MCP server so an LLM can drive it", _mcp));
         rows.Children.Add(NumberRow("Server port", "localhost port the MCP server listens on",
             cfg.McpPort, 1, 65535, 1, out _mcpPort));
+
+        rows.Children.Add(Divider());
+        rows.Children.Add(Section("CHATBOT · TAKES EFFECT NEXT LAUNCH"));
+        _chatbot = Toggle();
+        _chatbot.IsChecked = cfg.EnableChatbot;
+        rows.Children.Add(ToggleRow("Enable chatbot",
+            "Type in the input bar to chat with an LLM — it can search the web and the pet reacts and speaks the reply. Off = the pet just says what you type.", _chatbot));
+        _webSearch = Toggle();
+        _webSearch.IsChecked = cfg.EnableWebSearch;
+        rows.Children.Add(ToggleRow("Web search",
+            "Let the chatbot search the web and read pages — keyless, via DuckDuckGo. No search key needed.", _webSearch));
+
+        // The input bar's open shortcut (also double-click the pet). Lives here since the bar is the chat.
+        _hotkeyText = HotkeyGesture.IsBindable(cfg.SayInputHotkey) ? cfg.SayInputHotkey : "";
+        _hotkeyBtn = HotkeyButton(_hotkeyText);
+        rows.Children.Add(Row("Open hotkey",
+            "Global shortcut to open the input bar · you can also double-click the pet", _hotkeyBtn));
+
+        // Pick the active provider; only its fields show below. Keys go to the encrypted secret store
+        // (never settings.json); model/base-URL edits persist to the profile. String items (not the
+        // ProviderProfile objects) so the closed combo reliably shows the selected name.
+        _provider = new ComboBox
+        {
+            ItemsSource = cfg.Providers.Select(p => p.DisplayName).ToList(),
+            SelectedIndex = Math.Max(0, cfg.Providers.FindIndex(p => p.Id == cfg.ActiveProviderId)),
+            Width = 240,
+            Height = FieldHeight,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        rows.Children.Add(Row("Provider", "Which LLM the chat uses", _provider));
+        _providerHost = new StackPanel { Margin = new Thickness(0, 2, 0, 0) };
+        rows.Children.Add(_providerHost);
+        RebuildProviderPanel();
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("SYSTEM"));
@@ -113,6 +146,24 @@ public sealed class SettingsView : UserControl
         _mcp.IsCheckedChanged += (_, _) => { _mcpPort.IsEnabled = _mcp.IsChecked == true; ApplyLive(); };
         _mcpPort.IsEnabled = _mcp.IsChecked == true; // the port only matters when the server is on
         _startup.IsCheckedChanged += (_, _) => { if (_ready) ApplyStartup(); };
+        _chatbot.IsCheckedChanged += (_, _) =>
+        {
+            if (!_ready) return;
+            _cfg.EnableChatbot = _chatbot.IsChecked ?? false;
+            _cfg.Save();
+        };
+        _webSearch.IsCheckedChanged += (_, _) =>
+        {
+            if (!_ready) return;
+            _cfg.EnableWebSearch = _webSearch.IsChecked ?? false;
+            _cfg.Save();
+        };
+        _provider.SelectionChanged += (_, _) =>
+        {
+            int i = _provider.SelectedIndex;
+            if (i >= 0 && i < _cfg.Providers.Count) { _cfg.ActiveProviderId = _cfg.Providers[i].Id; _cfg.Save(); }
+            RebuildProviderPanel();
+        };
     }
 
     /// <summary>Push every control's value into the shared <see cref="Settings"/> and persist it.</summary>
@@ -245,6 +296,85 @@ public sealed class SettingsView : UserControl
 
     private static Control ToggleRow(string label, string caption, ToggleSwitch toggle) =>
         Row(label, caption, toggle);
+
+    /// <summary>Rebuild the per-provider field panel for the currently selected provider.</summary>
+    private void RebuildProviderPanel()
+    {
+        int i = _provider.SelectedIndex;
+        var p = (i >= 0 && i < _cfg.Providers.Count) ? _cfg.Providers[i] : _cfg.Providers.FirstOrDefault();
+        _providerHost.Children.Clear();
+        if (p is not null) _providerHost.Children.Add(BuildProviderPanel(p));
+    }
+
+    /// <summary>The fields for one provider: API key (masked), model (a picklist auto-populated from the
+    /// provider, free-text otherwise), and base URL (OpenAI-compatible providers only).</summary>
+    private Control BuildProviderPanel(ProviderProfile p)
+    {
+        var secrets = PlatformServices.SecretStore;
+        var panel = new StackPanel();
+
+        panel.Children.Add(TextRow("API key",
+            p.Kind == "anthropic" ? "Anthropic key (sk-ant-…)" : "Provider key (blank for keyless local servers)",
+            secrets.Get(p.Id) ?? "", 240, v => secrets.Set(p.Id, v), passwordChar: '•'));
+
+        // Model picklist: an AutoCompleteBox that shows the full fetched list on focus (MinimumPrefixLength
+        // = 0) and still allows typing a custom id if the list is empty/unavailable.
+        var model = new AutoCompleteBox
+        {
+            Text = p.Model,
+            Width = 240,
+            Height = FieldHeight,
+            Watermark = "model id",
+            FilterMode = AutoCompleteFilterMode.ContainsOrdinal,
+            MinimumPrefixLength = 0,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        model.TextChanged += (_, _) => { p.Model = model.Text ?? ""; _cfg.Save(); };
+        panel.Children.Add(Row("Model", "Pick or type the model id", model));
+
+        if (p.Kind != "anthropic")
+            panel.Children.Add(TextRow("Base URL", "OpenAI-compatible endpoint (blank = provider default)",
+                p.BaseUrl, 240, v => { p.BaseUrl = v; _cfg.Save(); }));
+
+        // Populate the picklist from the provider (best-effort; stays free-text on failure).
+        if (!p.UsesKey || !string.IsNullOrEmpty(secrets.Get(p.Id)))
+            _ = LoadModelsAsync(p, model);
+
+        return panel;
+    }
+
+    /// <summary>Fetch the provider's model ids into the picklist. Best-effort: on failure the box stays a
+    /// free-text field.</summary>
+    private static async Task LoadModelsAsync(ProviderProfile p, AutoCompleteBox box)
+    {
+        var secrets = PlatformServices.SecretStore;
+        string key = p.UsesKey ? (secrets.Get(p.Id) ?? "") : "";
+        try
+        {
+            var backend = ChatBackendFactory.Create(p.Kind, p.BaseUrl, key,
+                string.IsNullOrEmpty(p.Model) ? "model" : p.Model);
+            var models = await backend.ListModelsAsync(CancellationToken.None);
+            if (models.Count > 0) box.ItemsSource = models;
+        }
+        catch { /* leave as free text */ }
+    }
+
+    /// <summary>A text-input row. <paramref name="onChanged"/> fires on edits only (the initial value is
+    /// set before the handler is attached). Pass <paramref name="passwordChar"/> to mask a secret.</summary>
+    private static Control TextRow(string label, string caption, string initial, double width,
+        Action<string> onChanged, char? passwordChar = null)
+    {
+        var box = new TextBox
+        {
+            Text = initial,
+            Width = width,
+            Height = FieldHeight,
+            VerticalContentAlignment = VerticalAlignment.Center,
+        };
+        if (passwordChar is char pc) box.PasswordChar = pc;
+        box.TextChanged += (_, _) => onChanged(box.Text ?? "");
+        return Row(label, caption, box);
+    }
 
     /// <summary>The right-hand "v1.0.0" value for the About row (version comes from <see cref="AppInfo"/>).</summary>
     private static Control VersionValue()

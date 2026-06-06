@@ -31,6 +31,18 @@ public sealed class Settings
     // A compact gesture string like "Ctrl+Alt+Space"; parsed at the registration site, not here.
     public string SayInputHotkey { get; set; } = "Ctrl+Alt+Space";
 
+    // ---- In-app chatbot (talks to an LLM provider with the user's own key) -------------------------
+    public bool EnableChatbot { get; set; } = false;          // route the input bar to the LLM (vs plain "say")
+    public List<ProviderProfile> Providers { get; set; } = new(); // configured LLM providers (seeded on first run)
+    public string ActiveProviderId { get; set; } = "";        // which profile the chat uses (a Providers[].Id)
+    public bool EnableWebSearch { get; set; } = true;         // keyless DuckDuckGo web_search + web_fetch tools
+    public bool ChatHistoryVisible { get; set; } = true;      // input bar shows the conversation-history panel
+    // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
+    // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
+
+    // The /rank chat command picks its MapleStory server per call via a leading flag (-na/-eu/-kr/-sea/-tw,
+    // default -na) — see RankServers — so the server is no longer a persisted setting.
+
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
 
@@ -99,7 +111,65 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
 
+        // ---- chatbot ----
+        Providers ??= new();
+        if (Providers.Count == 0) SeedDefaultProviders();
+        foreach (var p in Providers) p.Sanitize();
+
+        // Migration: the OpenAI-compatible preset was renamed from "OpenAI" and is now shown first.
+        var oai = Providers.FirstOrDefault(p => p.Id == "openai");
+        if (oai is not null)
+        {
+            if (oai.DisplayName == "OpenAI") oai.DisplayName = "OpenAI Compatible";
+            if (Providers.IndexOf(oai) > 0) { Providers.Remove(oai); Providers.Insert(0, oai); }
+        }
+
+        if (string.IsNullOrWhiteSpace(ActiveProviderId) || Providers.All(p => p.Id != ActiveProviderId))
+            ActiveProviderId = Providers.Count > 0 ? Providers[0].Id : "";
+
         static double Positive(double value, double fallback) =>
             double.IsFinite(value) && value > 0 ? value : fallback;
+    }
+
+    /// <summary>Seed the two prioritized presets on first run (keys are added by the user in Settings).</summary>
+    private void SeedDefaultProviders()
+    {
+        Providers.Add(new ProviderProfile
+        {
+            Id = "openai", DisplayName = "OpenAI Compatible", Kind = "openai",
+            BaseUrl = "https://api.openai.com/v1", Model = "gpt-5.1", UsesKey = true, MaxTokens = 2048,
+        });
+        Providers.Add(new ProviderProfile
+        {
+            Id = "claude", DisplayName = "Claude", Kind = "anthropic",
+            BaseUrl = "", Model = "claude-opus-4-8", UsesKey = true, MaxTokens = 2048,
+        });
+    }
+}
+
+/// <summary>
+/// One configured LLM provider the chatbot can use. <see cref="Kind"/> selects the backend
+/// (<c>"anthropic"</c> → Claude SDK; anything else → the OpenAI-compatible backend, so OpenAI, DeepSeek,
+/// Ollama, and LM Studio are all just a <see cref="BaseUrl"/> + <see cref="Model"/>). The API key is NOT
+/// stored here — it lives in the platform secret store under this profile's <see cref="Id"/>.
+/// </summary>
+public sealed class ProviderProfile
+{
+    public string Id { get; set; } = "";
+    public string DisplayName { get; set; } = "";
+    public string Kind { get; set; } = "openai";   // "anthropic" | "openai"
+    public string BaseUrl { get; set; } = "";       // e.g. https://api.openai.com/v1, http://localhost:11434/v1
+    public string Model { get; set; } = "";
+    public bool UsesKey { get; set; } = true;        // false for keyless local servers (Ollama / LM Studio)
+    public int MaxTokens { get; set; } = 2048;
+
+    public void Sanitize()
+    {
+        if (string.IsNullOrWhiteSpace(Id)) Id = Guid.NewGuid().ToString("N")[..8];
+        if (string.IsNullOrWhiteSpace(DisplayName)) DisplayName = Id;
+        Kind = (Kind?.Trim().ToLowerInvariant()) == "anthropic" ? "anthropic" : "openai";
+        MaxTokens = MaxTokens is >= 256 and <= 32000 ? MaxTokens : 2048;
+        BaseUrl ??= "";
+        Model ??= "";
     }
 }

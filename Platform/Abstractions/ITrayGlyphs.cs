@@ -4,7 +4,7 @@ using Avalonia.Media.Imaging;
 namespace MaplePet.Platform.Abstractions;
 
 /// <summary>The icon shown beside a tray/menu-bar item.</summary>
-public enum TrayGlyph { Contact, Settings, Power }
+public enum TrayGlyph { Contact, Settings, Power, Chat }
 
 /// <summary>
 /// Produces the small bitmaps used for tray menu item icons. Keeps App.axaml.cs free of OS-specific

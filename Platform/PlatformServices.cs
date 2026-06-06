@@ -27,6 +27,16 @@ public static class PlatformServices
         new MacPlatformServices(overlay);
 #endif
 
+    /// <summary>Force <paramref name="hwnd"/> to the foreground with keyboard focus, bypassing the OS
+    /// foreground lock — used to focus the say/chat bar when it's summoned by the global hotkey while
+    /// another app is active. No-op on macOS (and when the handle is 0).</summary>
+    public static void ForceForeground(nint hwnd)
+    {
+#if WINDOWS
+        WindowsInterop.ForceForeground(hwnd);
+#endif
+    }
+
     /// <summary>The single-instance guard acquired by Program.Main, exposed so the app can subscribe to
     /// <see cref="ISingleInstance.Activated"/>. Null until <see cref="AcquireSingleInstance"/> runs (and
     /// on non-interactive launches that skip it).</summary>
@@ -59,6 +69,15 @@ public static class PlatformServices
         new WindowsAppPaths();
 #else
         new MacAppPaths();
+#endif
+
+    /// <summary>Encrypted-at-rest store for chatbot secrets (provider API keys, the web-search key).
+    /// Windows uses DPAPI under <see cref="IAppPaths.DataRoot"/>; macOS uses the login Keychain.</summary>
+    public static ISecretStore SecretStore { get; } =
+#if WINDOWS
+        new WindowsSecretStore(AppPaths.DataRoot);
+#else
+        new MacSecretStore();
 #endif
 
     // The dark Fluent menu surface the Windows tray popup paints behind each item (measured #2B2B2B).
