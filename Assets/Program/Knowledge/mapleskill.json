@@ -1,0 +1,33 @@
+// One MapleStory RAG source for the chatbot (one source per file in this folder).
+// Add a source by dropping another .json file here. Schema: see KnowledgeBase.cs (KnowledgeSource).
+// Selection is language-prioritized: a question in this source's language ("languages") ranks it first.
+// Comments and trailing commas are allowed (the loader skips them).
+{
+  "id": "mapleskill",
+  "name": "MapleSkill",
+  "languages": ["ko"],
+  "region": "KMS",
+  "homepage": "https://mapleskill.com/",
+  "summary": "Korean data-driven class guides (based on the top-100 players): inner ability, hyper skills, link skills, special/boost cores, HEXA stats, job core order, union raid & artifact setups per job.",
+  "topics": [
+    "job guide", "class guide", "inner ability", "hyper skills", "link skills", "skill build",
+    "core enhancement", "hexa stats", "union raid", "union artifact", "boss", "5th job", "6th job",
+    "이너어빌리티", "이너", "하이퍼스킬", "하이퍼", "링크스킬", "링크", "스킬트리", "코어강화", "코강",
+    "헥사", "헥사스탯", "유니온", "공격대", "아티팩트", "직업", "보스", "사냥"
+  ],
+  "templates": [
+    {
+      "urlTemplate": "https://mapleskill.com/jobs/{job}/",
+      "description": "Per-job guide page. {job} is the lowercase English job slug used in the URL path.",
+      "examples": [
+        "https://mapleskill.com/jobs/hero/",
+        "https://mapleskill.com/jobs/darkknight/",
+        "https://mapleskill.com/jobs/bishop/",
+        "https://mapleskill.com/jobs/bowmaster/",
+        "https://mapleskill.com/jobs/nightlord/",
+        "https://mapleskill.com/jobs/archmage-fp/"
+      ]
+    }
+  ],
+  "notes": "URL slugs are lowercase English class names, usually with no separator (darkknight, nightlord, soulmaster), except the two archmages which use a hyphen (archmage-fp, archmage-il). Korean name -> slug: 히어로=hero, 팔라딘=paladin, 다크나이트=darkknight, 소울마스터=soulmaster, 미하일=mikhail, 블래스터=blaster, 데몬슬레이어=demonslayer, 데몬어벤져=demonavenger, 아란=aran, 카이저=kaiser, 아델=adele, 렌=len, 제로=zero, 아크메이지(불독)=archmage-fp, 아크메이지(썬콜)=archmage-il, 비숍=bishop, 플레임위자드=flamewizard, 배틀메이지=battlemage, 에반=evan, 루미너스=luminous, 일리움=illium, 라라=lara, 키네시스=kinesis, 보우마스터=bowmaster, 신궁=marksman, 패스파인더=pathfinder, 윈드브레이커=windbreaker, 와일드헌터=wildhunter, 메르세데스=mercedes, 카인=kain, 나이트로드=nightlord, 섀도어=shadower, 듀얼블레이드=dualblade, 나이트워커=nightwalker, 제논=xenon, 팬텀=phantom, 카데나=cadena, 칼리=khali, 호영=hoyoung, 바이퍼=viper, 캡틴=captain, 캐논슈터=cannonshooter, 스트라이커=striker, 메카닉=mechanic, 은월=eunwol, 엔젤릭버스터=angelicbuster, 아크=ark."
+}

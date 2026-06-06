@@ -1,0 +1,33 @@
+// One MapleStory RAG source for the chatbot (one source per file in this folder).
+// Add a source by dropping another .json file here. Schema: see KnowledgeBase.cs (KnowledgeSource).
+// Selection is language-prioritized: a question in this source's language ("languages") ranks it first.
+// Comments and trailing commas are allowed (the loader skips them).
+{
+  "id": "grandislibrary",
+  "name": "Grandis Library",
+  "languages": ["en"],
+  "region": "GMS",
+  "homepage": "https://grandislibrary.com/classes",
+  "summary": "English class reference for every job: skill build path, link skill, inner ability, hyper skill passives, boost nodes / V matrix trios, base stats, and full active-skill breakdowns. Primary source for English class/skill questions.",
+  "topics": [
+    "class guide", "skill build", "build path", "link skill", "inner ability", "hyper skill", "hyper passive",
+    "hyper stat", "boost nodes", "v matrix", "nodes", "trio", "hexa", "6th job", "5th job", "active skills",
+    "base stats", "bossing", "training", "legion", "weapon", "stats"
+  ],
+  "templates": [
+    {
+      "urlTemplate": "https://grandislibrary.com/{group}/{class}",
+      "description": "Per-class guide. {group} is the class group and {class} is the kebab-case class name — see notes for the full group->class map.",
+      "examples": [
+        "https://grandislibrary.com/explorers/hero",
+        "https://grandislibrary.com/cygnus-knights/wind-archer",
+        "https://grandislibrary.com/heroes/aran",
+        "https://grandislibrary.com/resistance/demon-slayer",
+        "https://grandislibrary.com/nova/kaiser",
+        "https://grandislibrary.com/flora/adele",
+        "https://grandislibrary.com/other/zero"
+      ]
+    }
+  ],
+  "notes": "URL is /{group}/{class}, both lowercase kebab-case. The class GROUP is not guessable from the class name, so use this map. explorers: hero, paladin, dark-knight, bishop, arch-mage-fire-poison, arch-mage-ice-lightning, night-lord, shadower, dual-blade, bowmaster, marksman, pathfinder, buccaneer, corsair, cannoneer. cygnus-knights: dawn-warrior, blaze-wizard, wind-archer, night-walker, thunder-breaker, mihile. heroes: aran, evan, mercedes, phantom, luminous, shade. resistance: blaster, battle-mage, wild-hunter, mechanic, demon-slayer, demon-avenger, xenon. nova: kaiser, kain, cadena, angelic-buster. sengoku: hayato, kanna. flora: adele, ark, illium, khali. anima: hoyoung, lara, ren. jianghu: lynn, mo-xuan. shine: sia-astelle, erel-light. other: zero, kinesis. If a class isn't listed, open https://grandislibrary.com/classes to find its path."
+}

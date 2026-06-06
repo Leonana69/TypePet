@@ -67,12 +67,19 @@ public sealed class KnowledgeBase
 {
     public const string LookupToolName = "maple_lookup";
 
-    private const string CatalogUri = "avares://MaplePet/Assets/Program/Knowledge/sources.json";
+    // One source per .json file lives in this folder; the whole folder is enumerated at load.
+    private const string CatalogDir = "avares://MaplePet/Assets/Program/Knowledge/";
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
+
+    private static readonly JsonDocumentOptions DocOpts = new()
+    {
+        CommentHandling = JsonCommentHandling.Skip,
         AllowTrailingCommas = true,
     };
 
@@ -84,33 +91,61 @@ public sealed class KnowledgeBase
     public bool HasSources => _sources.Count > 0;
     public bool Handles(string name) => name == LookupToolName;
 
-    /// <summary>Load the bundled catalog. Never throws — a missing/invalid file yields an empty base.</summary>
+    /// <summary>Load every bundled source file under <c>Assets/Program/Knowledge/</c> — one source per
+    /// <c>.json</c> file. Grow the knowledge base by dropping a new file there; no code change needed. Never
+    /// throws: a missing folder or a malformed file is skipped, yielding whatever loaded.</summary>
     public static KnowledgeBase LoadBundled()
     {
+        var sources = new List<KnowledgeSource>();
         try
         {
-            using var s = AssetLoader.Open(new Uri(CatalogUri));
-            using var r = new StreamReader(s);
-            return Parse(r.ReadToEnd());
+            foreach (var asset in AssetLoader.GetAssets(new Uri(CatalogDir), null))
+            {
+                if (!asset.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+                try
+                {
+                    using var s = AssetLoader.Open(asset);
+                    using var r = new StreamReader(s);
+                    sources.AddRange(ParseSources(r.ReadToEnd()));
+                }
+                catch { /* skip a malformed source file */ }
+            }
         }
-        catch { return new KnowledgeBase(Array.Empty<KnowledgeSource>()); }
+        catch { /* asset loader unavailable */ }
+
+        // Stable, deterministic order (by id) so ranking ties don't depend on enumeration order.
+        sources.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+        return new KnowledgeBase(sources);
     }
 
-    /// <summary>Parse a catalog JSON string into a base. Drops entries missing an id; never throws.</summary>
-    public static KnowledgeBase Parse(string json)
+    /// <summary>Parse one catalog file's sources. Accepts a single source object (the per-file layout) or a
+    /// <c>{ "sources": [ … ] }</c> wrapper. Drops entries missing an id; never throws.</summary>
+    public static IReadOnlyList<KnowledgeSource> ParseSources(string json)
     {
+        var list = new List<KnowledgeSource>();
         try
         {
-            var doc = JsonSerializer.Deserialize<Catalog>(json, JsonOpts);
-            var list = (doc?.Sources ?? new())
-                .Where(s => s is not null && !string.IsNullOrWhiteSpace(s.Id))
-                .ToList();
-            return new KnowledgeBase(list);
+            using var doc = JsonDocument.Parse(json, DocOpts);
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty("sources", out var arr) && arr.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var el in arr.EnumerateArray()) Add(el, list);
+            }
+            else if (root.ValueKind == JsonValueKind.Object)
+            {
+                Add(root, list);
+            }
         }
-        catch { return new KnowledgeBase(Array.Empty<KnowledgeSource>()); }
-    }
+        catch { /* malformed JSON → no sources from this file */ }
+        return list;
 
-    private sealed class Catalog { public List<KnowledgeSource>? Sources { get; init; } }
+        static void Add(JsonElement el, List<KnowledgeSource> outp)
+        {
+            var s = el.Deserialize<KnowledgeSource>(JsonOpts);
+            if (s is not null && !string.IsNullOrWhiteSpace(s.Id)) outp.Add(s);
+        }
+    }
 
     // ---- language detection ------------------------------------------------------
 
