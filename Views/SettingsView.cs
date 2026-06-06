@@ -8,6 +8,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.Threading;
 using MaplePet.Api.Chat;
 using MaplePet.Engine;
 using MaplePet.Platform;
@@ -38,6 +40,9 @@ public sealed class SettingsView : UserControl
     private string _hotkeyBefore = "";  // button text to restore if a capture is cancelled
     private bool _capturing;            // a key-capture is in progress
     private bool _ready; // suppress change handlers while the initial values are being set
+    private bool _clamping;             // reentrancy guard while a range-clamp rewrites a value
+    private Flyout? _rangeFlyout;       // the transient "out of range" message bubble (reused)
+    private IDisposable? _rangeHide;    // pending auto-hide for _rangeFlyout
 
     public SettingsView(Settings cfg, Action<bool>? onHotkeyCapture = null)
     {
@@ -52,22 +57,22 @@ public sealed class SettingsView : UserControl
         };
 
         rows.Children.Add(Section("MOVEMENT"));
-        rows.Children.Add(NumberRow("Jump height", "px · highest platform it will hop to",
-            cfg.JumpHeight, 0, 4000, 5, out _jump));
-        rows.Children.Add(NumberRow("Walk speed", "px / second", cfg.WalkSpeed, 1, 2000, 5, out _walk));
-        rows.Children.Add(NumberRow("Climb speed", "px / second", cfg.ClimbSpeed, 1, 2000, 5, out _climb));
+        rows.Children.Add(RangeRow("Jump height", "px · highest platform it will hop to",
+            cfg.JumpHeight, 100, 300, 5, out _jump));
+        rows.Children.Add(RangeRow("Walk speed", "px / second", cfg.WalkSpeed, 20, 900, 5, out _walk));
+        rows.Children.Add(RangeRow("Climb speed", "px / second", cfg.ClimbSpeed, 20, 900, 5, out _climb));
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("BEHAVIOR"));
-        rows.Children.Add(NumberRow("Roaming level", "0–100 · how often it wanders when idle",
+        rows.Children.Add(RangeRow("Roaming level", "0–100 · how often it wanders when idle",
             cfg.RoamingLevel, 0, 100, 5, out _roam));
-        rows.Children.Add(NumberRow("Gravity", "px / second²", cfg.Gravity, 1, 10000, 50, out _gravity));
+        rows.Children.Add(RangeRow("Gravity", "px / second²", cfg.Gravity, 20, 10000, 50, out _gravity));
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("ADVANCED · TAKES EFFECT NEXT LAUNCH"));
-        rows.Children.Add(NumberRow("Target FPS", "frames / second", cfg.TargetFps, 15, 240, 5, out _fps));
-        rows.Children.Add(NumberRow("World poll", "Hz · how often window geometry is re-read",
-            cfg.WorldPollHz, 1, 60, 1, out _poll));
+        rows.Children.Add(RangeRow("Target FPS", "frames / second", cfg.TargetFps, 30, 120, 5, out _fps));
+        rows.Children.Add(RangeRow("World poll", "Hz · how often window geometry is re-read",
+            cfg.WorldPollHz, 2, 16, 1, out _poll));
 
         rows.Children.Add(Divider());
         rows.Children.Add(Section("CONTROL API · TAKES EFFECT NEXT LAUNCH"));
@@ -292,6 +297,63 @@ public sealed class SettingsView : UserControl
             VerticalAlignment = VerticalAlignment.Center,
         };
         return Row(label, caption, box);
+    }
+
+    /// <summary>A numeric row whose value is capped to <paramref name="min"/>–<paramref name="max"/>. The
+    /// soft range is enforced in code (and deliberately NOT shown in the caption): an out-of-range entry is
+    /// clamped and a small, self-dismissing flyout reports the limit. The <see cref="NumericUpDown"/> keeps
+    /// generous hard bounds so a typed value reaches the handler instead of being silently coerced first
+    /// (which would also suppress the change event when the field is already sitting at the cap).</summary>
+    private Control RangeRow(string label, string caption, double value,
+        double min, double max, double step, out NumericUpDown box)
+    {
+        var b = new NumericUpDown
+        {
+            Minimum = 0,
+            Maximum = 1_000_000,
+            Increment = (decimal)step,
+            Value = (decimal)Math.Clamp(value, min, max),
+            Width = 124,
+            FormatString = "0.##",
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        // Attached before ApplyLive (wired later in the ctor) so the value is capped before it's persisted.
+        b.ValueChanged += (_, _) => ClampToRange(b, label, min, max);
+        box = b;
+        return Row(label, caption, b);
+    }
+
+    /// <summary>Cap <paramref name="box"/> to [<paramref name="min"/>, <paramref name="max"/>] and, when a
+    /// value was actually out of range, show a brief flyout. Guarded against the re-entrant change raised by
+    /// writing the clamped value back.</summary>
+    private void ClampToRange(NumericUpDown box, string label, double min, double max)
+    {
+        if (!_ready || _clamping || box.Value is not { } dv) return;
+        double v = (double)dv;
+        double clamped = Math.Clamp(v, min, max);
+        if (clamped == v) return;
+
+        _clamping = true;
+        box.Value = (decimal)clamped;
+        _clamping = false;
+        ShowRangeMessage(box, $"{label} must be {min:0.##}–{max:0.##}");
+    }
+
+    /// <summary>Pop a small, self-dismissing flyout by <paramref name="target"/> — the only place a field's
+    /// valid range is surfaced (the row captions intentionally don't list it).</summary>
+    private void ShowRangeMessage(Control target, string message)
+    {
+        _rangeHide?.Dispose();
+        _rangeFlyout?.Hide();
+        var f = new Flyout
+        {
+            Placement = PlacementMode.Top,
+            ShowMode = FlyoutShowMode.Transient, // shown without stealing focus from the field
+            Content = new TextBlock { Text = message, MaxWidth = 260, TextWrapping = TextWrapping.Wrap },
+        };
+        _rangeFlyout = f;
+        f.ShowAt(target);
+        _rangeHide = DispatcherTimer.RunOnce(() => f.Hide(), TimeSpan.FromSeconds(2.2));
     }
 
     private static Control ToggleRow(string label, string caption, ToggleSwitch toggle) =>
