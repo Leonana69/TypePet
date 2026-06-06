@@ -152,7 +152,7 @@ public sealed class PetChatAgent
                       "You are a helpful assistant AND a playful creature with a body.");
         sb.AppendLine();
         sb.AppendLine("HOW TO REPLY:");
-        sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet in a speech bubble. Keep it concise and conversational — a sentence or two when you can. Use plain spoken language: no markdown, bullet lists, headings, or code blocks.");
+        sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet AND shown in the chat. Keep it concise and conversational — a sentence or two when you can. You may use **bold** or *italic* for light emphasis and include links/URLs (the chat shows them as clickable); avoid headings, bullet lists, tables, and code blocks.");
         sb.AppendLine("- React with your body using the tools: set_expression / do_action to emote, face / walk_to / move_to to move. Pick what fits the mood (happy → smile/cheers; bad news → troubled; success → an action). Don't overdo it — usually one expression and maybe one action per reply.");
         if (searchOn)
         {

@@ -366,7 +366,7 @@ public sealed class SayBarWindow : Window
                 // pokes the pet or this per-command timer elapses (default CommandHoldSeconds; /esfera asks for
                 // longer to read its guide).
                 double secs = cmd.HoldSeconds ?? CommandHoldSeconds;
-                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
+                _ = control?.Say(ChatMarkup.ToSpoken(ctext), secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
                 if (keepOpen)
                 {
                     // After /clear the history is intentionally empty — don't re-add a bubble for the result.
@@ -400,7 +400,8 @@ public sealed class SayBarWindow : Window
             var result = await agent!.SendAsync(text, CancellationToken.None);
             StopThinking();
             var reply = string.IsNullOrWhiteSpace(result.Text) ? "…" : result.Text;
-            _ = control!.Say(reply, ChatSpeechSeconds(reply));
+            var spoken = ChatMarkup.ToSpoken(reply); // speech bubble renders raw text — drop the * markers
+            _ = control!.Say(spoken, ChatSpeechSeconds(spoken));
             if (keepOpen) { AddAssistantBubble(reply, result.Sources, result.IsError); _input.Focus(); }
         }
         catch (Exception ex)
@@ -510,12 +511,9 @@ public sealed class SayBarWindow : Window
             LoadImageInto(img, imageUrl!);
         }
 
-        body.Children.Add(new SelectableTextBlock
-        {
-            Text = text,
-            TextWrapping = TextWrapping.Wrap,
-            Foreground = isError ? FrostTheme.StatusError : FrostTheme.TextPrimary,
-        });
+        // Render light inline markdown (**bold**, *italic*) and make links clickable; the body text stays
+        // selectable. The pet's speech bubble gets the stripped/plain version (see ToSpoken at the call site).
+        body.Children.Add(ChatMarkup.BuildBlock(text, isError ? FrostTheme.StatusError : FrostTheme.TextPrimary, OpenUrl));
 
         // A primary "more info" link (e.g. /rank's MapleRanks page). It's an actionable destination, not a
         // citation, so it's shown on its own — NOT under the "Sources" heading.

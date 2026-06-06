@@ -48,6 +48,14 @@ internal static class Program
             return MaplePet.Api.Chat.RagTest.Run(ParseOption(args, "--rag-test"));
         }
 
+        // Dev-only: smoke-test chat inline-markup rendering (bold/italic + clickable links). Builds real
+        // controls, so set up Avalonia without starting the UI.
+        if (Array.IndexOf(args, "--markup-test") >= 0)
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            return MaplePet.Views.MarkupTest.Run();
+        }
+
 #if MACOS
         // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
         if (Array.IndexOf(args, "--mac-windump") >= 0)
