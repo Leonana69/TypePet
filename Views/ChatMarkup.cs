@@ -85,12 +85,18 @@ public static class ChatMarkup
     {
         if (s.Length == 0) return;
         // Emit block/box-drawing glyphs (the /rank EXP bar's █/░) as their own monospace runs so they tile at
-        // a uniform height; the default proportional font renders ░ short and gappy on macOS. See MonoGlyphs.
+        // a uniform height where the default proportional font mis-renders them (░ short and gappy on macOS).
+        // On Windows MonoGlyphs.Mono is null — the default font already aligns █/░ — so emit one plain run.
+        if (MonoGlyphs.Mono is not { } mono)
+        {
+            outp.Add(MakeRun(s, bold, italic, null));
+            return;
+        }
         int pos = 0;
         foreach (var (start, len) in MonoGlyphs.Spans(s))
         {
             if (start > pos) outp.Add(MakeRun(s.Substring(pos, start - pos), bold, italic, null));
-            outp.Add(MakeRun(s.Substring(start, len), bold, italic, MonoGlyphs.Mono));
+            outp.Add(MakeRun(s.Substring(start, len), bold, italic, mono));
             pos = start + len;
         }
         if (pos < s.Length) outp.Add(MakeRun(s.Substring(pos), bold, italic, null));
