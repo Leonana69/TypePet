@@ -6,6 +6,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using MaplePet.Rendering;
 
 namespace MaplePet.Views;
 
@@ -83,11 +84,27 @@ public static class ChatMarkup
     private static void AddRun(string s, bool bold, bool italic, IList<Inline> outp)
     {
         if (s.Length == 0) return;
-        outp.Add(new Run(s)
+        // Emit block/box-drawing glyphs (the /rank EXP bar's █/░) as their own monospace runs so they tile at
+        // a uniform height; the default proportional font renders ░ short and gappy on macOS. See MonoGlyphs.
+        int pos = 0;
+        foreach (var (start, len) in MonoGlyphs.Spans(s))
+        {
+            if (start > pos) outp.Add(MakeRun(s.Substring(pos, start - pos), bold, italic, null));
+            outp.Add(MakeRun(s.Substring(start, len), bold, italic, MonoGlyphs.Mono));
+            pos = start + len;
+        }
+        if (pos < s.Length) outp.Add(MakeRun(s.Substring(pos), bold, italic, null));
+    }
+
+    private static Run MakeRun(string s, bool bold, bool italic, FontFamily? family)
+    {
+        var run = new Run(s)
         {
             FontWeight = bold ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = italic ? FontStyle.Italic : FontStyle.Normal,
-        });
+        };
+        if (family is not null) run.FontFamily = family;
+        return run;
     }
 
     private static void AddLink(string url, bool bold, bool italic, IList<Inline> outp, Action<string> openUrl)

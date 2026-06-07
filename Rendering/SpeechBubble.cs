@@ -47,6 +47,10 @@ public static class SpeechBubble
 
         var ft = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
             Typeface.Default, FontSize, TextBrush) { MaxTextWidth = MaxTextWidth };
+        // Draw any block/box-drawing glyphs (the /rank EXP bar's █ and ░) in a monospace font — the default
+        // proportional font renders ░ shorter than █ and with gaps on macOS, leaving the bar ragged. See MonoGlyphs.
+        foreach (var (start, len) in MonoGlyphs.Spans(text))
+            ft.SetFontFamily(MonoGlyphs.Mono, start, len);
 
         // Optional link line (its own underlined, blue FormattedText below the message).
         string link = Sanitize(linkLabel ?? "");
