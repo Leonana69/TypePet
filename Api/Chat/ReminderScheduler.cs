@@ -210,15 +210,32 @@ public sealed class ReminderScheduler : IDisposable
         if (!recurring) entry.Timer?.Dispose();
 
         var pet = _pet();
-        if (pet is not null)
+        if (pet is not null) _ = AnnounceAsync(pet, message); // fire-and-forget; never blocks the timer thread
+        _onChanged?.Invoke(); // recurring: due time advanced; once: reminder removed — persist either way
+    }
+
+    /// <summary>Announce a fired reminder: show the speech bubble (held, movement frozen) and play a random
+    /// one-shot action so the pet visibly reacts when the reminder comes due. The action is picked from the
+    /// worn character's supported actions and forced to "once" so it's a transient gesture, not a held pose;
+    /// if the pet can't act right now (e.g. mid-fall) the control just declines and only the bubble shows.
+    /// All best-effort — a failure here must never crash the timer thread.</summary>
+    private static async Task AnnounceAsync(IPetControl pet, string message)
+    {
+        try
         {
             string text = "⏰ " + message; // ⏰
             // Hold the bubble (and freeze wandering) long enough to read; scales with message length.
             double secs = Math.Clamp(6 + message.Length * 0.07, 6, 30);
-            try { _ = pet.Say(text, secs, freezeMovement: true); }
-            catch { /* a failed Say must never crash the timer thread */ }
+            await pet.Say(text, secs, freezeMovement: true).ConfigureAwait(false);
+
+            var caps = await pet.GetCapabilities().ConfigureAwait(false);
+            if (caps.Actions.Count > 0)
+            {
+                string action = caps.Actions[Random.Shared.Next(caps.Actions.Count)].Name;
+                await pet.DoAction(action, "once").ConfigureAwait(false);
+            }
         }
-        _onChanged?.Invoke(); // recurring: due time advanced; once: reminder removed — persist either way
+        catch { /* best-effort reaction; never propagate out of the timer callback */ }
     }
 
     private static long ArmMs(TimeSpan span) =>
