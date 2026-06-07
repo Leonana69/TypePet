@@ -46,7 +46,8 @@ public sealed class CommandManifest
     /// <summary>Optional facial expression(s) the pet wears after the command runs (any kind). When more than
     /// one is listed (<c>reaction: [smile|30, blink|20]</c>) one is chosen at random each run; a lone
     /// <c>reaction: smile|6</c> is just a one-element list. Each option carries its own optional hold time in
-    /// seconds (the number after <c>|</c>); null falls back to <see cref="HoldSeconds"/>.</summary>
+    /// seconds (the number after <c>|</c>); null falls back to a fixed default (10 s — see
+    /// <c>CommandInterpreter.DefaultExpressionSeconds</c>), independent of the bubble's <see cref="HoldSeconds"/>.</summary>
     public List<(string Expression, double? Seconds)> Reactions { get; set; } = new();
 
     // ---- kind payloads (exactly one is read per Kind) ----

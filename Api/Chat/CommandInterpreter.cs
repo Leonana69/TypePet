@@ -27,6 +27,12 @@ public sealed class CommandInterpreter
 {
     private const int MaxPetSteps = 32;
 
+    /// <summary>How long the pet wears a <c>reaction:</c> face when that reaction doesn't carry its own
+    /// <c>|seconds</c> override. The bubble's <see cref="CommandManifest.HoldSeconds"/> is independent: a
+    /// reaction is a brief "afterward" face, so it no longer inherits the (often much longer) bubble hold —
+    /// and a command that sets a reaction but no hold no longer leaves the face stuck forever.</summary>
+    private const double DefaultExpressionSeconds = 10;
+
     private readonly Func<bool> _chatEnabled;
     private readonly Func<ChatSessionConfig?> _buildConfig;
     private readonly Func<IPetControl?> _pet;
@@ -152,7 +158,7 @@ public sealed class CommandInterpreter
                 else
                 {
                     var (expr, secs) = m.PickReaction();
-                    if (!string.IsNullOrEmpty(expr)) _ = pet.Expression(expr!, secs ?? m.HoldSeconds);
+                    if (!string.IsNullOrEmpty(expr)) _ = pet.Expression(expr!, secs ?? DefaultExpressionSeconds);
                 }
             }
             catch { /* character may lack the expression — ignore */ }
@@ -253,7 +259,7 @@ public sealed class CommandInterpreter
         if (string.IsNullOrEmpty(expr)) return;
         var pet = _pet();
         if (pet is null) return;
-        try { await pet.Expression(expr!, secs ?? m.HoldSeconds); }
+        try { await pet.Expression(expr!, secs ?? DefaultExpressionSeconds); }
         catch { /* the character may lack that expression — ignore */ }
     }
 

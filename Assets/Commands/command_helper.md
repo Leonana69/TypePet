@@ -84,7 +84,7 @@ The **body** is the *content* of the command:
 | `help` (or `description`) | all | One-line description shown in the dropdown and `/help`. |
 | `aliases` | all | Other names that trigger it, comma-separated. e.g. `aliases: hi, hey` |
 | `holdSeconds` | all | How long the pet holds the result bubble (and stays still). Default ~12s (images 120s). |
-| `reaction` | all | A face the pet wears afterward: `reaction: smile`, `reaction: smile\|6` (6 s), or a random pick from a list — `reaction: [smile\|6, blink]` (see §7). |
+| `reaction` | all | A face the pet wears afterward: `reaction: smile` (held 10 s by default), `reaction: smile\|6` (6 s), or a random pick from a list — `reaction: [smile\|6, blink]` (see §7). |
 | `clipboard` (or `copy`) | clipboard | The text to copy. |
 | `image` | image | A file in this folder (e.g. `guide.png`), or an `avares://`/`http(s)://` URL. |
 | `text` (or `say`) | text | What the pet says (instead of the body). |
@@ -368,10 +368,11 @@ text + EXP bar + image + profile link; calling `rank(...)` takes precedence over
 ## 7. The `reaction` field
 
 `reaction` works on **any** kind: after the command runs, the pet wears that expression. The value is an
-expression name, optionally followed by `|seconds` to set how long it's held:
+expression name, optionally followed by `|seconds` to set how long it's held. With no `|seconds`, the face
+is held for **10 seconds** by default (independent of the bubble's `holdSeconds`):
 
 ```
-reaction: cheers
+reaction: cheers       # held 10 s (the default)
 reaction: cheers|6     # hold for 6 seconds
 ```
 
@@ -379,7 +380,7 @@ reaction: cheers|6     # hold for 6 seconds
 the command runs (each option has equal odds). Every option may carry its own `|seconds`:
 
 ```
-reaction: [smile, blink]          # 50/50 smile or blink, default hold
+reaction: [smile, blink]          # 50/50 smile or blink, each held 10 s (the default)
 reaction: [smile|30, blink|20]    # 50/50; smile held 30 s, blink held 20 s
 reaction: [cheers|6]              # a one-item list works too (same as: reaction: cheers|6)
 ```
@@ -428,7 +429,7 @@ usage: /<word> [...]    # shown in the dropdown
 help: <one line>        # shown in the dropdown / /help
 aliases: alt1, alt2     # optional extra names
 holdSeconds: <number>   # optional bubble hold time
-reaction: <expr>[|secs] # optional face afterward (or [a|secs, b, …] = random pick)
+reaction: <expr>[|secs] # optional face afterward; default hold 10 s (or [a|secs, b, …] = random pick)
 
 clipboard: <text>       # kind: clipboard
 image: <file|url>       # kind: image
