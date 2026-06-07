@@ -315,6 +315,8 @@ public partial class App : Application
         _commandStore,
         () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
         () => _settings?.EnableUserScripts ?? true,
+        (id, hosts) => _settings is not null
+            && _settings.IsNetworkApproved(id, MaplePet.Engine.CommandManifest.HostsSignature(hosts)),
         PersistReminders);
 
     /// <summary>Write the current reminders back to <c>settings.json</c>. Marshaled onto the UI thread so

@@ -301,8 +301,9 @@ say Hello! 👋 {{args}}
 ### `script` — a sandboxed mini-program (advanced)
 
 For logic the other kinds can't express, `kind: script` runs the body as **JavaScript** in a locked-down
-sandbox. It has **no file, network, or system access**, and hard limits (time, memory, statement count) so
-a buggy script can't freeze the pet. Must be enabled in Settings (it is by default).
+sandbox. It has **no file or system access**, and hard limits (time, memory, statement count) so a buggy
+script can't freeze the pet. Networking is **off by default** and only available when the command opts in
+(see "Networking" below). Must be enabled in Settings (it is by default).
 
 Available inside a script:
 
@@ -317,8 +318,12 @@ Available inside a script:
 | `expression(name[, seconds])` | Make the pet wear a face. |
 | `action(name[, "once"\|"hold"])` | Play an action. |
 | `walk(x)` / `face("left"\|"right")` | Move / turn the pet. |
+| `rank({ … })` | Hand structured rank data to the core renderer (see "Rank rendering"). |
+| `httpGet(url[, headers])` | Fetch over HTTPS — only with a `hosts:` allowlist + approval (see below). |
+| `httpJson(url[, headers])` | `JSON.parse(httpGet(...).body)`. |
 
-If you don't call `say(...)`, a value the script *returns* becomes the spoken text.
+`JSON`, `RegExp`, `encodeURIComponent`, and the usual JS built-ins are available.
+If you don't call `say(...)` or `rank(...)`, a value the script *returns* becomes the spoken text.
 
 ```
 ---
@@ -334,6 +339,29 @@ var n = 1 + Math.floor(Math.random() * sides);
 expression(n === sides ? "cheers" : "blink", 8);
 say("🎲 You rolled a " + n + " (d" + sides + ")!");
 ```
+
+#### Networking (`hosts:` + approval)
+
+A script can reach the network **only** when it declares a `hosts:` allowlist in its frontmatter **and** you
+approve it in the Commands tab. Then `httpGet(url, headers?)` fetches over HTTPS and returns
+`{ status, ok, body }`. Every request is re-checked against the allowlist; private/loopback addresses are
+refused, responses are size- and time-capped, and only `User-Agent` / `Accept` / `Accept-Language` /
+`Referer` headers are honored. A leaf host (`maple.gg`) also covers its subdomains (`msea.maple.gg`).
+
+```
+hosts: example.com, api.example.com
+```
+
+When you enable (or click **Allow network** on) such a command, a prompt lists exactly which hosts it will
+contact. Editing `hosts:` later revokes the approval until you grant it again.
+
+#### Rank rendering (`rank({ … })`)
+
+To produce a MapleStory-style rank card whose EXP bar and layout are drawn by the app, call `rank({...})`
+with any of: `name`, `level`, `job` (or `class`), `world`, `expPercent` (0–100), `guild`, `rank`,
+`legionLevel`, `legionGrade`, `fame`, `imageUrl`, `serverLabel`, `infoTitle`, `infoUrl`. The core renders the
+text + EXP bar + image + profile link; calling `rank(...)` takes precedence over `say(...)`. The bundled
+`/rankx` command is a full worked example.
 
 ---
 

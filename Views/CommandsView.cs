@@ -121,7 +121,7 @@ public sealed class CommandsView : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             IsEnabled = e.Valid, // an invalid command can't be enabled
         };
-        toggle.IsCheckedChanged += (_, _) => SetEnabled(e.Id, toggle.IsChecked == true);
+        toggle.IsCheckedChanged += (_, _) => _ = SetEnabledAsync(e.Id, toggle.IsChecked == true);
 
         var title = new TextBlock
         {
@@ -141,7 +141,18 @@ public sealed class CommandsView : UserControl
         textCol.Children.Add(title);
         textCol.Children.Add(help);
 
-        var badge = KindBadge(e.Kind);
+        // Right side: an optional network status/affordance (for kind:script commands that declare hosts:)
+        // followed by the kind badge.
+        var right = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        var net = NetworkControl(e);
+        if (net is not null) right.Children.Add(net);
+        right.Children.Add(KindBadge(e.Kind));
 
         var grid = new Grid
         {
@@ -150,12 +161,12 @@ public sealed class CommandsView : UserControl
         };
         Grid.SetColumn(toggle, 0);
         Grid.SetColumn(textCol, 1);
-        Grid.SetColumn(badge, 2);
+        Grid.SetColumn(right, 2);
         toggle.Margin = new Thickness(0, 0, 12, 0);
         textCol.Margin = new Thickness(0, 0, 10, 0);
         grid.Children.Add(toggle);
         grid.Children.Add(textCol);
-        grid.Children.Add(badge);
+        grid.Children.Add(right);
 
         var card = new Border
         {
@@ -191,18 +202,85 @@ public sealed class CommandsView : UserControl
         };
     }
 
-    private void SetEnabled(string id, bool enabled)
+    /// <summary>For a <c>kind:script</c> command that declares a <c>hosts:</c> allowlist: a "🌐 ✓" badge when
+    /// its network access is approved, otherwise an "Allow network" button that opens the approval prompt.
+    /// Null for every other command (no network capability). Bundled net commands ship enabled but
+    /// <i>unapproved</i>, so this button is how the user grants the capability without toggling the command
+    /// off and on.</summary>
+    private Control? NetworkControl(CommandEntry e)
     {
+        if (!string.Equals(e.Kind, "script", StringComparison.OrdinalIgnoreCase)) return null;
+        var m = _store.ReadManifest(e.Id);
+        if (m is null || m.Hosts.Count == 0) return null;
+
+        if (_cfg.IsNetworkApproved(e.Id, CommandManifest.HostsSignature(m.Hosts)))
+        {
+            var ok = new TextBlock
+            {
+                Text = "🌐 ✓",
+                FontSize = 11,
+                Foreground = FrostTheme.TextSecondary,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            ToolTip.SetTip(ok, "Network approved: " + string.Join(", ", m.Hosts));
+            return ok;
+        }
+
+        var btn = new Button { Content = "Allow network", FontSize = 10, VerticalAlignment = VerticalAlignment.Center };
+        btn.Classes.Add("link");
+        ToolTip.SetTip(btn, "This command wants to reach: " + string.Join(", ", m.Hosts));
+        btn.Click += (_, _) => _ = PromptNetworkAsync(e.Id, m);
+        return btn;
+    }
+
+    private async Task SetEnabledAsync(string id, bool enabled)
+    {
+        bool changed = false;
         bool currentlyDisabled = _cfg.DisabledCommandIds.Contains(id, StringComparer.OrdinalIgnoreCase);
         if (enabled && currentlyDisabled)
+        {
             _cfg.DisabledCommandIds.RemoveAll(x => string.Equals(x, id, StringComparison.OrdinalIgnoreCase));
+            changed = true;
+        }
         else if (!enabled && !currentlyDisabled)
+        {
             _cfg.DisabledCommandIds.Add(id);
-        else
-            return; // no change
+            changed = true;
+        }
 
+        // On enable, offer the network approval prompt for a command that declares hosts: and isn't granted.
+        if (enabled)
+        {
+            var m = _store.ReadManifest(id);
+            if (m is not null && m.Kind == CommandKind.Script && m.Hosts.Count > 0
+                && !_cfg.IsNetworkApproved(id, CommandManifest.HostsSignature(m.Hosts))
+                && await ConfirmNetworkAsync(m.Name, m.Hosts))
+            {
+                GrantNetwork(id, m);
+                changed = true;
+            }
+        }
+
+        if (!changed) return;
         _cfg.Save();
+        Rebuild();      // refresh the row's network affordance
         _onChanged();   // rebuild the live registry so the change applies immediately
+    }
+
+    private async Task PromptNetworkAsync(string id, CommandManifest m)
+    {
+        if (!await ConfirmNetworkAsync(m.Name, m.Hosts)) return;
+        GrantNetwork(id, m);
+        _cfg.Save();
+        Rebuild();      // flip the button → "🌐 ✓"
+        _onChanged();   // rebuild so httpGet becomes available to the running command
+    }
+
+    private void GrantNetwork(string id, CommandManifest m)
+    {
+        string sig = CommandManifest.HostsSignature(m.Hosts);
+        _cfg.NetworkApprovedCommands.RemoveAll(g => string.Equals(g.Id, id, StringComparison.OrdinalIgnoreCase));
+        _cfg.NetworkApprovedCommands.Add(new NetworkGrant { Id = id, Hosts = sig });
     }
 
     private async Task DeleteAsync(CommandEntry e)
@@ -234,12 +312,25 @@ public sealed class CommandsView : UserControl
     }
 
     // ------------------------------------------------------------------ small modal confirm
-    private async Task<bool> ConfirmAsync(string message)
+    /// <summary>The delete confirmation (a danger-styled "Delete" button).</summary>
+    private Task<bool> ConfirmAsync(string message) =>
+        ConfirmAsync("Delete command?", message, "Delete", danger: true);
+
+    /// <summary>The network-access prompt: lists the hosts the command wants to reach and asks to allow.</summary>
+    private Task<bool> ConfirmNetworkAsync(string name, IReadOnlyList<string> hosts)
+    {
+        string list = string.Join("\n", hosts.Select(h => "  •  " + h));
+        string msg = $"The \"/{name}\" command makes network requests to:\n\n{list}\n\n" +
+                     "Allow it to reach these hosts? Only these are reachable, over HTTPS.";
+        return ConfirmAsync("Allow network access?", msg, "Allow", danger: false);
+    }
+
+    private async Task<bool> ConfirmAsync(string title, string message, string okText, bool danger)
     {
         if (TopLevel.GetTopLevel(this) is not Window owner) return false;
 
         var tcs = new TaskCompletionSource<bool>();
-        var dlg = new FrostedWindow("Delete command?")
+        var dlg = new FrostedWindow(title)
         {
             Width = 360,
             SizeToContent = SizeToContent.Height,
@@ -247,8 +338,8 @@ public sealed class CommandsView : UserControl
             ShowInTaskbar = false,
         };
 
-        var ok = new Button { Content = "Delete", MinWidth = 88, IsDefault = true, HorizontalContentAlignment = HorizontalAlignment.Center };
-        ok.Classes.Add("danger");
+        var ok = new Button { Content = okText, MinWidth = 88, IsDefault = true, HorizontalContentAlignment = HorizontalAlignment.Center };
+        if (danger) ok.Classes.Add("danger");
         var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 88, HorizontalContentAlignment = HorizontalAlignment.Center };
         cancel.Classes.Add("ghost");
         ok.Click += (_, _) => { tcs.TrySetResult(true); dlg.Close(); };

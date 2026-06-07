@@ -15,8 +15,11 @@ namespace MaplePet.Api.Chat;
 public static partial class CommandScriptHost
 {
     /// <summary>Execute <paramref name="m"/>'s script body. Never throws — failures (including a disabled
-    /// or absent engine) come back as an error <see cref="CommandResult"/>.</summary>
-    public static partial Task<CommandResult> RunAsync(CommandManifest m, string args, IPetControl? pet, CancellationToken ct);
+    /// or absent engine) come back as an error <see cref="CommandResult"/>. <paramref name="networkApproved"/>
+    /// is true only when the user has granted this command's declared <c>hosts:</c> allowlist; the
+    /// <c>httpGet</c>/<c>httpJson</c> host functions are wired in only then.</summary>
+    public static partial Task<CommandResult> RunAsync(CommandManifest m, string args, IPetControl? pet,
+        bool networkApproved, CancellationToken ct);
 }
 
 #if !MAPLEPET_SCRIPTING
@@ -25,7 +28,8 @@ public static partial class CommandScriptHost
 /// Jint package is referenced and the <c>MAPLEPET_SCRIPTING</c> constant is defined.</summary>
 public static partial class CommandScriptHost
 {
-    public static partial Task<CommandResult> RunAsync(CommandManifest m, string args, IPetControl? pet, CancellationToken ct)
+    public static partial Task<CommandResult> RunAsync(CommandManifest m, string args, IPetControl? pet,
+        bool networkApproved, CancellationToken ct)
         => Task.FromResult(CommandResult.Error($"/{m.Name}: scripting isn't available in this build."));
 }
 #endif

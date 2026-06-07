@@ -31,14 +31,17 @@ public sealed class CommandInterpreter
     private readonly Func<ChatSessionConfig?> _buildConfig;
     private readonly Func<IPetControl?> _pet;
     private readonly Func<bool> _scriptsEnabled;
+    private readonly Func<string, IReadOnlyCollection<string>, bool> _networkApproved;
 
     public CommandInterpreter(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig,
-        Func<IPetControl?> pet, Func<bool> scriptsEnabled)
+        Func<IPetControl?> pet, Func<bool> scriptsEnabled,
+        Func<string, IReadOnlyCollection<string>, bool>? networkApproved = null)
     {
         _chatEnabled = chatEnabled;
         _buildConfig = buildConfig;
         _pet = pet;
         _scriptsEnabled = scriptsEnabled;
+        _networkApproved = networkApproved ?? ((_, _) => false);
     }
 
     /// <summary>Build the handler for <paramref name="m"/> (its folder is <paramref name="dir"/>, used to
@@ -236,7 +239,11 @@ public sealed class CommandInterpreter
     {
         if (!_scriptsEnabled())
             return Task.FromResult(CommandResult.Error($"/{m.Name}: user scripts are disabled (Settings → enable scripts)."));
-        return CommandScriptHost.RunAsync(m, args, _pet(), ct);
+        // Network is gated per command: it needs a declared hosts: allowlist AND a standing user approval
+        // for exactly that allowlist (keyed by the command's CommandStore id = its folder name).
+        string id = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        bool networkApproved = m.Hosts.Count > 0 && _networkApproved(id, m.Hosts);
+        return CommandScriptHost.RunAsync(m, args, _pet(), networkApproved, ct);
     }
 
     // -------------------------------------------------------------------- helpers

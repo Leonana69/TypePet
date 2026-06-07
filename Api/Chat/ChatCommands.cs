@@ -86,16 +86,19 @@ public sealed class ChatCommands
     /// <param name="store">The user command library, or null to expose only the built-ins.</param>
     /// <param name="disabledIds">The store ids the user has turned off (excluded from the registry).</param>
     /// <param name="scriptsEnabled">Whether <c>kind:script</c> commands may run (Settings gate).</param>
+    /// <param name="networkApproved">Probe — given a command's store id and its declared <c>hosts:</c> — for
+    /// whether the user has approved that command's network access (Commands tab). Null = never approved.</param>
     /// <param name="onReminderChanged">Invoked whenever the reminder list changes (added/cancelled/cleared,
     /// or a reminder fired and re-armed or completed) so the owner can persist it to settings. Null = no
     /// persistence (reminders stay in-memory, as in the headless test harness).</param>
     public ChatCommands(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig, Func<IPetControl?> pet,
         CommandStore? store = null, Func<IReadOnlyCollection<string>>? disabledIds = null,
-        Func<bool>? scriptsEnabled = null, Action? onReminderChanged = null)
+        Func<bool>? scriptsEnabled = null, Func<string, IReadOnlyCollection<string>, bool>? networkApproved = null,
+        Action? onReminderChanged = null)
     {
         _store = store;
         _disabledIds = disabledIds ?? (() => Array.Empty<string>());
-        _interp = new CommandInterpreter(chatEnabled, buildConfig, pet, scriptsEnabled ?? (() => true));
+        _interp = new CommandInterpreter(chatEnabled, buildConfig, pet, scriptsEnabled ?? (() => true), networkApproved);
         _reminders = new ReminderScheduler(pet, onReminderChanged);
         _builtIns = new[]
         {
