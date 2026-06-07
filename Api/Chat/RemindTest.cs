@@ -109,6 +109,9 @@ public static class RemindTest
         Console.WriteLine("\nPERSISTENCE round-trip");
         fail += RoundTrip();
 
+        Console.WriteLine("\nCHAT TOOL (set_reminder → /remind)");
+        fail += ChatToolChecks();
+
         Console.WriteLine("\nSCHEDULER bookkeeping");
         fail += SchedulerChecks();
 
@@ -174,6 +177,62 @@ public static class RemindTest
         }
         Console.WriteLine($"  json: {json}");
         return fail;
+    }
+
+    private static int ChatToolChecks()
+    {
+        int fail = 0;
+
+        // 1) The model's structured args build the right /remind command (normalization + flags) — tested
+        // with a fake runner that just captures the command string.
+        string? captured = null;
+        var fake = new ReminderChatTools((cmd, _) => { captured = cmd; return Task.FromResult(CommandResult.Ok("ok")); });
+        (string args, string expected)[] cases =
+        {
+            ("""{"time":"10m","message":"do dailies"}""",                                          "/remind 10m do dailies"),
+            ("""{"time":"in 10 minutes","message":"do dailies"}""",                                "/remind 10minutes do dailies"), // "in" + spaces stripped
+            ("""{"time":"2:00 PM","message":"call mom"}""",                                        "/remind 2:00PM call mom"),
+            ("""{"time":"9:00","message":"standup","repeat":"daily"}""",                           "/remind -d 9:00 standup"),
+            ("""{"time":"20:00","message":"raid","repeat":"weekly","weekday":"monday"}""",         "/remind -w monday 20:00 raid"),
+            ("""{"time":"20:00","message":"raid","repeat":"weekly"}""",                            "/remind -w 20:00 raid"),
+            ("""{"time":"9:00","message":"pay rent","repeat":"monthly","day_of_month":1}""",       "/remind -m 1 9:00 pay rent"),
+            ("""{"time":"9:00","message":"pay rent","repeat":"monthly"}""",                        "/remind -m 9:00 pay rent"),
+        };
+        foreach (var (args, expected) in cases)
+        {
+            captured = null;
+            _ = fake.DispatchAsync(new ChatToolCall("t", "set_reminder", args), CancellationToken.None).GetAwaiter().GetResult();
+            bool good = captured == expected;
+            Console.WriteLine($"  {(good ? "PASS" : "FAIL")}  set_reminder {args}");
+            Console.WriteLine($"        -> {captured}");
+            if (!good) { fail++; Console.WriteLine($"        expected: {expected}"); }
+        }
+
+        captured = null;
+        _ = fake.DispatchAsync(new ChatToolCall("t", "list_reminders", "{}"), CancellationToken.None).GetAwaiter().GetResult();
+        fail += Expect(captured == "/remind list", "list_reminders → /remind list", captured);
+        captured = null;
+        _ = fake.DispatchAsync(new ChatToolCall("t", "cancel_reminder", """{"id":"all"}"""), CancellationToken.None).GetAwaiter().GetResult();
+        fail += Expect(captured == "/remind cancel all", "cancel_reminder all → /remind cancel all", captured);
+
+        // 2) End-to-end through the REAL ChatCommands (built-ins only, no pet/LLM/store): a chat-set reminder
+        // actually lands in the shared scheduler and shows up in list_reminders.
+        var commands = new ChatCommands(chatEnabled: () => false, buildConfig: () => null, pet: () => null);
+        var tools = new ReminderChatTools((cmd, ct) => commands.RunAsync(cmd, ct));
+        string setText = tools.DispatchAsync(
+            new ChatToolCall("t", "set_reminder", """{"time":"9:00","message":"standup","repeat":"daily"}"""),
+            CancellationToken.None).GetAwaiter().GetResult();
+        fail += Expect(setText.Contains("every day", StringComparison.OrdinalIgnoreCase), "real set_reminder daily confirms", setText);
+        string listText = tools.DispatchAsync(new ChatToolCall("t", "list_reminders", "{}"), CancellationToken.None).GetAwaiter().GetResult();
+        fail += Expect(listText.Contains("daily 9:00", StringComparison.OrdinalIgnoreCase), "real list_reminders shows it", listText);
+
+        return fail;
+    }
+
+    private static int Expect(bool ok, string label, string? got)
+    {
+        Console.WriteLine($"  {(ok ? "PASS" : "FAIL")}  {label}" + (ok ? "" : $"   (got: {got})"));
+        return ok ? 0 : 1;
     }
 
     private static ReminderRecord Rec(ReminderKind k, TimeSpan tod) => new() { Kind = k, TimeOfDay = tod };

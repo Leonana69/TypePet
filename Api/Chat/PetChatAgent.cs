@@ -29,16 +29,22 @@ public sealed class PetChatAgent
 
     private readonly IPetControl _pet;
     private readonly PetChatTools _petTools;
+    private readonly ReminderChatTools? _reminderTools;
     private readonly Func<ChatSessionConfig?> _resolveConfig;
     private readonly List<ChatMessage> _history = new();
 
     /// <summary>Raised (on the calling thread) with short progress notes — "Thinking…", "Searching the web…".</summary>
     public event Action<string>? StatusChanged;
 
-    public PetChatAgent(IPetControl pet, Func<ChatSessionConfig?> resolveConfig)
+    /// <param name="runReminderCommand">Runs a slash command (the app passes <see cref="ChatCommands.RunAsync"/>),
+    /// enabling the <c>set_reminder</c>/<c>list_reminders</c>/<c>cancel_reminder</c> tools so the model can
+    /// schedule real reminders from natural language. Null disables those tools.</param>
+    public PetChatAgent(IPetControl pet, Func<ChatSessionConfig?> resolveConfig,
+        Func<string, CancellationToken, Task<CommandResult>>? runReminderCommand = null)
     {
         _pet = pet;
         _petTools = new PetChatTools(pet);
+        _reminderTools = runReminderCommand is null ? null : new ReminderChatTools(runReminderCommand);
         _resolveConfig = resolveConfig;
     }
 
@@ -65,9 +71,10 @@ public sealed class PetChatAgent
             tools.AddRange(_petTools.BuildTools(caps));
             if (webOn) { tools.Add(cfg.Web!.SearchDefinition); tools.Add(cfg.Web!.FetchDefinition); }
             if (kbOn) tools.Add(kb!.LookupDefinition);
+            if (_reminderTools is not null) tools.AddRange(_reminderTools.BuildTools());
         }
 
-        string system = BuildSystemPrompt(caps, webOn, kbOn ? kb!.SystemPromptDigest() : null);
+        string system = BuildSystemPrompt(caps, webOn, kbOn ? kb!.SystemPromptDigest() : null, _reminderTools is not null);
         _history.Add(ChatMessage.User(userText));
 
         var sources = new List<WebSource>();
@@ -112,6 +119,12 @@ public sealed class PetChatAgent
                         sources.AddRange(src);
                         _history.Add(ChatMessage.ToolResult(call.Id, text));
                     }
+                    else if (_reminderTools is not null && _reminderTools.Handles(call.Name))
+                    {
+                        StatusChanged?.Invoke("Setting a reminder…");
+                        var text = await _reminderTools.DispatchAsync(call, ct);
+                        _history.Add(ChatMessage.ToolResult(call.Id, text));
+                    }
                     else if (_petTools.Handles(call.Name))
                     {
                         var result = await _petTools.DispatchAsync(call);
@@ -144,7 +157,7 @@ public sealed class PetChatAgent
         return sources.Where(s => !string.IsNullOrEmpty(s.Url) && seen.Add(s.Url)).ToList();
     }
 
-    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn, string? mapleDigest)
+    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn, string? mapleDigest, bool remindersOn)
     {
         var name = caps?.CharacterName ?? "MaplePet";
         var sb = new StringBuilder();
@@ -155,6 +168,8 @@ public sealed class PetChatAgent
         sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet AND shown in the chat. Keep it concise and conversational — a sentence or two when you can. You may use **bold** or *italic* for light emphasis and include links/URLs (the chat shows them as clickable); avoid headings, bullet lists, tables, and code blocks.");
         sb.AppendLine("- If you mention a link or URL, copy it EXACTLY as it appears in the page or search result — never invent or guess invite codes, IDs, or slugs. If the page doesn't show the URL, say so instead of making one up.");
         sb.AppendLine("- React with your body using the tools: set_expression / do_action to emote, face / walk_to / move_to to move. Pick what fits the mood (happy → smile/cheers; bad news → troubled; success → an action). Don't overdo it — usually one expression and maybe one action per reply.");
+        if (remindersOn)
+            sb.AppendLine("- If the user asks to be reminded or notified of something later (\"remind me in 10 minutes\", \"notify me at 2pm to log off\", \"every day at 9am do dailies\"), call set_reminder with a compact time and their message — set repeat to daily/weekly/monthly for recurring ones. Use list_reminders / cancel_reminder to show or remove reminders. After it succeeds, confirm naturally in your reply (e.g. \"Okay! I'll remind you in 10 minutes 😊\").");
         if (searchOn)
         {
             sb.AppendLine("- For current / real-time / external info (weather, news, prices, recent facts), call web_search FIRST. The results include snippets that often already contain the answer — read them carefully.");

@@ -96,7 +96,11 @@ public partial class App : Application
             _petWindow.ControlReady += () =>
             {
                 if (_petWindow?.Control is { } control)
-                    _chatAgent = new PetChatAgent(control, BuildChatConfig);
+                    // Pass the slash-command runner so the chatbot's set_reminder/list/cancel tools schedule
+                    // real reminders through the same ChatCommands (and the same shared scheduler).
+                    _chatAgent = new PetChatAgent(control, BuildChatConfig,
+                        (cmd, ct) => _commands?.RunAsync(cmd, ct)
+                            ?? System.Threading.Tasks.Task.FromResult(CommandResult.Error("Reminders aren't ready yet.")));
             };
 
             // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
