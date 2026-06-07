@@ -100,13 +100,14 @@ public sealed class MacWindowTracker : IWindowTracker
         // The display the Taskbar slot covers (so we don't also add a strip for it).
         Rect floorDisplay = dockVisible ? dockDisplay : mainDisplay;
 
+        // Menu bar (top strip) as a walkable surface — only on the MAIN display. macOS shows a menu bar
+        // on every display ("separate Spaces"), but treating a secondary display's menu bar as a platform
+        // is unwanted, so it's added for the main display alone.
+        windows.Add(new Rect(mainDisplay.X, mainDisplay.Y, mainDisplay.Width, MenuBarHeight));
+
         var grounds = new List<Rect>();
         foreach (var disp in displays)
         {
-            // Menu bar (top strip): a walkable surface at the top of every display ("Displays have
-            // separate Spaces" gives each its own menu bar).
-            windows.Add(new Rect(disp.X, disp.Y, disp.Width, MenuBarHeight));
-
             if (Same(disp, floorDisplay)) continue; // floored by the Taskbar slot
             grounds.Add(new Rect(disp.X, disp.Bottom - GroundThickness, disp.Width, GroundThickness));
         }
