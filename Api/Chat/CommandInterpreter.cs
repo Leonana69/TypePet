@@ -146,8 +146,11 @@ public sealed class CommandInterpreter
             try
             {
                 if (picked is not null) _ = pet.Expression(picked, m.HoldSeconds);
-                else if (!string.IsNullOrEmpty(m.ReactionExpression))
-                    _ = pet.Expression(m.ReactionExpression!, m.ReactionSeconds ?? m.HoldSeconds);
+                else
+                {
+                    var (expr, secs) = m.PickReaction();
+                    if (!string.IsNullOrEmpty(expr)) _ = pet.Expression(expr!, secs ?? m.HoldSeconds);
+                }
             }
             catch { /* character may lack the expression — ignore */ }
         }
@@ -239,10 +242,11 @@ public sealed class CommandInterpreter
     // -------------------------------------------------------------------- helpers
     private async Task ApplyReaction(CommandManifest m)
     {
-        if (string.IsNullOrEmpty(m.ReactionExpression)) return;
+        var (expr, secs) = m.PickReaction();
+        if (string.IsNullOrEmpty(expr)) return;
         var pet = _pet();
         if (pet is null) return;
-        try { await pet.Expression(m.ReactionExpression!, m.ReactionSeconds ?? m.HoldSeconds); }
+        try { await pet.Expression(expr!, secs ?? m.HoldSeconds); }
         catch { /* the character may lack that expression — ignore */ }
     }
 

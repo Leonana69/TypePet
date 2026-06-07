@@ -43,9 +43,11 @@ public sealed class CommandManifest
     /// <summary>Override for how long the pet holds the result bubble (seconds); null uses the default.</summary>
     public double? HoldSeconds { get; set; }
 
-    /// <summary>An optional facial expression the pet wears after the command runs (any kind).</summary>
-    public string? ReactionExpression { get; set; }
-    public double? ReactionSeconds { get; set; }
+    /// <summary>Optional facial expression(s) the pet wears after the command runs (any kind). When more than
+    /// one is listed (<c>reaction: [smile|30, blink|20]</c>) one is chosen at random each run; a lone
+    /// <c>reaction: smile|6</c> is just a one-element list. Each option carries its own optional hold time in
+    /// seconds (the number after <c>|</c>); null falls back to <see cref="HoldSeconds"/>.</summary>
+    public List<(string Expression, double? Seconds)> Reactions { get; set; } = new();
 
     // ---- kind payloads (exactly one is read per Kind) ----
     public string? Clipboard { get; set; }        // kind=clipboard: text to copy
@@ -74,7 +76,6 @@ public sealed class CommandManifest
         Usage = string.IsNullOrWhiteSpace(Usage) ? "/" + Name : Usage!.Trim();
         Help = (Help ?? "").Trim();
         if (HoldSeconds is { } h && (!double.IsFinite(h) || h <= 0)) HoldSeconds = null;
-        if (ReactionSeconds is { } rs && (!double.IsFinite(rs) || rs <= 0)) ReactionSeconds = null;
     }
 
     /// <summary>Null when the manifest is runnable, otherwise a short reason it isn't (shown in the UI).</summary>
@@ -149,7 +150,7 @@ public sealed class CommandManifest
             case "help": case "description": m.Help = val; break;
             case "kind": m.RawKind = val; break;
             case "holdseconds": case "hold": if (TryDouble(val, out var hs)) m.HoldSeconds = hs; break;
-            case "reaction": (m.ReactionExpression, m.ReactionSeconds) = ParseReaction(val); break;
+            case "reaction": m.Reactions = ParseReactions(val); break;
             case "clipboard": case "copy": m.Clipboard = val; break;
             case "image": m.Image = val; break;
             case "text": case "say": m.Text = val; break;
@@ -173,6 +174,16 @@ public sealed class CommandManifest
             roll -= w;
         }
         return Roll[0].Value;
+    }
+
+    /// <summary>Pick a reaction face at random (uniform) from <see cref="Reactions"/>, or <c>(null, null)</c>
+    /// when none is declared. The list form (<c>reaction: [a, b|6]</c>) varies the face each run; a single
+    /// <c>reaction: a</c> always returns that one.</summary>
+    public (string? Expression, double? Seconds) PickReaction()
+    {
+        if (Reactions.Count == 0) return (null, null);
+        var r = Reactions[Random.Shared.Next(Reactions.Count)];
+        return (r.Expression, r.Seconds);
     }
 
     private static List<(string Value, int Weight)> ParseRoll(string val)
@@ -201,13 +212,34 @@ public sealed class CommandManifest
         _ => CommandKind.Unknown,
     };
 
-    private static (string? expr, double? seconds) ParseReaction(string val)
+    /// <summary>Parse a <c>reaction:</c> value into one or more <c>expr|seconds</c> options. A bare value
+    /// (<c>smile|6</c>) yields a single option; a bracketed list (<c>[smile|30, blink|20]</c>) yields several,
+    /// from which <see cref="PickReaction"/> picks one uniformly at random. The <c>|seconds</c> is the hold
+    /// time everywhere (omitted ⇒ default); blank or non-positive durations fall back to null.</summary>
+    private static List<(string Expression, double? Seconds)> ParseReactions(string val)
     {
-        if (string.IsNullOrWhiteSpace(val)) return (null, null);
-        var parts = val.Split('|', 2);
-        string expr = parts[0].Trim();
-        double? secs = parts.Length > 1 && TryDouble(parts[1], out var s) ? s : null;
-        return (expr.Length == 0 ? null : expr, secs);
+        var list = new List<(string, double?)>();
+        if (string.IsNullOrWhiteSpace(val)) return list;
+        val = val.Trim();
+
+        // A bracketed value is a comma-separated list of options; a bare value is a single option (so an
+        // expression name is never split on a stray comma — only the explicit [..] form lists alternatives).
+        if (val.Length >= 2 && val[0] == '[' && val[^1] == ']')
+            foreach (var part in val[1..^1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                AddReaction(list, part);
+        else
+            AddReaction(list, val);
+
+        return list;
+    }
+
+    private static void AddReaction(List<(string, double?)> list, string part)
+    {
+        var seg = part.Split('|', 2);
+        string expr = seg[0].Trim();
+        if (expr.Length == 0) return;
+        double? secs = seg.Length > 1 && TryDouble(seg[1].Trim(), out var s) && double.IsFinite(s) && s > 0 ? s : null;
+        list.Add((expr, secs));
     }
 
     private static (string? title, string? url) ParseLink(string val)

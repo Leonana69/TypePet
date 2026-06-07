@@ -70,8 +70,9 @@ public static partial class CommandScriptHost
         }
 
         // An optional reaction expression applies after the script (like the declarative kinds).
-        if (!string.IsNullOrEmpty(m.ReactionExpression))
-            Fire(() => pet?.Expression(m.ReactionExpression!, m.ReactionSeconds ?? hold));
+        var (reactExpr, reactSecs) = m.PickReaction();
+        if (!string.IsNullOrEmpty(reactExpr))
+            Fire(() => pet?.Expression(reactExpr!, reactSecs ?? hold));
 
         WebSource? link = string.IsNullOrWhiteSpace(linkUrl) ? null
             : new WebSource(string.IsNullOrWhiteSpace(linkTitle) ? linkUrl! : linkTitle!, linkUrl!, "");
