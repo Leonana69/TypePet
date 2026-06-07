@@ -46,6 +46,7 @@ public sealed class SayBarWindow : Window
     private readonly Func<IPetControl?> _control;
     private readonly Func<bool> _chatConfigured;
     private readonly ChatCommands _commands;
+    private readonly Func<Avalonia.PixelRect?>? _petScreenBounds; // the pet's current display, so the bar opens there
 
     private readonly TextBox _input;
     private readonly StackPanel _history;
@@ -68,13 +69,19 @@ public sealed class SayBarWindow : Window
     public event Action? HideRequested;
 
     public SayBarWindow(Settings cfg, Func<PetChatAgent?> agent, Func<IPetControl?> control,
-        Func<bool> chatConfigured, ChatCommands commands)
+        Func<bool> chatConfigured, ChatCommands commands, Func<Avalonia.PixelRect?>? petScreenBounds = null)
     {
         _cfg = cfg;
         _agent = agent;
         _control = control;
         _chatConfigured = chatConfigured;
         _commands = commands;
+        _petScreenBounds = petScreenBounds;
+
+        // Hot-reload: when the command library changes on disk, refresh an open '/' dropdown. (Typing
+        // already re-reads the live list, so this only matters while the menu is showing.)
+        _commands.CommandsChanged += OnCommandsChanged;
+        Closed += (_, _) => _commands.CommandsChanged -= OnCommandsChanged;
 
         // Frosted-glass plumbing (borderless acrylic, DWM round/shadow on Win11).
         Title = "MaplePet";
@@ -270,6 +277,10 @@ public sealed class SayBarWindow : Window
 
     private bool MenuOpen => _commandMenuHost.IsVisible;
 
+    /// <summary>Refresh an open dropdown after the command library hot-reloads (added/removed/edited).</summary>
+    private void OnCommandsChanged() =>
+        Dispatcher.UIThread.Post(() => { if (MenuOpen) UpdateCommandMenu(); });
+
     /// <summary>Refresh the '/' command dropdown for the current input. It shows only while the user is still
     /// typing the command NAME — i.e. the first character is '/' and no space has been typed yet (a space
     /// means the name is settled and arguments are being entered). The list is filtered by the typed prefix.</summary>
@@ -354,6 +365,9 @@ public sealed class SayBarWindow : Window
                 // A command can ask for text to be put on the clipboard (e.g. /ssc, /asc). The write is a UI
                 // concern (needs a TopLevel), so the command only carries the text and the say bar copies it.
                 if (!string.IsNullOrEmpty(cmd.ClipboardText)) await SetClipboardAsync(cmd.ClipboardText);
+                // /clear wipes the conversation: reset the agent's context AND the visible bubbles (including
+                // the "/clear" line just added above). The say bar owns both, so the command only flags intent.
+                if (cmd.ClearHistory) { _agent()?.Reset(); ClearHistory(); }
                 var ctext = string.IsNullOrWhiteSpace(cmd.Text) ? "…" : cmd.Text;
                 // A command link (e.g. /rank's MapleRanks page) shows as a clickable line in the pet's bubble
                 // (and, when open, in history). The bubble link is ALWAYS shown; it's only made click-hittable
@@ -363,8 +377,13 @@ public sealed class SayBarWindow : Window
                 // pokes the pet or this per-command timer elapses (default CommandHoldSeconds; /esfera asks for
                 // longer to read its guide).
                 double secs = cmd.HoldSeconds ?? CommandHoldSeconds;
-                _ = control?.Say(ctext, secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
-                if (keepOpen) { AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl); _input.Focus(); }
+                _ = control?.Say(ChatMarkup.ToSpoken(ctext), secs, cmd.Link?.Url, cmd.Link?.Title, cmd.ImageUrl, freezeMovement: true);
+                if (keepOpen)
+                {
+                    // After /clear the history is intentionally empty — don't re-add a bubble for the result.
+                    if (!cmd.ClearHistory) AddAssistantBubble(ctext, cmd.Sources, cmd.IsError, cmd.Link, cmd.ImageUrl);
+                    _input.Focus();
+                }
                 return;
             }
 
@@ -392,7 +411,8 @@ public sealed class SayBarWindow : Window
             var result = await agent!.SendAsync(text, CancellationToken.None);
             StopThinking();
             var reply = string.IsNullOrWhiteSpace(result.Text) ? "…" : result.Text;
-            _ = control!.Say(reply, ChatSpeechSeconds(reply));
+            var spoken = ChatMarkup.ToSpoken(reply); // speech bubble renders raw text — drop the * markers
+            _ = control!.Say(spoken, ChatSpeechSeconds(spoken));
             if (keepOpen) { AddAssistantBubble(reply, result.Sources, result.IsError); _input.Focus(); }
         }
         catch (Exception ex)
@@ -454,6 +474,14 @@ public sealed class SayBarWindow : Window
 
     private void UpdateToggleGlyph() => _toggle.Content = _cfg.ChatHistoryVisible ? "⌄" : "⌃";
 
+    /// <summary>Wipe all conversation bubbles (used by <c>/clear</c>). The agent's own context is reset
+    /// separately by the caller; this just empties the visible panel, which then collapses itself.</summary>
+    private void ClearHistory()
+    {
+        _history.Children.Clear();
+        UpdateHistoryVisibility();
+    }
+
     // ---- message bubbles ---------------------------------------------------------
 
     private void AddUserBubble(string text)
@@ -494,12 +522,9 @@ public sealed class SayBarWindow : Window
             LoadImageInto(img, imageUrl!);
         }
 
-        body.Children.Add(new SelectableTextBlock
-        {
-            Text = text,
-            TextWrapping = TextWrapping.Wrap,
-            Foreground = isError ? FrostTheme.StatusError : FrostTheme.TextPrimary,
-        });
+        // Render light inline markdown (**bold**, *italic*) and make links clickable; the body text stays
+        // selectable. The pet's speech bubble gets the stripped/plain version (see ToSpoken at the call site).
+        body.Children.Add(ChatMarkup.BuildBlock(text, isError ? FrostTheme.StatusError : FrostTheme.TextPrimary, OpenUrl));
 
         // A primary "more info" link (e.g. /rank's MapleRanks page). It's an actionable destination, not a
         // citation, so it's shown on its own — NOT under the "Sources" heading.
@@ -584,9 +609,17 @@ public sealed class SayBarWindow : Window
         return t.Length <= 64 ? t : t[..64] + "…";
     }
 
+    /// <summary>Re-place the bar at the bottom-center of the pet's current display. The app calls this each
+    /// time the bar is shown, since the pet may have moved to another screen since the last open.</summary>
+    public void SnapToScreen() => PositionAtBottomCenter();
+
     private void PositionAtBottomCenter()
     {
-        var screen = Screens.Primary ?? (Screens.All.Count > 0 ? Screens.All[0] : null);
+        // Prefer the pet's current display so the bar opens on whichever screen the pet is on; fall back
+        // to the primary.
+        var petBounds = _petScreenBounds?.Invoke();
+        var screen = (petBounds is { } pb ? Screens.ScreenFromBounds(pb) : null)
+            ?? Screens.Primary ?? (Screens.All.Count > 0 ? Screens.All[0] : null);
         if (screen is null) return;
 
         double s = screen.Scaling;

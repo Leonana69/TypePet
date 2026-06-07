@@ -5,24 +5,26 @@ using Avalonia.Layout;
 
 namespace MaplePet.Views;
 
-public enum ConfigTab { Characters, Settings }
+public enum ConfigTab { Characters, Commands, Settings }
 
 /// <summary>
-/// The single frosted-glass config window opened from the tray. It hosts the Characters and Settings
-/// tabs (<see cref="CharacterView"/> / <see cref="SettingsView"/>) under a segmented tab bar; both
-/// views are kept alive so switching tabs preserves their state. The tray's "Characters…" and
-/// "Settings…" items open this one window on the matching tab.
+/// The single frosted-glass config window opened from the tray. It hosts the Characters, Commands, and
+/// Settings tabs (<see cref="CharacterView"/> / <see cref="CommandsView"/> / <see cref="SettingsView"/>)
+/// under a segmented tab bar; all views are kept alive so switching tabs preserves their state. The
+/// tray's "Characters…", "Commands…", and "Settings…" items open this one window on the matching tab.
 /// </summary>
 public sealed class ConfigWindow : FrostedWindow
 {
     private readonly CharacterView _charactersView;
+    private readonly CommandsView _commandsView;
     private readonly SettingsView _settingsView;
     private readonly ContentControl _host;
-    private readonly Button _tabCharacters, _tabSettings;
+    private readonly Button _tabCharacters, _tabCommands, _tabSettings;
 
-    public ConfigWindow(CharacterView charactersView, SettingsView settingsView) : base("MaplePet")
+    public ConfigWindow(CharacterView charactersView, CommandsView commandsView, SettingsView settingsView) : base("MaplePet")
     {
         _charactersView = charactersView;
+        _commandsView = commandsView;
         _settingsView = settingsView;
 
         // Sized to fit the 6-wide character grid; the Settings tab's narrower content sits left-aligned.
@@ -32,13 +34,14 @@ public sealed class ConfigWindow : FrostedWindow
         _host = new ContentControl();
 
         _tabCharacters = TabButton("Characters", ConfigTab.Characters);
+        _tabCommands = TabButton("Commands", ConfigTab.Commands);
         _tabSettings = TabButton("Settings", ConfigTab.Settings);
         var tabs = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 2,
             Margin = new Thickness(10, 0, 0, 0),
-            Children = { _tabCharacters, _tabSettings },
+            Children = { _tabCharacters, _tabCommands, _tabSettings },
         };
         var tabBar = new Border
         {
@@ -59,10 +62,15 @@ public sealed class ConfigWindow : FrostedWindow
     /// <summary>Show the given tab.</summary>
     public void Select(ConfigTab tab)
     {
-        bool chars = tab == ConfigTab.Characters;
-        _host.Content = chars ? _charactersView : (Control)_settingsView;
-        SetActive(_tabCharacters, chars);
-        SetActive(_tabSettings, !chars);
+        _host.Content = tab switch
+        {
+            ConfigTab.Commands => _commandsView,
+            ConfigTab.Settings => _settingsView,
+            _ => (Control)_charactersView,
+        };
+        SetActive(_tabCharacters, tab == ConfigTab.Characters);
+        SetActive(_tabCommands, tab == ConfigTab.Commands);
+        SetActive(_tabSettings, tab == ConfigTab.Settings);
     }
 
     protected override void OnClosed(EventArgs e)

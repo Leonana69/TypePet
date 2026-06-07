@@ -11,7 +11,7 @@ namespace MaplePet.Api.Chat;
 /// <summary>Everything needed to run one chat turn against the active provider. Rebuilt per send by the
 /// app from current settings + the secret store, so a provider quick-switch or key edit takes effect on
 /// the next message.</summary>
-public sealed record ChatSessionConfig(IChatBackend Backend, string Model, int MaxTokens, WebTools? Web);
+public sealed record ChatSessionConfig(IChatBackend Backend, string Model, int MaxTokens, WebTools? Web, KnowledgeBase? Knowledge = null);
 
 /// <summary>The result of a chat turn: the assistant's answer text and any web sources it cited.</summary>
 public sealed record ChatResult(string Text, IReadOnlyList<WebSource> Sources, bool IsError = false);
@@ -29,16 +29,22 @@ public sealed class PetChatAgent
 
     private readonly IPetControl _pet;
     private readonly PetChatTools _petTools;
+    private readonly ReminderChatTools? _reminderTools;
     private readonly Func<ChatSessionConfig?> _resolveConfig;
     private readonly List<ChatMessage> _history = new();
 
     /// <summary>Raised (on the calling thread) with short progress notes — "Thinking…", "Searching the web…".</summary>
     public event Action<string>? StatusChanged;
 
-    public PetChatAgent(IPetControl pet, Func<ChatSessionConfig?> resolveConfig)
+    /// <param name="runReminderCommand">Runs a slash command (the app passes <see cref="ChatCommands.RunAsync"/>),
+    /// enabling the <c>set_reminder</c>/<c>list_reminders</c>/<c>cancel_reminder</c> tools so the model can
+    /// schedule real reminders from natural language. Null disables those tools.</param>
+    public PetChatAgent(IPetControl pet, Func<ChatSessionConfig?> resolveConfig,
+        Func<string, CancellationToken, Task<CommandResult>>? runReminderCommand = null)
     {
         _pet = pet;
         _petTools = new PetChatTools(pet);
+        _reminderTools = runReminderCommand is null ? null : new ReminderChatTools(runReminderCommand);
         _resolveConfig = resolveConfig;
     }
 
@@ -57,14 +63,18 @@ public sealed class PetChatAgent
         try { caps = await _pet.GetCapabilities(); } catch { /* pet may not be ready; proceed text-only */ }
 
         bool webOn = cfg.Web is not null;
+        var kb = cfg.Knowledge;
+        bool kbOn = kb is not null && kb.HasSources;
         var tools = new List<ChatToolDef>();
         if (cfg.Backend.SupportsTools && caps is not null)
         {
             tools.AddRange(_petTools.BuildTools(caps));
             if (webOn) { tools.Add(cfg.Web!.SearchDefinition); tools.Add(cfg.Web!.FetchDefinition); }
+            if (kbOn) tools.Add(kb!.LookupDefinition);
+            if (_reminderTools is not null) tools.AddRange(_reminderTools.BuildTools());
         }
 
-        string system = BuildSystemPrompt(caps, webOn);
+        string system = BuildSystemPrompt(caps, webOn, kbOn ? kb!.SystemPromptDigest() : null, _reminderTools is not null);
         _history.Add(ChatMessage.User(userText));
 
         var sources = new List<WebSource>();
@@ -102,6 +112,19 @@ public sealed class PetChatAgent
                             _history.Add(ChatMessage.ToolResult(call.Id, text));
                         }
                     }
+                    else if (kbOn && kb!.Handles(call.Name))
+                    {
+                        StatusChanged?.Invoke("Checking MapleStory guides…");
+                        var (text, src) = await kb.RunLookupAsync(call.ArgumentsJson, ct);
+                        sources.AddRange(src);
+                        _history.Add(ChatMessage.ToolResult(call.Id, text));
+                    }
+                    else if (_reminderTools is not null && _reminderTools.Handles(call.Name))
+                    {
+                        StatusChanged?.Invoke("Setting a reminder…");
+                        var text = await _reminderTools.DispatchAsync(call, ct);
+                        _history.Add(ChatMessage.ToolResult(call.Id, text));
+                    }
                     else if (_petTools.Handles(call.Name))
                     {
                         var result = await _petTools.DispatchAsync(call);
@@ -134,16 +157,23 @@ public sealed class PetChatAgent
         return sources.Where(s => !string.IsNullOrEmpty(s.Url) && seen.Add(s.Url)).ToList();
     }
 
-    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn)
+    private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn, string? mapleDigest, bool remindersOn)
     {
         var name = caps?.CharacterName ?? "MaplePet";
         var sb = new StringBuilder();
         sb.AppendLine($"You are {name}, a tiny, upbeat MapleStory desktop pet living on the user's screen. " +
                       "You are a helpful assistant AND a playful creature with a body.");
         sb.AppendLine();
+        sb.AppendLine($"The current date and time (the user's local time) is {PromptTime.Now()}. Use it to " +
+                      "resolve relative times like \"today\", \"tonight\", \"in an hour\", or \"tomorrow morning\", " +
+                      "and when the user asks what day or time it is.");
+        sb.AppendLine();
         sb.AppendLine("HOW TO REPLY:");
-        sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet in a speech bubble. Keep it concise and conversational — a sentence or two when you can. Use plain spoken language: no markdown, bullet lists, headings, or code blocks.");
+        sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet AND shown in the chat. Keep it concise and conversational — a sentence or two when you can. You may use **bold** or *italic* for light emphasis and include links/URLs (the chat shows them as clickable); avoid headings, bullet lists, tables, and code blocks.");
+        sb.AppendLine("- If you mention a link or URL, copy it EXACTLY as it appears in the page or search result — never invent or guess invite codes, IDs, or slugs. If the page doesn't show the URL, say so instead of making one up.");
         sb.AppendLine("- React with your body using the tools: set_expression / do_action to emote, face / walk_to / move_to to move. Pick what fits the mood (happy → smile/cheers; bad news → troubled; success → an action). Don't overdo it — usually one expression and maybe one action per reply.");
+        if (remindersOn)
+            sb.AppendLine("- If the user asks to be reminded or notified of something later (\"remind me in 10 minutes\", \"notify me at 2pm to log off\", \"every day at 9am do dailies\"), call set_reminder with a compact time and their message — set repeat to daily/weekly/monthly for recurring ones. Use list_reminders / cancel_reminder to show or remove reminders. After it succeeds, confirm naturally in your reply (e.g. \"Okay! I'll remind you in 10 minutes 😊\").");
         if (searchOn)
         {
             sb.AppendLine("- For current / real-time / external info (weather, news, prices, recent facts), call web_search FIRST. The results include snippets that often already contain the answer — read them carefully.");
@@ -153,6 +183,17 @@ public sealed class PetChatAgent
         }
         else
             sb.AppendLine("- You have no web access right now, so answer from your own knowledge and say so if the question needs live data.");
+
+        if (!string.IsNullOrWhiteSpace(mapleDigest))
+        {
+            sb.AppendLine("MAPLESTORY KNOWLEDGE:");
+            sb.AppendLine("- For MapleStory class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), use the maple_lookup tool to read the curated reference sites below instead of answering from memory or a generic search.");
+            sb.AppendLine("- Two steps, and you MUST do BOTH: (1) call maple_lookup with a `query` to get the ranked sources + URL templates (a source in the question's language is preferred); (2) build a concrete `url` from a template and call maple_lookup AGAIN to actually fetch and read that page. Never stop after step 1 — a directory of links is not an answer.");
+            sb.AppendLine("- Then ANSWER the question directly from what the page says: name the actual skills/values (e.g. the top recommended link skills and their pick rates) in a sentence or two, in the user's language, and mention the source briefly. NEVER reply with only a link, a generic closer, or 'go check the site' — pulling the answer out of the page is your job.");
+            sb.AppendLine("- The question's language decides the source: a Korean question prefers a Korean site. Map the class name to the English URL slug yourself (e.g. 히어로 → hero, 아란 → aran).");
+            sb.AppendLine("Available MapleStory sources:");
+            sb.AppendLine(mapleDigest);
+        }
 
         if (caps is not null)
         {

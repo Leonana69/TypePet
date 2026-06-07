@@ -18,11 +18,14 @@ public partial class App : Application
 {
     private Settings? _settings;
     private CharacterStore? _store;
+    private CommandStore? _commandStore;        // the user command library (hot-reloaded skill library)
+    private CommandWatcher? _commandWatcher;    // watches the library and rebuilds the registry on change
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
     private SayBarWindow? _sayBar;
     private PetChatAgent? _chatAgent;
+    private KnowledgeBase? _knowledge;          // bundled MapleStory RAG catalog, loaded once on first chat
     private ChatCommands? _commands;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
@@ -64,6 +67,21 @@ public partial class App : Application
                 _settings.Save();
             }
 
+            // The user command library (the hot-reloaded "skill" library). Built eagerly — before the say
+            // bar's first open — so commands dropped into the folder register immediately and the watcher
+            // can rebuild the registry live. First run seeds the bundled starter commands; the watcher
+            // marshals its rebuild onto the UI thread (the registry's snapshot is read by the say bar).
+            _commandStore = new CommandStore(paths.CommandsRoot);
+            SeedBundledCommands(_commandStore.Root);
+            _commands = BuildCommands();
+            // Re-arm any persisted /remind reminders (recurring ones recompute their next fire; one-offs
+            // whose time passed while closed are dropped). Safe before the pet is ready — the scheduler
+            // resolves the pet lazily at fire time.
+            _commands.LoadReminders(_settings.Reminders);
+            _commandWatcher = new CommandWatcher(_commandStore.Root,
+                () => Avalonia.Threading.Dispatcher.UIThread.Post(() => _commands?.Rebuild()));
+            desktop.Exit += (_, _) => _commandWatcher?.Dispose();
+
             _petWindow = new PetWindow(_settings, _store);
             desktop.MainWindow = _petWindow;
             SetupTrayIcon(desktop);
@@ -78,7 +96,11 @@ public partial class App : Application
             _petWindow.ControlReady += () =>
             {
                 if (_petWindow?.Control is { } control)
-                    _chatAgent = new PetChatAgent(control, BuildChatConfig);
+                    // Pass the slash-command runner so the chatbot's set_reminder/list/cancel tools schedule
+                    // real reminders through the same ChatCommands (and the same shared scheduler).
+                    _chatAgent = new PetChatAgent(control, BuildChatConfig,
+                        (cmd, ct) => _commands?.RunAsync(cmd, ct)
+                            ?? System.Threading.Tasks.Task.FromResult(CommandResult.Error("Reminders aren't ready yet.")));
             };
 
             // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
@@ -121,6 +143,9 @@ public partial class App : Application
         var charactersItem = new NativeMenuItem("Characters…") { Icon = glyphs.Render(TrayGlyph.Contact, accent) };
         charactersItem.Click += (_, _) => ShowCharacters();
 
+        var commandsItem = new NativeMenuItem("Commands…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
+        commandsItem.Click += (_, _) => ShowCommands();
+
         var settingsItem = new NativeMenuItem("Settings…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
@@ -131,6 +156,7 @@ public partial class App : Application
         menu.Items.Add(_wearingItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(charactersItem);
+        menu.Items.Add(commandsItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
@@ -175,11 +201,12 @@ public partial class App : Application
 
     private void ShowSettings() => ShowConfig(ConfigTab.Settings);
     private void ShowCharacters() => ShowConfig(ConfigTab.Characters);
+    private void ShowCommands() => ShowConfig(ConfigTab.Commands);
 
     /// <summary>Open (or re-focus) the single config window on the requested tab.</summary>
     private void ShowConfig(ConfigTab tab)
     {
-        if (_settings is null || _store is null) return;
+        if (_settings is null || _store is null || _commandStore is null) return;
         if (_configWindow is not null)
         {
             _configWindow.Select(tab);
@@ -198,11 +225,30 @@ public partial class App : Application
         {
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename
         });
-        _configWindow = new ConfigWindow(charactersView, settingsView);
+        // Toggling/deleting a command persists to settings and rebuilds the live registry at once.
+        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild());
+        _configWindow = new ConfigWindow(charactersView, commandsView, settingsView);
         _configWindow.Select(tab);
         _configWindow.Closed += (_, _) => _configWindow = null;
+        CenterOnPetScreen(_configWindow, 660, 600); // ConfigWindow's fixed logical size
         _configWindow.Show();
         _configWindow.Activate();
+    }
+
+    /// <summary>Position a window centered on the display the pet is currently on (falls back to the
+    /// platform default if the pet's screen can't be resolved). Call before Show, with the window's
+    /// known logical size.</summary>
+    private void CenterOnPetScreen(Window w, double logicalW, double logicalH)
+    {
+        if (_petWindow?.CurrentScreenBounds is not { } b) return;
+        var screen = _petWindow.Screens?.ScreenFromBounds(b);
+        if (screen is null) return;
+        double sc = screen.Scaling;
+        var wa = screen.WorkingArea; // physical px, excludes the menu bar / dock
+        int pw = (int)Math.Round(logicalW * sc);
+        int ph = (int)Math.Round(logicalH * sc);
+        w.WindowStartupLocation = WindowStartupLocation.Manual;
+        w.Position = new PixelPoint(wa.X + (wa.Width - pw) / 2, wa.Y + (wa.Height - ph) / 2);
     }
 
     /// <summary>Open (or re-focus) the floating say-input bar; what the user types is spoken by the
@@ -216,11 +262,14 @@ public partial class App : Application
         // thinking animation + spoken reply); the app only shows/hides it.
         if (_sayBar is null)
         {
-            // Slash commands run locally (no LLM); /rank picks its server per call via a flag (all keyless),
-            // so the command handler needs no settings or keys.
-            _commands ??= new ChatCommands();
+            // Slash commands run locally; most need no LLM (/rank picks its server per call via a flag, all
+            // keyless). The exception is /fortune, which calls the active chat provider. The registry merges
+            // these built-ins with the user's command library; it's built eagerly at startup (so dropped
+            // commands register before the first open), with a fallback here for safety.
+            _commands ??= BuildCommands();
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
-                () => BuildChatConfig() is not null, _commands);
+                () => BuildChatConfig() is not null, _commands,
+                () => _petWindow?.CurrentScreenBounds);
             _sayBar.HideRequested += HideSayBar;
             _sayBar.Closed += (_, _) =>
             {
@@ -231,6 +280,7 @@ public partial class App : Application
 
         _petWindow.SuppressOverlayTopmost = true; // keep the bar above the (topmost) pet overlay while open
         _sayBar.Show();
+        _sayBar.SnapToScreen(); // the pet may have moved to another display since the last open
         _sayBar.Activate();
 
         // The bar is summoned while another app owns the foreground (global hotkey) or the click that
@@ -253,6 +303,59 @@ public partial class App : Application
         if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
     }
 
+    /// <summary>Build the slash-command registry: the built-ins (/rank, /fortune, /clear, /help) merged
+    /// with the enabled user commands from <see cref="_commandStore"/>. The same probes the say bar uses
+    /// are forwarded so /fortune and prompt-kind commands can reach the active provider, plus the live pet
+    /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild). The
+    /// reminder-changed callback persists the /remind list to settings (see <see cref="PersistReminders"/>).</summary>
+    private ChatCommands BuildCommands() => new(
+        () => _settings?.EnableChatbot ?? false,
+        BuildChatConfig,
+        () => _petWindow?.Control,
+        _commandStore,
+        () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
+        () => _settings?.EnableUserScripts ?? true,
+        PersistReminders);
+
+    /// <summary>Write the current reminders back to <c>settings.json</c>. Marshaled onto the UI thread so
+    /// concurrent timer-thread fires and UI edits never race on the file write; the snapshot itself is taken
+    /// thread-safely by the scheduler.</summary>
+    private void PersistReminders() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        if (_settings is null || _commands is null) return;
+        _settings.Reminders = _commands.ReminderSnapshot().ToList();
+        _settings.Save();
+    });
+
+    /// <summary>On first run (an empty library), copy the bundled starter commands out of the app bundle
+    /// (<c>avares://MaplePet/Assets/Commands/**</c>) into the writable commands root. A non-empty root —
+    /// already seeded, or the repo's own <c>Assets/Commands</c> in a dev run — is left untouched, so user
+    /// edits are never clobbered. Best-effort: a failure just leaves the library empty.</summary>
+    private static void SeedBundledCommands(string root)
+    {
+        try
+        {
+            if (Directory.Exists(root) && Directory.EnumerateDirectories(root).Any()) return;
+            Directory.CreateDirectory(root);
+
+            const string marker = "/Assets/Commands/";
+            foreach (var asset in Avalonia.Platform.AssetLoader.GetAssets(
+                         new Uri("avares://MaplePet/Assets/Commands/"), null))
+            {
+                int idx = asset.AbsolutePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0) continue;
+                string rel = asset.AbsolutePath[(idx + marker.Length)..];     // e.g. cmd_ssc/command.md
+                if (rel.Length == 0) continue;
+                string dest = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                using var s = Avalonia.Platform.AssetLoader.Open(asset);
+                using var fs = File.Create(dest);
+                s.CopyTo(fs);
+            }
+        }
+        catch { /* best effort; the user can still drop commands in manually */ }
+    }
+
     /// <summary>Resolve the active provider into a chat session config (backend + model + web search),
     /// reading the key from the secret store. Returns null when nothing usable is configured — the agent
     /// then tells the user to add a key. Called per message so a provider/key change applies at once.</summary>
@@ -270,9 +373,11 @@ public partial class App : Application
         try
         {
             var backend = ChatBackendFactory.Create(profile.Kind, profile.BaseUrl, key, profile.Model);
-            // Web search/fetch are keyless (DuckDuckGo) — enabled unless the user turned it off.
+            // Web search/fetch and the MapleStory knowledge base are keyless — enabled unless turned off.
+            // The catalog is loaded once and reused (it's static, bundled data).
             WebTools? web = _settings.EnableWebSearch ? new WebTools() : null;
-            return new ChatSessionConfig(backend, profile.Model, profile.MaxTokens, web);
+            KnowledgeBase? knowledge = _settings.EnableMapleKnowledge ? (_knowledge ??= KnowledgeBase.LoadBundled()) : null;
+            return new ChatSessionConfig(backend, profile.Model, profile.MaxTokens, web, knowledge);
         }
         catch
         {

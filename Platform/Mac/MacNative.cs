@@ -78,6 +78,9 @@ internal static class MacNative
     [DllImport(CG)] internal static extern long CGWindowLevelForKey(int key);
     [DllImport(CG)] internal static extern uint CGMainDisplayID();
     [DllImport(CG)] internal static extern CGRect CGDisplayBounds(uint display); // global space, top-left, points
+    // Active (powered-on, mirror-resolved) displays. Two-call idiom: pass null to get the count, then a
+    // sized array. Returns CGError (0 == success). Permission-free.
+    [DllImport(CG)] internal static extern int CGGetActiveDisplayList(uint maxDisplays, uint[]? activeDisplays, out uint displayCount);
 
     // ---------------- CoreFoundation ----------------
     internal const long kCFNumberSInt64Type = 4;

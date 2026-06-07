@@ -43,10 +43,13 @@ public static class ImageCache
     }
 
     /// <summary>True for an Avalonia embedded-resource URI (a bundled app asset, e.g.
-    /// <c>avares://MaplePet/Assets/…</c>) as opposed to a remote image. Bundled images are shown whole;
-    /// only remote character canvases get center-cropped (see <see cref="CropCharacterCanvas"/>).</summary>
+    /// <c>avares://MaplePet/Assets/…</c>) or a local <c>file://</c> image (an uploaded command's own
+    /// asset) — as opposed to a remote image. Both are shown WHOLE; only remote character canvases get
+    /// center-cropped (see <see cref="CropCharacterCanvas"/>), and both negatively-cache a permanent
+    /// failure (a missing/corrupt local or bundled file will never load).</summary>
     public static bool IsBundledAsset(string? url)
-        => url is not null && url.StartsWith("avares://", StringComparison.OrdinalIgnoreCase);
+        => url is not null && (url.StartsWith("avares://", StringComparison.OrdinalIgnoreCase)
+                               || url.StartsWith("file://", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Load an image for a speech bubble / history card and prepare it for display: remote character
     /// canvases (from <c>/rank</c>) are center-cropped to drop their wide transparent margin; bundled app
@@ -80,7 +83,13 @@ public static class ImageCache
             // Another caller may have cached this between LoadAsync's check and this factory running.
             if (Cache.TryGetValue(url, out var hit)) return hit;
             Bitmap bmp;
-            if (IsBundledAsset(url))
+            if (url.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+            {
+                // Local file (an uploaded command's own image), decoded straight from disk, no network.
+                using var s = File.OpenRead(new Uri(url).LocalPath);
+                bmp = new Bitmap(s);
+            }
+            else if (IsBundledAsset(url))
             {
                 // Embedded app resource: decoded straight from the bundle, no network.
                 using var s = AssetLoader.Open(new Uri(url));

@@ -71,20 +71,40 @@ public sealed class WebTools
             var sources = await DuckDuckGoAsync(query, ct).ConfigureAwait(false);
             if (sources.Count == 0)
                 return ($"No results for \"{query}\".", sources);
-
-            var sb = new StringBuilder();
-            for (int i = 0; i < sources.Count; i++)
-            {
-                var s = sources[i];
-                sb.AppendLine($"[{i + 1}] {s.Title} — {s.Url}");
-                if (!string.IsNullOrWhiteSpace(s.Snippet)) sb.AppendLine(s.Snippet);
-            }
-            return (sb.ToString().TrimEnd(), sources);
+            return (FormatResults(sources), sources);
         }
         catch (Exception ex)
         {
             return ($"Web search failed: {ex.Message}", Array.Empty<WebSource>());
         }
+    }
+
+    /// <summary>Run a search and return just the formatted result block — the same text
+    /// <see cref="RunSearchAsync"/> produces, but keyless/static so prompt-command RAG
+    /// (<see cref="PromptRag"/>) can splice search results into a prompt without a tool call.
+    /// Best-effort: any failure returns a short message instead of throwing.</summary>
+    public static async Task<string> SearchReadableAsync(string query, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return "No query provided.";
+        try
+        {
+            var sources = await DuckDuckGoAsync(query, ct).ConfigureAwait(false);
+            return sources.Count == 0 ? $"No results for \"{query}\"." : FormatResults(sources);
+        }
+        catch (Exception ex) { return $"Web search failed: {ex.Message}"; }
+    }
+
+    /// <summary>Format DuckDuckGo results as a numbered "[n] Title — Url\nSnippet" block.</summary>
+    private static string FormatResults(IReadOnlyList<WebSource> sources)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < sources.Count; i++)
+        {
+            var s = sources[i];
+            sb.AppendLine($"[{i + 1}] {s.Title} — {s.Url}");
+            if (!string.IsNullOrWhiteSpace(s.Snippet)) sb.AppendLine(s.Snippet);
+        }
+        return sb.ToString().TrimEnd();
     }
 
     private static async Task<IReadOnlyList<WebSource>> DuckDuckGoAsync(string query, CancellationToken ct)
@@ -130,9 +150,14 @@ public sealed class WebTools
 
     // ---- web_fetch ---------------------------------------------------------------
 
-    public async Task<string> RunFetchAsync(string argumentsJson, CancellationToken ct)
+    public Task<string> RunFetchAsync(string argumentsJson, CancellationToken ct)
+        => FetchReadableAsync(Arg(argumentsJson, "url"), ct);
+
+    /// <summary>Download a page and return its readable text — "Title: …", "Summary: …" (meta description),
+    /// then the body, capped. Static and keyless so the knowledge base (<see cref="KnowledgeBase"/>) reuses
+    /// the exact same fetch as the <c>web_fetch</c> tool. Best-effort: any failure returns a short message.</summary>
+    public static async Task<string> FetchReadableAsync(string url, CancellationToken ct)
     {
-        string url = Arg(argumentsJson, "url");
         if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             return "Invalid or missing URL.";
@@ -149,6 +174,10 @@ public sealed class WebTools
             // and news apps) these are often the only text present, and frequently carry the answer.
             string title = Collapse(doc.Title ?? "");
             string desc = MetaDescription(doc);
+
+            // Plain text drops <a> hrefs, so a link like "Class Discord" loses its real invite URL and the
+            // model guesses one. Fold the target into the text ("Class Discord (https://discord.gg/…)") first.
+            AnnotateLinks(doc, uri);
 
             foreach (var el in doc.QuerySelectorAll("script, style, noscript, nav, footer, header, aside, form, svg"))
                 el.Remove();
@@ -200,6 +229,35 @@ public sealed class WebTools
     {
         var m = doc.QuerySelector("meta[name='description']") ?? doc.QuerySelector("meta[property='og:description']");
         return Collapse(m?.GetAttribute("content") ?? "");
+    }
+
+    /// <summary>Fold each EXTERNAL link's target into its anchor text as "text (href)", so the plain-text
+    /// extraction keeps real URLs (Discord invites, wikis, videos) instead of just the words. Internal
+    /// same-site links are left alone — they're navigational noise and the model can construct those itself.
+    /// Absolute http(s) only; each target annotated once; capped so a link farm can't flood the output.</summary>
+    private static void AnnotateLinks(IDocument doc, Uri pageUri)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int annotated = 0;
+        foreach (var a in doc.QuerySelectorAll("a[href]"))
+        {
+            if (annotated >= 40) break;
+            if (!Uri.TryCreate(a.GetAttribute("href"), UriKind.Absolute, out var lu)) continue;
+            if (lu.Scheme != Uri.UriSchemeHttp && lu.Scheme != Uri.UriSchemeHttps) continue;
+            if (SameHost(lu.Host, pageUri.Host)) continue;                            // skip internal links
+            string text = Collapse(a.TextContent);
+            if (text.Length == 0) continue;                                           // image-only / empty
+            if (text.Contains(lu.Host, StringComparison.OrdinalIgnoreCase)) continue; // text already shows the URL
+            if (!seen.Add(lu.AbsoluteUri)) continue;                                  // annotate each target once
+            a.TextContent = $"{text} ({lu.AbsoluteUri})";
+            annotated++;
+        }
+    }
+
+    private static bool SameHost(string a, string b)
+    {
+        static string N(string h) => h.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? h[4..] : h;
+        return string.Equals(N(a), N(b), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Collapse(string s) => string.IsNullOrEmpty(s) ? "" : Regex.Replace(s, @"\s+", " ").Trim();

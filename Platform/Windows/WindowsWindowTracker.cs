@@ -19,6 +19,7 @@ namespace MaplePet.Platform.Windows;
 public sealed class WindowsWindowTracker : IWindowTracker
 {
     private const int MinWindowSize = 40;
+    private const int GroundThickness = 4;
 
     /// <summary>The overlay's own HWND, excluded from the captured world.</summary>
     public nint ExcludeHwnd { get; set; }
@@ -44,7 +45,42 @@ public sealed class WindowsWindowTracker : IWindowTracker
         }
 
         var (taskbar, edge) = GetTaskbar();
-        return new WorldGeometry(windows, taskbar, edge);
+
+        // A fixed bottom-edge floor for every monitor, so a pet confined to a monitor without the
+        // taskbar still has a place to stand (and doesn't fall through the bottom). The monitor whose
+        // bottom holds the taskbar is already floored by the Taskbar slot, so skip a duplicate there.
+        var grounds = new List<ERect>();
+        bool bottomTaskbar = edge == TaskbarEdge.Bottom && taskbar.Width > 0 && taskbar.Height > 0;
+        double tbcx = taskbar.X + taskbar.Width / 2.0, tbcy = taskbar.Y + taskbar.Height / 2.0;
+        foreach (var m in EnumerateMonitors())
+        {
+            bool hasBottomTaskbar = bottomTaskbar
+                && tbcx >= m.Left && tbcx <= m.Right && tbcy >= m.Top && tbcy <= m.Bottom;
+            if (hasBottomTaskbar) continue;
+            grounds.Add(new ERect(m.Left, m.Bottom - GroundThickness, m.Width, GroundThickness));
+        }
+
+        return new WorldGeometry(windows, taskbar, edge) { Grounds = grounds };
+    }
+
+    /// <summary>Every monitor's full bounds (physical px), via EnumDisplayMonitors + GetMonitorInfo.</summary>
+    private static unsafe List<ERect> EnumerateMonitors()
+    {
+        var monitors = new List<ERect>();
+        BOOL Collect(HMONITOR hMon, HDC hdc, RECT* lprc, LPARAM data)
+        {
+            var mi = new MONITORINFO { cbSize = (uint)Marshal.SizeOf<MONITORINFO>() };
+            if (PInvoke.GetMonitorInfo(hMon, ref mi))
+            {
+                var m = mi.rcMonitor;
+                monitors.Add(new ERect(m.left, m.top, m.right - m.left, m.bottom - m.top));
+            }
+            return true;
+        }
+        MONITORENUMPROC cb = Collect;
+        PInvoke.EnumDisplayMonitors(default, null, cb, default);
+        GC.KeepAlive(cb);
+        return monitors;
     }
 
     /// <summary>
