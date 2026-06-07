@@ -46,6 +46,7 @@ public sealed class SayBarWindow : Window
     private readonly Func<IPetControl?> _control;
     private readonly Func<bool> _chatConfigured;
     private readonly ChatCommands _commands;
+    private readonly Func<Avalonia.PixelRect?>? _petScreenBounds; // the pet's current display, so the bar opens there
 
     private readonly TextBox _input;
     private readonly StackPanel _history;
@@ -68,13 +69,14 @@ public sealed class SayBarWindow : Window
     public event Action? HideRequested;
 
     public SayBarWindow(Settings cfg, Func<PetChatAgent?> agent, Func<IPetControl?> control,
-        Func<bool> chatConfigured, ChatCommands commands)
+        Func<bool> chatConfigured, ChatCommands commands, Func<Avalonia.PixelRect?>? petScreenBounds = null)
     {
         _cfg = cfg;
         _agent = agent;
         _control = control;
         _chatConfigured = chatConfigured;
         _commands = commands;
+        _petScreenBounds = petScreenBounds;
 
         // Hot-reload: when the command library changes on disk, refresh an open '/' dropdown. (Typing
         // already re-reads the live list, so this only matters while the menu is showing.)
@@ -607,9 +609,17 @@ public sealed class SayBarWindow : Window
         return t.Length <= 64 ? t : t[..64] + "…";
     }
 
+    /// <summary>Re-place the bar at the bottom-center of the pet's current display. The app calls this each
+    /// time the bar is shown, since the pet may have moved to another screen since the last open.</summary>
+    public void SnapToScreen() => PositionAtBottomCenter();
+
     private void PositionAtBottomCenter()
     {
-        var screen = Screens.Primary ?? (Screens.All.Count > 0 ? Screens.All[0] : null);
+        // Prefer the pet's current display so the bar opens on whichever screen the pet is on; fall back
+        // to the primary.
+        var petBounds = _petScreenBounds?.Invoke();
+        var screen = (petBounds is { } pb ? Screens.ScreenFromBounds(pb) : null)
+            ?? Screens.Primary ?? (Screens.All.Count > 0 ? Screens.All[0] : null);
         if (screen is null) return;
 
         double s = screen.Scaling;

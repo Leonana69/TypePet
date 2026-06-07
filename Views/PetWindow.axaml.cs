@@ -73,6 +73,11 @@ public partial class PetWindow : Window
         set { if (_overlay is not null) _overlay.SuppressTopmost = value; }
     }
 
+    /// <summary>The display the pet is currently confined to (physical px, Avalonia Screen.Bounds units),
+    /// or null before the first layout. The app opens the say bar / config window on this display so they
+    /// appear on whichever screen the pet is on, not always the primary.</summary>
+    public Avalonia.PixelRect? CurrentScreenBounds => _currentDisplay;
+
     /// <summary>True while the overlay is hidden behind a fullscreen app — the game loop is frozen, so
     /// nothing draws and the speech-bubble countdown doesn't tick. The app checks this before arming a
     /// transient bubble (e.g. the second-launch greeting) that would otherwise resurface, stale, only

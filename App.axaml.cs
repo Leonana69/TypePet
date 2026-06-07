@@ -230,8 +230,25 @@ public partial class App : Application
         _configWindow = new ConfigWindow(charactersView, commandsView, settingsView);
         _configWindow.Select(tab);
         _configWindow.Closed += (_, _) => _configWindow = null;
+        CenterOnPetScreen(_configWindow, 660, 600); // ConfigWindow's fixed logical size
         _configWindow.Show();
         _configWindow.Activate();
+    }
+
+    /// <summary>Position a window centered on the display the pet is currently on (falls back to the
+    /// platform default if the pet's screen can't be resolved). Call before Show, with the window's
+    /// known logical size.</summary>
+    private void CenterOnPetScreen(Window w, double logicalW, double logicalH)
+    {
+        if (_petWindow?.CurrentScreenBounds is not { } b) return;
+        var screen = _petWindow.Screens?.ScreenFromBounds(b);
+        if (screen is null) return;
+        double sc = screen.Scaling;
+        var wa = screen.WorkingArea; // physical px, excludes the menu bar / dock
+        int pw = (int)Math.Round(logicalW * sc);
+        int ph = (int)Math.Round(logicalH * sc);
+        w.WindowStartupLocation = WindowStartupLocation.Manual;
+        w.Position = new PixelPoint(wa.X + (wa.Width - pw) / 2, wa.Y + (wa.Height - ph) / 2);
     }
 
     /// <summary>Open (or re-focus) the floating say-input bar; what the user types is spoken by the
@@ -251,7 +268,8 @@ public partial class App : Application
             // commands register before the first open), with a fallback here for safety.
             _commands ??= BuildCommands();
             _sayBar = new SayBarWindow(_settings!, () => _chatAgent, () => _petWindow?.Control,
-                () => BuildChatConfig() is not null, _commands);
+                () => BuildChatConfig() is not null, _commands,
+                () => _petWindow?.CurrentScreenBounds);
             _sayBar.HideRequested += HideSayBar;
             _sayBar.Closed += (_, _) =>
             {
@@ -262,6 +280,7 @@ public partial class App : Application
 
         _petWindow.SuppressOverlayTopmost = true; // keep the bar above the (topmost) pet overlay while open
         _sayBar.Show();
+        _sayBar.SnapToScreen(); // the pet may have moved to another display since the last open
         _sayBar.Activate();
 
         // The bar is summoned while another app owns the foreground (global hotkey) or the click that
