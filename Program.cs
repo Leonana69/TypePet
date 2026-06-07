@@ -40,6 +40,10 @@ internal static class Program
             return 0;
         }
 
+        // Dev-only: check the /remind time parser + scheduler bookkeeping. Pure (no Avalonia needed).
+        if (Array.IndexOf(args, "--remind-test") >= 0)
+            return MaplePet.Api.Chat.RemindTest.Run();
+
         // Dev-only: smoke-test the MapleStory knowledge base (RAG). Needs Avalonia's asset loader for the
         // bundled catalog, so set up without starting the UI. Optional query: --rag-test "<question>".
         if (Array.IndexOf(args, "--rag-test") >= 0)

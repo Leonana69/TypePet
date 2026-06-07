@@ -55,6 +55,7 @@ public sealed class ChatCommands
     private readonly NexonGmsRankApi _gms = new();
     private readonly MapleGgScraper _mapleGg = new();
     private readonly MapleKitApi _mapleKit = new();
+    private readonly ReminderScheduler _reminders;        // pending /remind reminders, spoken when due
 
     // The built-in commands kept in code (rank/clear/help) — too complex or state-coupled to express
     // declaratively. ssc/asc/esfera/fortune live as bundled declarative command files instead.
@@ -85,17 +86,23 @@ public sealed class ChatCommands
     /// <param name="store">The user command library, or null to expose only the built-ins.</param>
     /// <param name="disabledIds">The store ids the user has turned off (excluded from the registry).</param>
     /// <param name="scriptsEnabled">Whether <c>kind:script</c> commands may run (Settings gate).</param>
+    /// <param name="onReminderChanged">Invoked whenever the reminder list changes (added/cancelled/cleared,
+    /// or a reminder fired and re-armed or completed) so the owner can persist it to settings. Null = no
+    /// persistence (reminders stay in-memory, as in the headless test harness).</param>
     public ChatCommands(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig, Func<IPetControl?> pet,
         CommandStore? store = null, Func<IReadOnlyCollection<string>>? disabledIds = null,
-        Func<bool>? scriptsEnabled = null)
+        Func<bool>? scriptsEnabled = null, Action? onReminderChanged = null)
     {
         _store = store;
         _disabledIds = disabledIds ?? (() => Array.Empty<string>());
         _interp = new CommandInterpreter(chatEnabled, buildConfig, pet, scriptsEnabled ?? (() => true));
+        _reminders = new ReminderScheduler(pet, onReminderChanged);
         _builtIns = new[]
         {
             new Command("rank", $"/rank [{RankServers.FlagList.Replace(", ", "|")}] <character>",
                 "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
+            new Command("remind", "/remind <time|-d|-w|-m> <message>",
+                "Have the pet remind you. One-off: a duration (10m, 1h30m, 90s, 1.5h, or a plain number = minutes) or a clock time (14:23, 1:30pm). Recurring (clock time required): -d daily, -w [weekday] weekly, -m [day] monthly — e.g. /remind -d 9:00 …, /remind -w mon 20:00 …, /remind -m 1 9:00 …. Also: /remind list, /remind cancel <id>, /remind clear.", RemindAsync),
             new Command("clear", "/clear", "Clear the chat history and start a fresh conversation.", ClearAsync),
             new Command("help", "/help", "List the available commands.", HelpAsync),
         };
@@ -216,6 +223,177 @@ public sealed class ChatCommands
         string rest = sp < 0 ? "" : s[(sp + 1)..].Trim();
         return (token.TrimStart('-').ToLowerInvariant(), rest);
     }
+
+    /// <summary><c>/remind &lt;time&gt; &lt;message&gt;</c> — schedule a message the pet speaks later. With no
+    /// flag the first token is a one-off time spec (a duration like <c>10m</c>/<c>1h30m</c>/<c>90s</c> or a
+    /// clock time like <c>14:23</c>/<c>1:30pm</c>, optionally preceded by <c>in</c>/<c>at</c>). A leading
+    /// <c>-d</c>/<c>-w</c>/<c>-m</c> flag makes it recurring (daily/weekly/monthly at a clock time — see
+    /// <see cref="RemindRecurring"/>). The management forms <c>/remind list</c>, <c>/remind cancel &lt;id&gt;</c>
+    /// and <c>/remind clear</c> inspect and drop pending reminders. Returns immediately with a confirmation;
+    /// the reminder itself fires asynchronously via <see cref="ReminderScheduler"/>.</summary>
+    private Task<CommandResult> RemindAsync(string args, CancellationToken ct)
+    {
+        string s = (args ?? "").Trim();
+        if (s.Length == 0)
+            return Task.FromResult(CommandResult.Error(
+                "Usage: /remind <time> <message> — e.g. /remind 10m do dailies, /remind 5 quick check " +
+                "(a plain number = minutes), or /remind 14:23 raid. Recurring: /remind -d 9:00 …, " +
+                "/remind -w mon 20:00 …, /remind -m 1 9:00 …. Also /remind list, /remind cancel <id>."));
+
+        var (first, rest) = SplitFirstToken(s);
+
+        // Management subcommands (these never collide with a time token: a duration/clock time is never a word).
+        switch (first.ToLowerInvariant())
+        {
+            case "list":
+            case "ls":
+                return Task.FromResult(ListReminders());
+            case "cancel":
+            case "remove":
+            case "rm":
+            case "del":
+            case "delete":
+                return Task.FromResult(CancelReminder(rest));
+            case "clear":
+            case "clearall":
+                return Task.FromResult(ClearReminders());
+        }
+
+        // A leading flag (-d/-w/-m) marks a recurring reminder. A time token never starts with '-', so this
+        // is unambiguous (mirrors how /rank picks its server by a leading flag).
+        if (first.StartsWith('-'))
+            return Task.FromResult(RemindRecurring(first, rest));
+
+        // Allow a natural lead-in: "/remind in 10m …" or "/remind at 14:23 …".
+        if ((first.Equals("in", StringComparison.OrdinalIgnoreCase) ||
+             first.Equals("at", StringComparison.OrdinalIgnoreCase)) && rest.Length > 0)
+            (first, rest) = SplitFirstToken(rest);
+
+        if (!ReminderTimeParser.TryParse(first, DateTime.Now, out var when, out var err))
+            return Task.FromResult(CommandResult.Error(
+                $"I couldn't read the time \"{first}\" — {err}. Try a duration like 10m, 1h30m or 90s, " +
+                "or a clock time like 14:23 or 1:30pm."));
+
+        if (rest.Length == 0)
+            return Task.FromResult(CommandResult.Error(
+                $"What should I remind you about {when.Display}? Usage: /remind {first} <message>."));
+
+        int id = _reminders.Schedule(when.DueAt, when.Delay, rest);
+        return Task.FromResult(CommandResult.Ok($"⏰ Okay! I'll remind you {when.Display}: \"{rest}\"  (#{id})"));
+    }
+
+    /// <summary>Map a recurrence flag to a new reminder: parse the body after <c>-d</c>/<c>-w</c>/<c>-m</c>,
+    /// schedule it, and confirm. Recurring reminders require an absolute clock time (enforced by the parser).</summary>
+    private CommandResult RemindRecurring(string flagToken, string body)
+    {
+        string flag = flagToken.TrimStart('-').ToLowerInvariant();
+        ReminderKind? kind = flag switch
+        {
+            "d" or "daily" => ReminderKind.Daily,
+            "w" or "weekly" => ReminderKind.Weekly,
+            "m" or "monthly" => ReminderKind.Monthly,
+            _ => null,
+        };
+        if (kind is null)
+            return CommandResult.Error($"Unknown option \"{flagToken}\". Use -d (daily), -w (weekly), or -m (monthly).");
+
+        if (!ReminderTimeParser.TryParseRecurring(kind.Value, body, DateTime.Now, out var rec, out var err))
+            return CommandResult.Error(err ?? "I couldn't read that reminder.");
+
+        if (rec.Message.Length == 0)
+            return CommandResult.Error(
+                $"What should I remind you about — {RecurrenceDescription(rec)}? Add a message after the time.");
+
+        int id = _reminders.ScheduleRecord(rec);
+        return CommandResult.Ok($"⏰ Okay! I'll remind you {RecurrenceDescription(rec)}: \"{rec.Message}\"  (#{id})");
+    }
+
+    private CommandResult ListReminders()
+    {
+        var items = _reminders.List();
+        if (items.Count == 0)
+            return CommandResult.Ok("No reminders set. Add one with /remind <time> <message> (or -d/-w/-m to repeat).");
+
+        var now = DateTime.Now;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var lines = items.Select(it =>
+        {
+            string? next = it.DueAt > now ? ReminderTimeParser.Humanize(it.DueAt - now) : null;
+            string schedule, suffix;
+            switch (it.Kind)
+            {
+                case ReminderKind.Daily:
+                    schedule = $"daily {ClockText(it.TimeOfDay)}";
+                    suffix = next is null ? "" : $" (next in {next})"; break;
+                case ReminderKind.Weekly:
+                    schedule = $"weekly {it.Weekday.ToString()[..3]} {ClockText(it.TimeOfDay)}";
+                    suffix = next is null ? "" : $" (next in {next})"; break;
+                case ReminderKind.Monthly:
+                    schedule = $"monthly day {it.DayOfMonth} {ClockText(it.TimeOfDay)}";
+                    suffix = next is null ? "" : $" (next in {next})"; break;
+                default: // Once
+                    schedule = it.DueAt.ToString("h:mm tt", inv) + (it.DueAt.Date != now.Date ? $" ({it.DueAt:MMM d})" : "");
+                    suffix = next is null ? "" : $" (in {next})"; break;
+            }
+            return $"#{it.Id} · {schedule}{suffix} · {Truncate(it.Message, 48)}";
+        });
+        return CommandResult.Ok($"⏰ Reminders ({items.Count}):\n" + string.Join("\n", lines));
+    }
+
+    /// <summary>A human phrase for a recurring reminder's schedule, used in confirmations
+    /// ("every day at 2:23 PM", "every Monday at 8:00 PM", "on day 1 of each month at 9:00 AM").</summary>
+    private static string RecurrenceDescription(ReminderRecord rec) => rec.Kind switch
+    {
+        ReminderKind.Daily => $"every day at {ClockText(rec.TimeOfDay)}",
+        ReminderKind.Weekly => $"every {rec.Weekday} at {ClockText(rec.TimeOfDay)}",
+        ReminderKind.Monthly => $"on day {rec.DayOfMonth} of each month at {ClockText(rec.TimeOfDay)}",
+        _ => $"at {ClockText(rec.TimeOfDay)}",
+    };
+
+    /// <summary>Format a time-of-day as a 12-hour clock ("2:23 PM", or "1:32:30 PM" when seconds matter),
+    /// matching the absolute-time formatting used elsewhere.</summary>
+    private static string ClockText(TimeSpan tod)
+    {
+        var dt = DateTime.MinValue + tod;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        return tod.Seconds != 0 ? dt.ToString("h:mm:ss tt", inv) : dt.ToString("h:mm tt", inv);
+    }
+
+    /// <summary>A copy of the pending reminders, for the owner to persist (App → settings.json).</summary>
+    public IReadOnlyList<ReminderRecord> ReminderSnapshot() => _reminders.Snapshot();
+
+    /// <summary>Rehydrate persisted reminders at startup (recurring recompute their next fire; one-offs whose
+    /// time already passed are dropped). Triggers one persist via the onChanged callback.</summary>
+    public void LoadReminders(IEnumerable<ReminderRecord> records) => _reminders.Load(records);
+
+    private CommandResult CancelReminder(string arg)
+    {
+        string a = arg.Trim();
+        if (a.Equals("all", StringComparison.OrdinalIgnoreCase)) return ClearReminders();
+
+        if (!int.TryParse(a.TrimStart('#'), out int id))
+            return CommandResult.Error("Which one? Use /remind cancel <id> (see /remind list), or /remind cancel all.");
+        return _reminders.Cancel(id)
+            ? CommandResult.Ok($"🗑️ Cancelled reminder #{id}.")
+            : CommandResult.Error($"No pending reminder #{id}. See /remind list.");
+    }
+
+    private CommandResult ClearReminders()
+    {
+        int n = _reminders.Clear();
+        return CommandResult.Ok(n == 0 ? "No reminders to clear." : $"🗑️ Cleared {n} reminder{(n == 1 ? "" : "s")}.");
+    }
+
+    /// <summary>Split the first whitespace-delimited token off <paramref name="s"/> (already trimmed),
+    /// returning it plus the trimmed remainder ("" when there's no remainder).</summary>
+    private static (string first, string rest) SplitFirstToken(string s)
+    {
+        int sp = s.IndexOfAny(new[] { ' ', '\t', '\n', '\r' });
+        return sp < 0 ? (s, "") : (s[..sp], s[(sp + 1)..].Trim());
+    }
+
+    private static string Truncate(string s, int max)
+        => s.Length <= max ? s : s[..(max - 1)].TrimEnd() + "…";
 
     private Task<CommandResult> HelpAsync(string args, CancellationToken ct)
     {

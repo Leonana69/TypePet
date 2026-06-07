@@ -74,6 +74,10 @@ public partial class App : Application
             _commandStore = new CommandStore(paths.CommandsRoot);
             SeedBundledCommands(_commandStore.Root);
             _commands = BuildCommands();
+            // Re-arm any persisted /remind reminders (recurring ones recompute their next fire; one-offs
+            // whose time passed while closed are dropped). Safe before the pet is ready — the scheduler
+            // resolves the pet lazily at fire time.
+            _commands.LoadReminders(_settings.Reminders);
             _commandWatcher = new CommandWatcher(_commandStore.Root,
                 () => Avalonia.Threading.Dispatcher.UIThread.Post(() => _commands?.Rebuild()));
             desktop.Exit += (_, _) => _commandWatcher?.Dispose();
@@ -279,14 +283,26 @@ public partial class App : Application
     /// <summary>Build the slash-command registry: the built-ins (/rank, /fortune, /clear, /help) merged
     /// with the enabled user commands from <see cref="_commandStore"/>. The same probes the say bar uses
     /// are forwarded so /fortune and prompt-kind commands can reach the active provider, plus the live pet
-    /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild).</summary>
+    /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild). The
+    /// reminder-changed callback persists the /remind list to settings (see <see cref="PersistReminders"/>).</summary>
     private ChatCommands BuildCommands() => new(
         () => _settings?.EnableChatbot ?? false,
         BuildChatConfig,
         () => _petWindow?.Control,
         _commandStore,
         () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
-        () => _settings?.EnableUserScripts ?? true);
+        () => _settings?.EnableUserScripts ?? true,
+        PersistReminders);
+
+    /// <summary>Write the current reminders back to <c>settings.json</c>. Marshaled onto the UI thread so
+    /// concurrent timer-thread fires and UI edits never race on the file write; the snapshot itself is taken
+    /// thread-safely by the scheduler.</summary>
+    private void PersistReminders() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+    {
+        if (_settings is null || _commands is null) return;
+        _settings.Reminders = _commands.ReminderSnapshot().ToList();
+        _settings.Save();
+    });
 
     /// <summary>On first run (an empty library), copy the bundled starter commands out of the app bundle
     /// (<c>avares://MaplePet/Assets/Commands/**</c>) into the writable commands root. A non-empty root —
