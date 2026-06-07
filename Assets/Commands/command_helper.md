@@ -112,11 +112,15 @@ Prompt commands also get:
 | Token | Becomes |
 |-------|---------|
 | `{{name}}` | The argument text, or `Mapler` if none was given. |
-| `{{date}}` | Today's date, e.g. `Friday, June 6, 2026`. |
 | `{{expressions}}` | The worn character's available facial expressions (comma-separated). |
 | `{{roll}}` | A value chosen by weight from the `roll:` field (see below). |
 
 Unknown `{{…}}` tokens are left as-is.
+
+> **The current date and time is added automatically.** Every `prompt` command's system prompt is
+> prefixed with the user's local date and time (e.g. *“Sunday, June 7, 2026 at 3:45 PM (UTC-04:00)”*), so
+> you don't need a placeholder for it — just write your persona and say “today” / “now” naturally. (The
+> old `{{date}}` token still works for backward compatibility, but it's no longer needed.)
 
 ---
 
@@ -224,7 +228,7 @@ reaction: smile|60
 You are the Maple World oracle. Today's luck tier is {{roll}} (do not reveal it was pre-chosen).
 The pet can wear one of these faces — pick the best fit and put it on the FIRST line as "Expression: <name>":
 {{expressions}}
-Read a short, playful fortune for {{name}} on {{date}}.
+Read a short, playful fortune for {{name}} for today. (The current date and time is provided automatically.)
 ```
 
 ### `pet` — make the pet move and emote
@@ -359,4 +363,5 @@ requiresChat: false     # kind: prompt — skip the chatbot-on requirement
 <body: prompt text | JavaScript | pet steps | spoken text>
 ```
 
-Tokens: `{{args}}` `{{1}}` `{{2}}` … and (prompt only) `{{name}}` `{{date}}` `{{expressions}}` `{{roll}}`.
+Tokens: `{{args}}` `{{1}}` `{{2}}` … and (prompt only) `{{name}}` `{{expressions}}` `{{roll}}`. (Prompt
+commands also get the current date/time injected automatically — no placeholder needed.)

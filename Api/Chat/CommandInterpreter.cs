@@ -114,13 +114,17 @@ public sealed class CommandInterpreter
         var named = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["name"] = name,
+            // {{date}} is kept as a back-compat alias (date only), but the current date AND time are now
+            // injected automatically below, so authors no longer need any placeholder for "now".
             ["date"] = DateTime.Now.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture),
             ["expressions"] = expressions.Count > 0 ? string.Join(", ", expressions) : "(none)",
         };
         if (m.Roll.Count > 0) named["roll"] = m.PickRoll(); // system-rolled, weighted outcome (not the model's whim)
 
-        // The body is the system prompt (persona/instructions); the typed arguments are the user turn.
-        string system = CommandManifest.Substitute(m.Body, args, named);
+        // The body is the system prompt (persona/instructions); the typed arguments are the user turn. The
+        // current date/time is prepended automatically so every persona knows "now" without a placeholder.
+        string system = $"Current date and time (the user's local time): {PromptTime.Now()}.\n\n"
+                      + CommandManifest.Substitute(m.Body, args, named);
         string user = args.Length > 0 ? args : "Go.";
         var req = new ChatRequest(system, new[] { ChatMessage.User(user) },
             Array.Empty<ChatToolDef>(), cfg.Model, cfg.MaxTokens);

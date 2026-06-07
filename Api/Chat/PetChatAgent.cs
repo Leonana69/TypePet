@@ -164,6 +164,10 @@ public sealed class PetChatAgent
         sb.AppendLine($"You are {name}, a tiny, upbeat MapleStory desktop pet living on the user's screen. " +
                       "You are a helpful assistant AND a playful creature with a body.");
         sb.AppendLine();
+        sb.AppendLine($"The current date and time (the user's local time) is {PromptTime.Now()}. Use it to " +
+                      "resolve relative times like \"today\", \"tonight\", \"in an hour\", or \"tomorrow morning\", " +
+                      "and when the user asks what day or time it is.");
+        sb.AppendLine();
         sb.AppendLine("HOW TO REPLY:");
         sb.AppendLine("- Your text response is SPOKEN ALOUD by the pet AND shown in the chat. Keep it concise and conversational — a sentence or two when you can. You may use **bold** or *italic* for light emphasis and include links/URLs (the chat shows them as clickable); avoid headings, bullet lists, tables, and code blocks.");
         sb.AppendLine("- If you mention a link or URL, copy it EXACTLY as it appears in the page or search result — never invent or guess invite codes, IDs, or slugs. If the page doesn't show the URL, say so instead of making one up.");
