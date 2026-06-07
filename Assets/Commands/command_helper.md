@@ -114,6 +114,8 @@ Prompt commands also get:
 | `{{name}}` | The argument text, or `Mapler` if none was given. |
 | `{{expressions}}` | The worn character's available facial expressions (comma-separated). |
 | `{{roll}}` | A value chosen by weight from the `roll:` field (see below). |
+| `{{web_fetch(url)}}` | The readable text of that page, fetched live (see *Retrieval directives*). |
+| `{{web_search(query)}}` | The top web results for that query (see *Retrieval directives*). |
 
 Unknown `{{…}}` tokens are left as-is.
 
@@ -230,6 +232,42 @@ The pet can wear one of these faces — pick the best fit and put it on the FIRS
 {{expressions}}
 Read a short, playful fortune for {{name}} for today. (The current date and time is provided automatically.)
 ```
+
+**Retrieval directives (web RAG).** A `prompt` body can pull in **live web content before the AI sees it**.
+Put a directive anywhere in the body and it's resolved *first* — the page is fetched / the search is run —
+and the result is spliced into the prompt inside `[retrieved …] … [end retrieved]` markers, so the AI can
+summarize or react to current content the persona couldn't otherwise know.
+
+| Directive | Replaced with |
+|-----------|---------------|
+| `{{web_fetch(https://example.com/page)}}` | That page's readable text (title, summary, body — capped). |
+| `{{web_search(your query)}}` | The top web results (titles, URLs, snippets). |
+
+```
+---
+name: steamnews
+kind: prompt
+usage: /steamnews
+help: Summarize the latest Steam news for a game.
+---
+Summarize the latest news in 3 short bullets:
+{{web_fetch(https://steamcommunity.com/app/216150/allnews/)}}
+```
+
+The url or query can use the normal argument tokens, e.g.
+`{{web_fetch(https://store.example.com/app/{{1}}/news)}}`.
+
+Good to know:
+- **Needs Web search ON.** Directives only fire when *Settings → Chatbot → Web search* is enabled (the same
+  switch the chatbot's web tools use). With it off, the directive is left as-is in the prompt — nothing is
+  fetched.
+- **Best-effort.** If a fetch or search fails, its error is spliced in and the command still runs.
+- **Limits.** Up to 4 distinct retrievals per command (repeats are fetched once); the total spliced-in text
+  is capped.
+- **The argument can't end with `)`.** `{{web_fetch(…/foo))}}` would drop the last `)` — add a trailing `/`
+  or a `?x=1` query string instead.
+- **Trust.** A directive fetches automatically when the command runs, so importing someone else's prompt
+  command means trusting its URLs — just like its `image:` / `link:` URLs.
 
 ### `pet` — make the pet move and emote
 
@@ -363,5 +401,6 @@ requiresChat: false     # kind: prompt — skip the chatbot-on requirement
 <body: prompt text | JavaScript | pet steps | spoken text>
 ```
 
-Tokens: `{{args}}` `{{1}}` `{{2}}` … and (prompt only) `{{name}}` `{{expressions}}` `{{roll}}`. (Prompt
-commands also get the current date/time injected automatically — no placeholder needed.)
+Tokens: `{{args}}` `{{1}}` `{{2}}` … and (prompt only) `{{name}}` `{{expressions}}` `{{roll}}`, plus the
+retrieval directives `{{web_fetch(url)}}` / `{{web_search(query)}}`. (Prompt commands also get the current
+date/time injected automatically — no placeholder needed.)

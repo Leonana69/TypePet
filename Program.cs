@@ -78,6 +78,15 @@ internal static class Program
             return 0;
         }
 
+        // Dev-only: expand a prompt body's inline {{web_fetch(...)}} / {{web_search(...)}} RAG directives and
+        // print the result (no LLM, no API key). Pure HTTP, no Avalonia. Usage: --prompt-rag-test "<text>".
+        if (ParseOption(args, "--prompt-rag-test") is string ragText)
+        {
+            try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
+            Console.WriteLine(MaplePet.Api.Chat.PromptRag.ExpandAsync(ragText, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
+            return 0;
+        }
+
 #if MACOS
         // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
         if (Array.IndexOf(args, "--mac-windump") >= 0)

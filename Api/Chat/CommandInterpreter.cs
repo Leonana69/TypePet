@@ -123,8 +123,13 @@ public sealed class CommandInterpreter
 
         // The body is the system prompt (persona/instructions); the typed arguments are the user turn. The
         // current date/time is prepended automatically so every persona knows "now" without a placeholder.
-        string system = $"Current date and time (the user's local time): {PromptTime.Now()}.\n\n"
-                      + CommandManifest.Substitute(m.Body, args, named);
+        string body = CommandManifest.Substitute(m.Body, args, named);
+        // RAG: resolve any inline {{web_fetch(...)}} / {{web_search(...)}} directives into the prompt before
+        // sending. Gated on the Web-search toggle (cfg.Web is non-null only when it's on), so it obeys the
+        // same kill-switch as the web_fetch/web_search tools. Substituted first so a url may use {{1}}/{{args}}.
+        if (cfg.Web is not null)
+            body = await PromptRag.ExpandAsync(body, ct).ConfigureAwait(false);
+        string system = $"Current date and time (the user's local time): {PromptTime.Now()}.\n\n" + body;
         string user = args.Length > 0 ? args : "Go.";
         var req = new ChatRequest(system, new[] { ChatMessage.User(user) },
             Array.Empty<ChatToolDef>(), cfg.Model, cfg.MaxTokens);

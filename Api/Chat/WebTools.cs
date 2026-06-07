@@ -71,20 +71,40 @@ public sealed class WebTools
             var sources = await DuckDuckGoAsync(query, ct).ConfigureAwait(false);
             if (sources.Count == 0)
                 return ($"No results for \"{query}\".", sources);
-
-            var sb = new StringBuilder();
-            for (int i = 0; i < sources.Count; i++)
-            {
-                var s = sources[i];
-                sb.AppendLine($"[{i + 1}] {s.Title} — {s.Url}");
-                if (!string.IsNullOrWhiteSpace(s.Snippet)) sb.AppendLine(s.Snippet);
-            }
-            return (sb.ToString().TrimEnd(), sources);
+            return (FormatResults(sources), sources);
         }
         catch (Exception ex)
         {
             return ($"Web search failed: {ex.Message}", Array.Empty<WebSource>());
         }
+    }
+
+    /// <summary>Run a search and return just the formatted result block — the same text
+    /// <see cref="RunSearchAsync"/> produces, but keyless/static so prompt-command RAG
+    /// (<see cref="PromptRag"/>) can splice search results into a prompt without a tool call.
+    /// Best-effort: any failure returns a short message instead of throwing.</summary>
+    public static async Task<string> SearchReadableAsync(string query, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return "No query provided.";
+        try
+        {
+            var sources = await DuckDuckGoAsync(query, ct).ConfigureAwait(false);
+            return sources.Count == 0 ? $"No results for \"{query}\"." : FormatResults(sources);
+        }
+        catch (Exception ex) { return $"Web search failed: {ex.Message}"; }
+    }
+
+    /// <summary>Format DuckDuckGo results as a numbered "[n] Title — Url\nSnippet" block.</summary>
+    private static string FormatResults(IReadOnlyList<WebSource> sources)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < sources.Count; i++)
+        {
+            var s = sources[i];
+            sb.AppendLine($"[{i + 1}] {s.Title} — {s.Url}");
+            if (!string.IsNullOrWhiteSpace(s.Snippet)) sb.AppendLine(s.Snippet);
+        }
+        return sb.ToString().TrimEnd();
     }
 
     private static async Task<IReadOnlyList<WebSource>> DuckDuckGoAsync(string query, CancellationToken ct)
