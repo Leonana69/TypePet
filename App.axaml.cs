@@ -375,10 +375,10 @@ public partial class App : Application
         try
         {
             var backend = ChatBackendFactory.Create(profile.Kind, profile.BaseUrl, key, profile.Model);
-            // Web search/fetch and the MapleStory knowledge base are keyless — enabled unless turned off.
-            // The catalog is loaded once and reused (it's static, bundled data).
+            // Web search/fetch is keyless and toggleable; the MapleStory knowledge base is keyless and
+            // always on. The catalog is loaded once and reused (it's static, bundled data).
             WebTools? web = _settings.EnableWebSearch ? new WebTools() : null;
-            KnowledgeBase? knowledge = _settings.EnableMapleKnowledge ? (_knowledge ??= KnowledgeBase.LoadBundled()) : null;
+            KnowledgeBase? knowledge = _knowledge ??= KnowledgeBase.LoadBundled();
             return new ChatSessionConfig(backend, profile.Model, profile.MaxTokens, web, knowledge);
         }
         catch

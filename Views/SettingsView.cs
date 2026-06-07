@@ -32,7 +32,7 @@ public sealed class SettingsView : UserControl
     // (true)=suspend the live global hotkey while a capture is in progress; (false)=re-arm it afterwards.
     private readonly Action<bool>? _onHotkeyCapture;
     private readonly NumericUpDown _jump, _roam, _walk, _climb, _gravity, _fps, _poll, _mcpPort;
-    private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen, _chatbot, _webSearch, _mapleKnowledge;
+    private readonly ToggleSwitch _overlay, _startup, _mcp, _hideFullscreen, _chatbot, _webSearch;
     private readonly ComboBox _provider;
     private readonly Panel _providerHost;
     private readonly Button _hotkeyBtn;
@@ -93,10 +93,6 @@ public sealed class SettingsView : UserControl
         _webSearch.IsChecked = cfg.EnableWebSearch;
         rows.Children.Add(ToggleRow("Web search",
             "Let the chatbot search the web and read pages — keyless, via DuckDuckGo. No search key needed.", _webSearch));
-        _mapleKnowledge = Toggle();
-        _mapleKnowledge.IsChecked = cfg.EnableMapleKnowledge;
-        rows.Children.Add(ToggleRow("MapleStory knowledge",
-            "Let the chatbot read curated MapleStory guide sites for class/skill questions, in the question's language. Keyless.", _mapleKnowledge));
 
         // The input bar's open shortcut (also double-click the pet). Lives here since the bar is the chat.
         _hotkeyText = HotkeyGesture.IsBindable(cfg.SayInputHotkey) ? cfg.SayInputHotkey : "";
@@ -165,12 +161,6 @@ public sealed class SettingsView : UserControl
         {
             if (!_ready) return;
             _cfg.EnableWebSearch = _webSearch.IsChecked ?? false;
-            _cfg.Save();
-        };
-        _mapleKnowledge.IsCheckedChanged += (_, _) =>
-        {
-            if (!_ready) return;
-            _cfg.EnableMapleKnowledge = _mapleKnowledge.IsChecked ?? false;
             _cfg.Save();
         };
         _provider.SelectionChanged += (_, _) =>

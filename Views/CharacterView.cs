@@ -75,7 +75,7 @@ public sealed class CharacterView : UserControl
         hint.Classes.Add("caption");
 
         // Link out to maple-sim.net, where the importable character footage is built/exported.
-        var link = new Button { Content = "maple-sim.net ↗", VerticalAlignment = VerticalAlignment.Center };
+        var link = new Button { Content = "Build your character ↗", VerticalAlignment = VerticalAlignment.Center };
         link.Classes.Add("link");
         ToolTip.SetTip(link, "Open " + MapleSimUrl + " in your browser");
         link.Click += (_, _) => _ = OpenLinkAsync();
