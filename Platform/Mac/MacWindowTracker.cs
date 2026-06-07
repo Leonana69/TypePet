@@ -77,25 +77,54 @@ public sealed class MacWindowTracker : IWindowTracker
             finally { MacNative.CFRelease(array); }
         }
 
-        var display = MainDisplayBounds();
+        var displays = ActiveDisplayBounds();
+        var mainDisplay = MainDisplayBounds();
 
-        // The menu bar (top strip) is an extra walkable surface.
-        windows.Add(new Rect(display.X, display.Y, display.Width, MenuBarHeight));
+        // Locate the Dock and which display it's on (it can sit on any display, e.g. moved there or
+        // auto-shown under the cursor). The Dock floors that display via the Taskbar slot below; every
+        // OTHER display gets a thin bottom strip so it has a floor too — this is the fix for a pet on a
+        // Dock-less secondary display falling through the bottom.
+        bool dockVisible = false;
+        Rect dockRect = default, dockDisplay = mainDisplay;
+        if (dock is Rect dk && dk.Width >= MinWindowSize && dk.Height > 0)
+        {
+            double dcx = dk.X + dk.Width / 2, dcy = dk.Y + dk.Height / 2;
+            foreach (var disp in displays)
+                if (dcx >= disp.X && dcx <= disp.Right && dcy >= disp.Y && dcy <= disp.Bottom)
+                {
+                    if (dk.Bottom <= disp.Bottom + 1) { dockVisible = true; dockRect = dk; dockDisplay = disp; }
+                    break;
+                }
+        }
 
-        // Ground (the "taskbar" slot, edge Bottom so the pet walks on its top): the Dock's top when it
-        // is on-screen, otherwise a thin strip at the bottom of the display.
-        Rect ground = dock is Rect d && d.Y >= display.Y && d.Bottom <= display.Bottom + 1 && d.Width >= MinWindowSize
-            ? d
-            : new Rect(display.X, display.Bottom - GroundThickness, display.Width, GroundThickness);
+        // The display the Taskbar slot covers (so we don't also add a strip for it).
+        Rect floorDisplay = dockVisible ? dockDisplay : mainDisplay;
 
-        return new WorldGeometry(windows, ground, TaskbarEdge.Bottom);
+        var grounds = new List<Rect>();
+        foreach (var disp in displays)
+        {
+            // Menu bar (top strip): a walkable surface at the top of every display ("Displays have
+            // separate Spaces" gives each its own menu bar).
+            windows.Add(new Rect(disp.X, disp.Y, disp.Width, MenuBarHeight));
+
+            if (Same(disp, floorDisplay)) continue; // floored by the Taskbar slot
+            grounds.Add(new Rect(disp.X, disp.Bottom - GroundThickness, disp.Width, GroundThickness));
+        }
+
+        // The canonical ground (Taskbar slot, edge Bottom so the pet walks on its top): the Dock when
+        // on-screen, otherwise a thin strip at the bottom of the main display.
+        Rect ground = dockVisible
+            ? dockRect
+            : new Rect(mainDisplay.X, mainDisplay.Bottom - GroundThickness, mainDisplay.Width, GroundThickness);
+
+        return new WorldGeometry(windows, ground, TaskbarEdge.Bottom) { Grounds = grounds };
     }
 
     /// <summary>
     /// True when the frontmost real app window covers an entire display's full frame (menu bar
     /// included) — a borderless / native-fullscreen app, not a merely zoomed window. Permission-free
-    /// (CGWindowList + display bounds). Compared against the main display only (a v1 limitation for
-    /// fullscreen apps on a secondary display).
+    /// (CGWindowList + display bounds). Compared against the display the window actually sits on, so a
+    /// fullscreen app on any monitor hides the pet (which may be confined to that monitor).
     /// </summary>
     public bool IsForegroundFullscreen()
     {
@@ -120,7 +149,7 @@ public sealed class MacWindowTracker : IWindowTracker
                 if (!TryReadBounds(dict, out var r)) continue;
                 if (r.Width < MinWindowSize || r.Height < MinWindowSize) continue;
 
-                var disp = MainDisplayBounds();
+                var disp = DisplayFor(r);
                 const double tol = 2;
                 return r.Left <= disp.Left + tol && r.Top <= disp.Top + tol
                     && r.Right >= disp.Right - tol && r.Bottom >= disp.Bottom - tol;
@@ -135,6 +164,53 @@ public sealed class MacWindowTracker : IWindowTracker
         var b = MacNative.CGDisplayBounds(MacNative.CGMainDisplayID());
         return new Rect(b.X, b.Y, b.W, b.H);
     }
+
+    /// <summary>All active displays' bounds (global space, top-left, points — the same unit as the
+    /// captured window rects). Falls back to the main display if enumeration fails, so capture is never
+    /// without a display to floor.</summary>
+    private static List<Rect> ActiveDisplayBounds()
+    {
+        var result = new List<Rect>();
+        if (MacNative.CGGetActiveDisplayList(0, null, out uint count) == 0 && count > 0)
+        {
+            var ids = new uint[count];
+            if (MacNative.CGGetActiveDisplayList(count, ids, out uint got) == 0)
+                for (uint i = 0; i < got; i++)
+                {
+                    var b = MacNative.CGDisplayBounds(ids[i]);
+                    result.Add(new Rect(b.X, b.Y, b.W, b.H));
+                }
+        }
+        if (result.Count == 0) result.Add(MainDisplayBounds());
+        return result;
+    }
+
+    /// <summary>The active display a window sits on: the one containing its center, else the one it
+    /// overlaps most, else the main display.</summary>
+    private static Rect DisplayFor(Rect r)
+    {
+        var displays = ActiveDisplayBounds();
+        double cx = r.X + r.Width / 2, cy = r.Y + r.Height / 2;
+        foreach (var d in displays)
+            if (cx >= d.X && cx <= d.Right && cy >= d.Y && cy <= d.Bottom) return d;
+
+        Rect best = displays[0];
+        double bestOverlap = -1;
+        foreach (var d in displays)
+        {
+            double ox = Math.Max(0, Math.Min(r.Right, d.Right) - Math.Max(r.Left, d.Left));
+            double oy = Math.Max(0, Math.Min(r.Bottom, d.Bottom) - Math.Max(r.Top, d.Top));
+            double area = ox * oy;
+            if (area > bestOverlap) { bestOverlap = area; best = d; }
+        }
+        return best;
+    }
+
+    /// <summary>Same display rect within a small tolerance (the same display id yields identical
+    /// CGDisplayBounds, but compare with epsilon to be safe).</summary>
+    private static bool Same(Rect a, Rect b)
+        => Math.Abs(a.X - b.X) < 1 && Math.Abs(a.Y - b.Y) < 1
+        && Math.Abs(a.Width - b.Width) < 1 && Math.Abs(a.Height - b.Height) < 1;
 
     private static double Area(Rect r) => r.Width * r.Height;
 

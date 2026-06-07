@@ -28,6 +28,11 @@ public partial class PetWindow : Window
     private IOverlayEffects? _overlay; // click-through + topmost z-order
     private IWindowTracker? _tracker;
     private ScreenSpace _screen = new(0, 0, 1);
+    // The display the pet is currently confined to, as a PHYSICAL-pixel rect (Avalonia Screen.Bounds
+    // units = the same space the window trackers report and Screens.All exposes). The pet starts on the
+    // primary display and only roams within _currentDisplay; dragging it onto another display switches
+    // it (see SwitchDisplayToPet). null until the first LayoutOverlay resolves the primary display.
+    private Avalonia.PixelRect? _currentDisplay;
     private World? _world;
     private PetController? _pet;
     private CharacterSprites? _sprites;
@@ -98,6 +103,9 @@ public partial class PetWindow : Window
         LayoutOverlay();
         SetupPlatform();
 
+        // Re-measure + re-confine when a monitor is plugged in/out or resized at runtime.
+        if (Screens is not null) Screens.Changed += OnScreensChanged;
+
         _pet = new PetController(_cfg, new Vec2(30, 38));
         // Keep the pet clear of the screen edges (it's drawn tall, above its feet): don't roam
         // onto platforms within 150px of the bottom edge, nor within 150px of the top (or its
@@ -120,7 +128,7 @@ public partial class PetWindow : Window
         // (swappable) instances. All its calls marshal onto this UI thread.
         _control = new PetControlService(
             () => _pet, () => _animator, () => _sprites, () => _world,
-            () => new MaplePet.Engine.Rect(0, 0, Width, Height),
+            () => CurrentDisplayLogical(), // confine programmatic/LLM moves to the current display too
             () =>
             {
                 var entry = _store.Get(_cfg.CurrentCharacterId);
@@ -146,6 +154,7 @@ public partial class PetWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        if (Screens is not null) Screens.Changed -= OnScreensChanged;
         _loop.Stop();
         _pollTimer?.Stop();
         _overlay?.Dispose();
@@ -171,35 +180,69 @@ public partial class PetWindow : Window
         _control?.NotifyCapabilitiesChanged(); // available actions/expressions are character-specific
     }
 
-    /// <summary>Size and position the overlay to span the whole virtual screen.</summary>
+    /// <summary>
+    /// Size and position the overlay to cover exactly the CURRENT display (not the whole virtual
+    /// desktop). macOS shows a window that spans displays on only one of them ("Displays have separate
+    /// Spaces", the default), so a single per-display overlay is what keeps the pet visible wherever it
+    /// is; the overlay is moved to follow the pet across displays (see <see cref="MoveOverlayToDisplay"/>).
+    /// This also makes confinement automatic (the overlay IS the display) and per-display DPI exact.
+    /// </summary>
     private void LayoutOverlay()
     {
-        var screens = Screens.All;
-        double scale = Screens.Primary?.Scaling ?? RenderScaling;
+        var d = ResolveCurrentDisplayBounds();
+        _currentDisplay = d;
+        double scale = ScalingFor(d);
+        Position = new PixelPoint(d.X, d.Y);
+        Width = d.Width / scale;
+        Height = d.Height / scale;
+        _screen = new ScreenSpace(d.X, d.Y, scale);
+    }
 
-        int minX = 0, minY = 0, maxX = 1920, maxY = 1080;
-        bool first = true;
-        foreach (var s in screens)
-        {
-            var b = s.Bounds;
-            if (first)
-            {
-                minX = b.X; minY = b.Y; maxX = b.X + b.Width; maxY = b.Y + b.Height;
-                first = false;
-            }
-            else
-            {
-                minX = Math.Min(minX, b.X);
-                minY = Math.Min(minY, b.Y);
-                maxX = Math.Max(maxX, b.X + b.Width);
-                maxY = Math.Max(maxY, b.Y + b.Height);
-            }
-        }
+    /// <summary>The display to confine the pet to: keep the remembered one if it still exists (so an
+    /// un-hide / hotplug doesn't teleport the pet), otherwise the primary. The pet starts on the primary;
+    /// dragging it onto another display updates <see cref="_currentDisplay"/>.</summary>
+    private Avalonia.PixelRect ResolveCurrentDisplayBounds()
+    {
+        var all = Screens?.All;
+        if (all is null || all.Count == 0)
+            return _currentDisplay ?? new Avalonia.PixelRect(0, 0, 1920, 1080);
+        if (_currentDisplay is { } cur)
+            foreach (var s in all)
+                if (s.Bounds == cur) return cur; // still present — keep the pet here
+        return (Screens!.Primary ?? all[0]).Bounds;
+    }
 
-        Position = new PixelPoint(minX, minY);
-        Width = (maxX - minX) / scale;
-        Height = (maxY - minY) / scale;
-        _screen = new ScreenSpace(minX, minY, scale);
+    /// <summary>The DPI scale of the display with the given bounds — its OWN scaling, so a per-display
+    /// overlay is exact even on a mixed-DPI multi-monitor setup. Falls back to the primary's, then this
+    /// window's render scaling.</summary>
+    private double ScalingFor(Avalonia.PixelRect bounds)
+    {
+        if (Screens?.All is { } all)
+            foreach (var s in all)
+                if (s.Bounds == bounds) return s.Scaling;
+        return Screens?.Primary?.Scaling ?? RenderScaling;
+    }
+
+    /// <summary>The current display in LOGICAL overlay px. The overlay covers exactly the current display,
+    /// so this is simply its content rect; the world is clipped to it (a no-op confinement) and the
+    /// control facade reports it as the movement range.</summary>
+    private MaplePet.Engine.Rect CurrentDisplayLogical() => new(0, 0, Width, Height);
+
+    /// <summary>Move the single overlay onto a different display and remap the pet into the new overlay's
+    /// coordinate space so it keeps its on-screen position. No-op if already on that display. This is how
+    /// the pet "moves to another screen": the overlay follows it.</summary>
+    private void MoveOverlayToDisplay(Avalonia.PixelRect bounds)
+    {
+        if (_pet is null || _currentDisplay == bounds) return;
+        // The pet's current physical (screen) position, so it stays put across the overlay move.
+        double physX = _pet.Pos.X * _screen.Scale + _screen.OriginX;
+        double physY = _pet.Pos.Y * _screen.Scale + _screen.OriginY;
+
+        _currentDisplay = bounds;
+        LayoutOverlay(); // move/resize the window to the new display + reset _screen
+        PollWorld();     // re-pin _screen to the realized position and rebuild the world for the new display
+
+        _pet.Pos = new Vec2((physX - _screen.OriginX) / _screen.Scale, (physY - _screen.OriginY) / _screen.Scale);
     }
 
     /// <summary>
@@ -228,8 +271,8 @@ public partial class PetWindow : Window
             // Poking (or grabbing) the pet dismisses a held command bubble and lets it move again; the grab
             // then proceeds as normal. A non-command bubble is left untouched (only its own timeout clears it).
             OnDragBegin: c => { DismissFrozenSpeech(); _pet?.BeginDrag(); },
-            OnDragMove: c => _pet?.DragTo(c),
-            OnDragEnd: () => _pet?.EndDrag(),
+            OnDragMove: OnDragMoveTo,
+            OnDragEnd: () => { _pet?.EndDrag(); SwitchDisplayToPet(); },
             OnSayRequested: RequestSayInput,
             OnLinkActivated: OpenSpeechLink));
 
@@ -272,6 +315,60 @@ public partial class PetWindow : Window
     /// keyboard-hook callback (which must return immediately) or re-enter the game tick.</summary>
     private void RequestSayInput()
         => Dispatcher.UIThread.Post(() => SayInputRequested?.Invoke());
+
+    /// <summary>Drag the pet to the cursor; if the cursor crossed onto another display, move the overlay
+    /// there so the pet stays visible (the overlay covers only one display). The pet is remapped to stay
+    /// under the cursor, and the next move event arrives already in the new overlay's coordinate space.</summary>
+    private void OnDragMoveTo(Vec2 c)
+    {
+        if (_pet is null) return;
+        _pet.DragTo(c);
+        if (Screens is null) return;
+        int px = (int)Math.Round(c.X * _screen.Scale + _screen.OriginX);
+        int py = (int)Math.Round(c.Y * _screen.Scale + _screen.OriginY);
+        var screen = Screens.ScreenFromPoint(new PixelPoint(px, py));
+        if (screen is not null && screen.Bounds != _currentDisplay)
+            MoveOverlayToDisplay(screen.Bounds);
+    }
+
+    /// <summary>After a drag release, confine the pet to whichever display its feet landed on (nearest
+    /// display when the drop is in an L-shaped gap between unequal displays) by moving the overlay there.
+    /// The pet then falls onto that display's floor. Runs on the UI thread, so it's visible next tick.</summary>
+    private void SwitchDisplayToPet()
+    {
+        if (_pet is null || Screens is null) return;
+        int px = (int)Math.Round(_pet.CenterX * _screen.Scale + _screen.OriginX);
+        int py = (int)Math.Round(_pet.FeetY * _screen.Scale + _screen.OriginY);
+        var pt = new PixelPoint(px, py);
+        var screen = Screens.ScreenFromPoint(pt) ?? NearestScreen(pt);
+        if (screen is not null) MoveOverlayToDisplay(screen.Bounds);
+        else PollWorld();
+    }
+
+    /// <summary>The display whose bounds are closest to a point that lies in no display (the L-gap case),
+    /// so the pet is always confined to a real screen.</summary>
+    private Avalonia.Platform.Screen? NearestScreen(PixelPoint p)
+    {
+        Avalonia.Platform.Screen? best = null;
+        long bestD2 = long.MaxValue;
+        foreach (var s in Screens!.All)
+        {
+            var b = s.Bounds;
+            long dx = p.X < b.X ? b.X - p.X : p.X > b.Right ? p.X - b.Right : 0;
+            long dy = p.Y < b.Y ? b.Y - p.Y : p.Y > b.Bottom ? p.Y - b.Bottom : 0;
+            long d2 = dx * dx + dy * dy;
+            if (d2 < bestD2) { bestD2 = d2; best = s; }
+        }
+        return best;
+    }
+
+    /// <summary>A monitor was added/removed/resized: re-measure the overlay span + origin, re-resolve the
+    /// current display (keep it if it survived, else follow the pet / fall back to primary), and re-clip.</summary>
+    private void OnScreensChanged(object? sender, EventArgs e)
+    {
+        LayoutOverlay();
+        PollWorld();
+    }
 
     /// <summary>
     /// The pet's clickable box in logical (overlay) px. Matches the drawn character: centered on
@@ -348,11 +445,18 @@ public partial class PetWindow : Window
         {
             var physical = _tracker.Capture();
             var logical = _screen.ToLogical(physical);
-            // The overlay spans the virtual screen at logical (0,0)..(Width,Height); clip the world to
-            // it so off-screen parts of partially-off-screen windows aren't walkable/targetable.
-            _world = WorldModel.Build(logical, new MaplePet.Engine.Rect(0, 0, Width, Height));
+            // Confine the pet to the current display: clip the world to that display's logical rect so it
+            // can only spawn/walk/land there (platforms spanning displays are cut at the edge, off-screen
+            // parts of partially-off-screen windows are dropped). The overlay still spans every display,
+            // so the pet can be DRAGGED across them; only autonomous movement is confined.
+            var clip = CurrentDisplayLogical();
+            _world = EnsureFloor(WorldModel.Build(logical, clip), clip);
             View.Geometry = logical;
             View.World = _world;
+
+            // Keep the (tall) pet clear of the current display's top/bottom edges. PollWorld is the sole
+            // owner of these now (the overlay covers exactly the current display).
+            if (_pet is not null) { _pet.RoamMaxY = clip.Bottom - 150; _pet.RoamMinY = clip.Top + 150; }
         }
         catch (Exception ex)
         {
@@ -360,6 +464,21 @@ public partial class PetWindow : Window
             // overlay; the next poll recovers. Trace it so it isn't fully invisible in dev.
             System.Diagnostics.Debug.WriteLine($"[MaplePet] world poll failed: {ex.Message}");
         }
+    }
+
+    /// <summary>Guarantee the current display has a floor near its bottom, so the pet always has a place
+    /// to stand and the clipped world is never empty (which would freeze it). A window tracker that
+    /// supplies a per-display ground (the Dock/taskbar top, or a bottom strip) already satisfies this —
+    /// this is a cross-platform safety net for any display that escaped enumeration. The synthesized
+    /// floor spans the display's bottom edge.</summary>
+    private static World EnsureFloor(World world, MaplePet.Engine.Rect clip)
+    {
+        const double band = 160; // a Dock/taskbar/strip within this of the bottom already counts as a floor
+        foreach (var p in world.Platforms)
+            if (p.Y >= clip.Bottom - band && p.Y <= clip.Bottom + 1 && p.Width >= 4) return world;
+        var platforms = new System.Collections.Generic.List<MaplePet.Engine.Platform>(world.Platforms)
+            { new MaplePet.Engine.Platform(clip.Bottom - 4, clip.Left, clip.Right) };
+        return new World(platforms, world.Ladders);
     }
 
     /// <summary>
@@ -390,9 +509,10 @@ public partial class PetWindow : Window
         {
             // Displays may have changed while we were hidden — a fullscreen game often switches
             // resolution — so re-measure the overlay's span and coordinate origin before showing again,
-            // otherwise cursor hit-testing and the click hook's pet rect would be misaligned.
+            // otherwise cursor hit-testing and the click hook's pet rect would be misaligned. LayoutOverlay
+            // re-resolves the current display; PollWorld re-clips the world and resets the roam bounds.
             LayoutOverlay();
-            if (_pet is not null) { _pet.RoamMaxY = Height - 150; _pet.RoamMinY = 150; }
+            PollWorld();
 
             _overlay?.ShowNoActivate();
             _loop.Start();

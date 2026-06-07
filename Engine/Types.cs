@@ -34,4 +34,15 @@ public enum ControlMode { Autonomous, Manual }
 public sealed record WorldGeometry(
     IReadOnlyList<Rect> Windows,
     Rect Taskbar,
-    TaskbarEdge TaskbarEdge);
+    TaskbarEdge TaskbarEdge)
+{
+    /// <summary>
+    /// Fixed per-display floors, in the same units as <see cref="Windows"/>. Each is a thin strip at
+    /// a display's bottom edge (the pet walks on its top face). Unlike <see cref="Taskbar"/> there can
+    /// be one per display: every screen gets a floor so the pet always has somewhere to stand, even a
+    /// secondary display with no Dock/taskbar and no windows. Always emitted as walkable platforms by
+    /// <c>WorldModel</c> (never occluded). The Dock/taskbar's own display is covered by
+    /// <see cref="Taskbar"/> instead, so it is not duplicated here.
+    /// </summary>
+    public IReadOnlyList<Rect> Grounds { get; init; } = System.Array.Empty<Rect>();
+}

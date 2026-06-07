@@ -48,6 +48,14 @@ public static class WorldModel
             platforms.Add(new Platform(baseY, tb.Left, tb.Right)); // ground; assumed always on top
         }
 
+        // Per-display floors (one per screen): always-present walkable surfaces, never occluded — so a
+        // pet confined to a secondary display with no windows still has a place to stand. Like the
+        // taskbar, the pet walks on the top face and the strip occludes window edges within its band.
+        var grounds = g.Grounds;
+        foreach (var gr in grounds)
+            if (gr.Width > 0 && gr.Height > 0)
+                platforms.Add(new Platform(gr.Top, gr.Left, gr.Right));
+
         var wins = g.Windows; // Z-order: index 0 = frontmost
         for (int i = 0; i < wins.Count; i++)
         {
@@ -66,6 +74,17 @@ public static class WorldModel
                 if (Covers(tb.Top, tb.Bottom, w.Bottom)) bottomHoles.Add((tb.Left, tb.Right));
                 if (Covers(tb.Left, tb.Right, w.Left)) leftHoles.Add((tb.Top, tb.Bottom));
                 if (Covers(tb.Left, tb.Right, w.Right)) rightHoles.Add((tb.Top, tb.Bottom));
+            }
+
+            // Per-display floors hide window edges within their band too (same as the taskbar), so a
+            // window resting on the floor doesn't emit a phantom edge under it.
+            foreach (var gr in grounds)
+            {
+                if (gr.Width <= 0 || gr.Height <= 0) continue;
+                if (Covers(gr.Top, gr.Bottom, w.Top)) topHoles.Add((gr.Left, gr.Right));
+                if (Covers(gr.Top, gr.Bottom, w.Bottom)) bottomHoles.Add((gr.Left, gr.Right));
+                if (Covers(gr.Left, gr.Right, w.Left)) leftHoles.Add((gr.Top, gr.Bottom));
+                if (Covers(gr.Left, gr.Right, w.Right)) rightHoles.Add((gr.Top, gr.Bottom));
             }
 
             // Windows in front of w (earlier in Z-order) occlude its edges.
