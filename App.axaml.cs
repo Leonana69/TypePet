@@ -25,7 +25,7 @@ public partial class App : Application
     private ConfigWindow? _configWindow;
     private SayBarWindow? _sayBar;
     private PetChatAgent? _chatAgent;
-    private KnowledgeBase? _knowledge;          // bundled MapleStory RAG catalog, loaded once on first chat
+    private KnowledgeBase? _knowledge;          // bundled game RAG catalog, loaded once on first chat
     private ChatCommands? _commands;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
@@ -303,7 +303,7 @@ public partial class App : Application
         if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
     }
 
-    /// <summary>Build the slash-command registry: the built-ins (/rank, /fortune, /clear, /help) merged
+    /// <summary>Build the slash-command registry: the built-ins (/remind, /clear, /help) merged
     /// with the enabled user commands from <see cref="_commandStore"/>. The same probes the say bar uses
     /// are forwarded so /fortune and prompt-kind commands can reach the active provider, plus the live pet
     /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild). The
@@ -315,6 +315,8 @@ public partial class App : Application
         _commandStore,
         () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
         () => _settings?.EnableUserScripts ?? true,
+        (id, hosts) => _settings is not null
+            && _settings.IsNetworkApproved(id, MaplePet.Engine.CommandManifest.HostsSignature(hosts)),
         PersistReminders);
 
     /// <summary>Write the current reminders back to <c>settings.json</c>. Marshaled onto the UI thread so
@@ -373,10 +375,10 @@ public partial class App : Application
         try
         {
             var backend = ChatBackendFactory.Create(profile.Kind, profile.BaseUrl, key, profile.Model);
-            // Web search/fetch and the MapleStory knowledge base are keyless — enabled unless turned off.
-            // The catalog is loaded once and reused (it's static, bundled data).
+            // Web search/fetch is keyless and toggleable; the game knowledge base is keyless and
+            // always on. The catalog is loaded once and reused (it's static, bundled data).
             WebTools? web = _settings.EnableWebSearch ? new WebTools() : null;
-            KnowledgeBase? knowledge = _settings.EnableMapleKnowledge ? (_knowledge ??= KnowledgeBase.LoadBundled()) : null;
+            KnowledgeBase? knowledge = _knowledge ??= KnowledgeBase.LoadBundled();
             return new ChatSessionConfig(backend, profile.Model, profile.MaxTokens, web, knowledge);
         }
         catch

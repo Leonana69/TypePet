@@ -43,7 +43,7 @@ open windows and the taskbar.
 - Window tracker that derives platforms and ladders from the visible (Z-order-clipped) window edges.
 - Roaming with path-planning: walking, jumping up, climbing ladders, and down-jumping, with a
   parabolic jump arc under gravity.
-- MapleStory character rendering (Body + Head + equipped items) with per-state poses, plus drag.
+- Character sprite rendering (Body + Head + equipped items) with per-state poses, plus drag.
 - A user-selectable character library: pick, import/export (zip), live-swap, and persistence.
 - Frosted-glass config UI with Characters and Settings tabs, and a tray icon with live settings.
 - "Start with Windows" support and a program icon (exe, taskbar, tray, title bar).

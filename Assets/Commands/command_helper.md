@@ -84,7 +84,7 @@ The **body** is the *content* of the command:
 | `help` (or `description`) | all | One-line description shown in the dropdown and `/help`. |
 | `aliases` | all | Other names that trigger it, comma-separated. e.g. `aliases: hi, hey` |
 | `holdSeconds` | all | How long the pet holds the result bubble (and stays still). Default ~12s (images 120s). |
-| `reaction` | all | A face the pet wears afterward: `reaction: smile`, `reaction: smile\|6` (6 s), or a random pick from a list — `reaction: [smile\|6, blink]` (see §7). |
+| `reaction` | all | A face the pet wears afterward: `reaction: smile` (held 10 s by default), `reaction: smile\|6` (6 s), or a random pick from a list — `reaction: [smile\|6, blink]` (see §7). |
 | `clipboard` (or `copy`) | clipboard | The text to copy. |
 | `image` | image | A file in this folder (e.g. `guide.png`), or an `avares://`/`http(s)://` URL. |
 | `text` (or `say`) | text | What the pet says (instead of the body). |
@@ -301,8 +301,9 @@ say Hello! 👋 {{args}}
 ### `script` — a sandboxed mini-program (advanced)
 
 For logic the other kinds can't express, `kind: script` runs the body as **JavaScript** in a locked-down
-sandbox. It has **no file, network, or system access**, and hard limits (time, memory, statement count) so
-a buggy script can't freeze the pet. Must be enabled in Settings (it is by default).
+sandbox. It has **no file or system access**, and hard limits (time, memory, statement count) so a buggy
+script can't freeze the pet. Networking is **off by default** and only available when the command opts in
+(see "Networking" below). Must be enabled in Settings (it is by default).
 
 Available inside a script:
 
@@ -317,8 +318,12 @@ Available inside a script:
 | `expression(name[, seconds])` | Make the pet wear a face. |
 | `action(name[, "once"\|"hold"])` | Play an action. |
 | `walk(x)` / `face("left"\|"right")` | Move / turn the pet. |
+| `rank({ … })` | Hand structured rank data to the core renderer (see "Rank rendering"). |
+| `httpGet(url[, headers])` | Fetch over HTTPS — only with a `hosts:` allowlist + approval (see below). |
+| `httpJson(url[, headers])` | `JSON.parse(httpGet(...).body)`. |
 
-If you don't call `say(...)`, a value the script *returns* becomes the spoken text.
+`JSON`, `RegExp`, `encodeURIComponent`, and the usual JS built-ins are available.
+If you don't call `say(...)` or `rank(...)`, a value the script *returns* becomes the spoken text.
 
 ```
 ---
@@ -335,15 +340,39 @@ expression(n === sides ? "cheers" : "blink", 8);
 say("🎲 You rolled a " + n + " (d" + sides + ")!");
 ```
 
+#### Networking (`hosts:` + approval)
+
+A script can reach the network **only** when it declares a `hosts:` allowlist in its frontmatter **and** you
+approve it in the Commands tab. Then `httpGet(url, headers?)` fetches over HTTPS and returns
+`{ status, ok, body }`. Every request is re-checked against the allowlist; private/loopback addresses are
+refused, responses are size- and time-capped, and only `User-Agent` / `Accept` / `Accept-Language` /
+`Referer` headers are honored. A leaf host (`maple.gg`) also covers its subdomains (`msea.maple.gg`).
+
+```
+hosts: example.com, api.example.com
+```
+
+When you enable (or click **Allow network** on) such a command, a prompt lists exactly which hosts it will
+contact. Editing `hosts:` later revokes the approval until you grant it again.
+
+#### Rank rendering (`rank({ … })`)
+
+To produce a MapleStory-style rank card whose EXP bar and layout are drawn by the app, call `rank({...})`
+with any of: `name`, `level`, `job` (or `class`), `world`, `expPercent` (0–100), `guild`, `rank`,
+`legionLevel`, `legionGrade`, `fame`, `imageUrl`, `serverLabel`, `infoTitle`, `infoUrl`. The core renders the
+text + EXP bar + image + profile link; calling `rank(...)` takes precedence over `say(...)`. The bundled
+`/rank` command is a full worked example.
+
 ---
 
 ## 7. The `reaction` field
 
 `reaction` works on **any** kind: after the command runs, the pet wears that expression. The value is an
-expression name, optionally followed by `|seconds` to set how long it's held:
+expression name, optionally followed by `|seconds` to set how long it's held. With no `|seconds`, the face
+is held for **10 seconds** by default (independent of the bubble's `holdSeconds`):
 
 ```
-reaction: cheers
+reaction: cheers       # held 10 s (the default)
 reaction: cheers|6     # hold for 6 seconds
 ```
 
@@ -351,7 +380,7 @@ reaction: cheers|6     # hold for 6 seconds
 the command runs (each option has equal odds). Every option may carry its own `|seconds`:
 
 ```
-reaction: [smile, blink]          # 50/50 smile or blink, default hold
+reaction: [smile, blink]          # 50/50 smile or blink, each held 10 s (the default)
 reaction: [smile|30, blink|20]    # 50/50; smile held 30 s, blink held 20 s
 reaction: [cheers|6]              # a one-item list works too (same as: reaction: cheers|6)
 ```
@@ -400,7 +429,7 @@ usage: /<word> [...]    # shown in the dropdown
 help: <one line>        # shown in the dropdown / /help
 aliases: alt1, alt2     # optional extra names
 holdSeconds: <number>   # optional bubble hold time
-reaction: <expr>[|secs] # optional face afterward (or [a|secs, b, …] = random pick)
+reaction: <expr>[|secs] # optional face afterward; default hold 10 s (or [a|secs, b, …] = random pick)
 
 clipboard: <text>       # kind: clipboard
 image: <file|url>       # kind: image

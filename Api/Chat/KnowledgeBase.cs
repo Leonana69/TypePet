@@ -12,7 +12,7 @@ using Avalonia.Platform;
 namespace MaplePet.Api.Chat;
 
 /// <summary>
-/// One curated reference site the chatbot may read to answer MapleStory questions, loaded from the
+/// One curated reference site the chatbot may read to answer game questions, loaded from the
 /// bundled <c>Assets/Program/Knowledge/sources.json</c> catalog. Grow the knowledge base by adding
 /// entries to that file — no code change needed. <see cref="Languages"/> drives language-prioritized
 /// selection: a Korean question prefers a source whose languages include <c>ko</c>.
@@ -26,7 +26,7 @@ public sealed class KnowledgeSource
     /// question's detected language ranks this source first.</summary>
     public List<string> Languages { get; init; } = new();
 
-    /// <summary>Optional MapleStory region tag (KMS/GMS/MSEA/TMS) — informational.</summary>
+    /// <summary>Optional game region tag (KMS/GMS/MSEA/TMS) — informational.</summary>
     public string? Region { get; init; }
     public string? Homepage { get; init; }
 
@@ -55,7 +55,7 @@ public sealed class KnowledgeTemplate
 }
 
 /// <summary>
-/// The chatbot's lightweight RAG layer: a catalog of authoritative MapleStory sites plus the
+/// The chatbot's lightweight RAG layer: a catalog of authoritative game sites plus the
 /// <c>maple_lookup</c> tool the model uses to retrieve from them. Selection is language-prioritized —
 /// the question's script is detected and a same-language source ranks first — so a Korean question is
 /// answered from a Korean site. Retrieval is two-step and model-driven: call <c>maple_lookup</c> with a
@@ -203,7 +203,7 @@ public sealed class KnowledgeBase
 
     public ChatToolDef LookupDefinition => new(
         LookupToolName,
-        "Look up authoritative MapleStory reference sites (class/skill guides: inner ability, hyper & link " +
+        "Look up authoritative game reference sites (class/skill guides: inner ability, hyper & link " +
         "skills, builds, cores, union, boss guides, etc.). A source written in the question's language is " +
         "preferred. Call with just `query` to get the ranked directory of matching sites and their URL " +
         "templates; then call again with a concrete `url` (built from a template, substituting the right " +
@@ -240,7 +240,7 @@ public sealed class KnowledgeBase
 
         // No URL → return the ranked directory so the model can choose a source and build a URL.
         if (!HasSources)
-            return ("No MapleStory knowledge sources are configured.", Array.Empty<WebSource>());
+            return ("No game knowledge sources are configured.", Array.Empty<WebSource>());
 
         string lang = DetectLanguage(query);
         var sb = new StringBuilder();

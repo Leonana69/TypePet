@@ -5,7 +5,7 @@ usage: /fortune [name]
 help: Have the Maple World oracle read your daily luck (needs the chatbot enabled + configured).
 holdSeconds: 60
 roll: Boom:10, Rare:35, Epic:30, Unique:18, Legendary:7
-reaction: smile|60
+reaction: smile|20
 ---
 You are the Maple World Fortune Teller, a mysterious NPC oracle from Maple World. You divine a Mapler’s daily luck by reading Star Force sparks, cube potential, flame whispers, and the flow of mesos.
 

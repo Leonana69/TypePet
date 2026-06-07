@@ -24,7 +24,7 @@ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the full design and m
 | Dynamic world | Rebuilds the graph and replans whenever windows move/open/close; if its surface vanishes it falls and recovers |
 | Fullscreen hide | Hides the overlay while a borderless/exclusive fullscreen app is foreground (taskbar-covering window, not a mere maximize); returns on alt-tab back to the desktop |
 
-The pet is a MapleStory character (Body + Head + equipped items, including item effects, rendered
+The pet is a sprite character (Body + Head + equipped items, including item effects, rendered
 from `Assets/footage`) that stands, walks, jumps, and climbs with per-state poses. If the footage
 fails to load it falls back to a state-tinted rectangle.
 
@@ -56,7 +56,7 @@ open artifacts/MaplePet.app
 ```
 
 You'll see your detected windows outlined, the derived platforms/ladders drawn on top,
-and the MapleStory character (the pet) roaming them — walking, jumping up onto nearby ledges, climbing
+and the sprite character (the pet) roaming them — walking, jumping up onto nearby ledges, climbing
 window edges for taller gaps, and down-jumping between them. The overlay is click-through,
 so everything behind it stays usable; you can
 still grab and drag the pet with the mouse. Quit from the tray icon's **Exit** (or Ctrl+C

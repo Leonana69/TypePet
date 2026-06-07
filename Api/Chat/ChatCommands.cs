@@ -40,21 +40,17 @@ public sealed record CommandResult(
 ///
 /// The registry merges a few <b>built-in</b> commands kept in code with the user's <b>command library</b>
 /// — declarative <c>command.md</c> files loaded via <see cref="CommandStore"/> + <see cref="CommandInterpreter"/>,
-/// hot-reloaded and managed in the Commands tab. The built-ins: <c>/rank [-na|-eu|-kr|-sea|-tw]
-/// &lt;character&gt;</c> — a keyless MapleStory lookup whose server is picked per call by a leading flag
-/// (<see cref="RankServers"/>: GMS via <see cref="NexonGmsRankApi"/>, KMS/MSEA via
-/// <see cref="MapleGgScraper"/>, TMS via <see cref="MapleKitApi"/>); <c>/clear</c> (wipe the chat); and
-/// <c>/help</c>. Built-ins win on a name collision, so an uploaded command can't shadow them. (<c>/fortune</c>,
-/// the LLM-backed oracle, now ships as a bundled <c>kind:prompt</c> command — see <see cref="CommandInterpreter"/>.)
+/// hot-reloaded and managed in the Commands tab. The built-ins are state-coupled glue: <c>/remind</c>,
+/// <c>/clear</c> (wipe the chat) and <c>/help</c>. Built-ins win on a name collision, so an uploaded command
+/// can't shadow them. (<c>/fortune</c>, the LLM-backed oracle, and <c>/rank</c>, the keyless ranking lookup,
+/// now ship as bundled commands — a <c>kind:prompt</c> and a network <c>kind:script</c> respectively — see
+/// <see cref="CommandInterpreter"/>.)
 /// </summary>
 public sealed class ChatCommands
 {
     /// <summary>The leading character that marks a message as a command.</summary>
     public const char Prefix = '/';
 
-    private readonly NexonGmsRankApi _gms = new();
-    private readonly MapleGgScraper _mapleGg = new();
-    private readonly MapleKitApi _mapleKit = new();
     private readonly ReminderScheduler _reminders;        // pending /remind reminders, spoken when due
 
     // The built-in commands kept in code (rank/clear/help) — too complex or state-coupled to express
@@ -86,21 +82,22 @@ public sealed class ChatCommands
     /// <param name="store">The user command library, or null to expose only the built-ins.</param>
     /// <param name="disabledIds">The store ids the user has turned off (excluded from the registry).</param>
     /// <param name="scriptsEnabled">Whether <c>kind:script</c> commands may run (Settings gate).</param>
+    /// <param name="networkApproved">Probe — given a command's store id and its declared <c>hosts:</c> — for
+    /// whether the user has approved that command's network access (Commands tab). Null = never approved.</param>
     /// <param name="onReminderChanged">Invoked whenever the reminder list changes (added/cancelled/cleared,
     /// or a reminder fired and re-armed or completed) so the owner can persist it to settings. Null = no
     /// persistence (reminders stay in-memory, as in the headless test harness).</param>
     public ChatCommands(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig, Func<IPetControl?> pet,
         CommandStore? store = null, Func<IReadOnlyCollection<string>>? disabledIds = null,
-        Func<bool>? scriptsEnabled = null, Action? onReminderChanged = null)
+        Func<bool>? scriptsEnabled = null, Func<string, IReadOnlyCollection<string>, bool>? networkApproved = null,
+        Action? onReminderChanged = null)
     {
         _store = store;
         _disabledIds = disabledIds ?? (() => Array.Empty<string>());
-        _interp = new CommandInterpreter(chatEnabled, buildConfig, pet, scriptsEnabled ?? (() => true));
+        _interp = new CommandInterpreter(chatEnabled, buildConfig, pet, scriptsEnabled ?? (() => true), networkApproved);
         _reminders = new ReminderScheduler(pet, onReminderChanged);
         _builtIns = new[]
         {
-            new Command("rank", $"/rank [{RankServers.FlagList.Replace(", ", "|")}] <character>",
-                "Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS.", RankAsync),
             new Command("remind", "/remind <time|-d|-w|-m> <message>",
                 "Have the pet remind you. One-off: a duration (10m, 1h30m, 90s, 1.5h, or a plain number = minutes) or a clock time (14:23, 1:30pm). Recurring (clock time required): -d daily, -w [weekday] weekly, -m [day] monthly — e.g. /remind -d 9:00 …, /remind -w mon 20:00 …, /remind -m 1 9:00 …. Also: /remind list, /remind cancel <id>, /remind clear.", RemindAsync),
             new Command("clear", "/clear", "Clear the chat history and start a fresh conversation.", ClearAsync),
@@ -165,64 +162,6 @@ public sealed class ChatCommands
     }
 
     // ---- commands ----------------------------------------------------------------
-
-    private async Task<CommandResult> RankAsync(string args, CancellationToken ct)
-    {
-        // A leading flag (e.g. "-kr Name") picks the server; with none, it defaults to -na (GMS NA). Names
-        // are alphanumeric/CJK, so a leading '-' is always a flag, never part of the name.
-        var (flag, rest) = SplitLeadingFlag(args);
-        var server = flag is null ? RankServers.Default : RankServers.Resolve(flag);
-        if (server is null)
-            return CommandResult.Error($"Unknown flag \"-{flag}\" — use {RankServers.FlagList}.");
-        if (rest.Length == 0)
-            return CommandResult.Error($"Usage: /rank [{RankServers.FlagList.Replace(", ", "|")}] <character name>");
-
-        try
-        {
-            // Each source returns its own shape (and a keyless render image / profile link); dispatch by kind.
-            switch (server.Kind)
-            {
-                case RankSourceKind.Gms:
-                {
-                    // GMS uniquely returns a true global rank position; ServerCode is the na/eu sub-server.
-                    var g = await _gms.GetRankAsync(rest, server.DataUrl, server.ServerCode, ct).ConfigureAwait(false);
-                    return CommandResult.Ok(FormatGmsRank(g, server), link: BuildInfoLink(server, g.Name), imageUrl: g.ImageUrl);
-                }
-                case RankSourceKind.MapleGg:
-                {
-                    // KMS/MSEA: scrape the public maple.gg page for identity, plus a best-effort dak.gg API
-                    // call (server.StatsUrl) for EXP%/rank/Legion.
-                    var m = await _mapleGg.GetRankAsync(rest, server.DataUrl, server.StatsUrl, ct).ConfigureAwait(false);
-                    return CommandResult.Ok(FormatMapleGgRank(m, server), link: BuildInfoLink(server, m.Name), imageUrl: m.ImageUrl);
-                }
-                case RankSourceKind.MapleKit:
-                {
-                    // TMS: the keyless maple-kit proxy returns the full Open-API profile in one call.
-                    var r = await _mapleKit.GetRankAsync(rest, server.DataUrl, ct).ConfigureAwait(false);
-                    return CommandResult.Ok(FormatRank(r, server), link: BuildInfoLink(server, r.Name), imageUrl: r.ImageUrl);
-                }
-                default:
-                    return CommandResult.Error("Unsupported server.");
-            }
-        }
-        catch (RankException ex)
-        {
-            return CommandResult.Error(ex.Message); // already user-facing
-        }
-    }
-
-    /// <summary>Split an optional leading <c>-flag</c>/<c>--flag</c> token off the front of <paramref
-    /// name="args"/>. Returns the lowercased flag name (no dashes) or null, plus the remaining text trimmed.
-    /// When there's no flag, the flag is null and the remainder is the full trimmed input.</summary>
-    private static (string? flag, string rest) SplitLeadingFlag(string args)
-    {
-        string s = (args ?? "").Trim();
-        if (s.Length == 0 || s[0] != '-') return (null, s);
-        int sp = s.IndexOfAny(new[] { ' ', '\t', '\n', '\r' });
-        string token = sp < 0 ? s : s[..sp];
-        string rest = sp < 0 ? "" : s[(sp + 1)..].Trim();
-        return (token.TrimStart('-').ToLowerInvariant(), rest);
-    }
 
     /// <summary><c>/remind &lt;time&gt; &lt;message&gt;</c> — schedule a message the pet speaks later. With no
     /// flag the first token is a one-off time spec (a duration like <c>10m</c>/<c>1h30m</c>/<c>90s</c> or a
@@ -409,76 +348,11 @@ public sealed class ChatCommands
 
     // ---- helpers -----------------------------------------------------------------
 
-    /// <summary>The per-server "check more info on …" link to that server's community profile site (maple.gg
-    /// for KMS/MSEA, maple-kit.com for TMS, MapleRanks for GMS). Shown as a clickable line in the pet's bubble
-    /// and the history card (not as a citation/source).</summary>
-    private static WebSource? BuildInfoLink(RankServer server, string characterName)
-    {
-        string url = string.Format(server.InfoUrlFormat, Uri.EscapeDataString(characterName));
-        return new WebSource($"Check more info on {server.InfoSite} ↗", url, "MapleStory character profile");
-    }
-
     private CommandResult Unknown(string name)
     {
         string known = string.Join(", ", _resolved.Commands.Select(c => Prefix + c.Name));
         string head = string.IsNullOrEmpty(name) ? "Type a command after '/'." : $"Unknown command \"/{name}\".";
         return CommandResult.Error($"{head} Try: {known}");
-    }
-
-    // TMS (maple-kit): the proxy returns EXP%, the global rank and the Legion (Union) level + grade.
-    private static string FormatRank(MapleKitApi.CharacterRank r, RankServer server)
-    {
-        var lines = new List<string> { $"{r.Name} · Lv.{r.Level} · {r.Class}" };
-        if (r.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add($"World: {r.World}");
-        lines.Add(r.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
-        if (r.Guild is not null) lines.Add($"Guild: {r.Guild}");
-        if (r.UnionLevel is int ul && ul > 0)
-            lines.Add($"Legion Lv.{ul:N0}" + (r.UnionGrade is { } grade ? $" · {grade}" : ""));
-        if (r.Popularity is int pop) lines.Add($"Fame {pop}");
-        return string.Join("\n", lines);
-    }
-
-    // KMS/MSEA (maple.gg): identity from the page scrape; EXP% (most recent EXP-history point), rank and
-    // Legion from the best-effort dak.gg API (null when unavailable — e.g. MSEA omits rank/Legion).
-    private static string FormatMapleGgRank(MapleGgScraper.MapleGgRank m, RankServer server)
-    {
-        var lines = new List<string> { $"{m.Name} · Lv.{m.Level} · {m.Class}" };
-        if (m.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add($"World: {m.World}");
-        lines.Add(m.Rank is long rk ? $"{server.Label} · Rank #{rk:N0}" : server.Label);
-        if (m.Guild is not null) lines.Add($"Guild: {m.Guild}");
-        if (m.LegionLevel is int legion && legion > 0) lines.Add($"Legion Lv.{legion:N0}");
-        if (m.Popularity is int pop) lines.Add($"Fame {pop}");
-        return string.Join("\n", lines);
-    }
-
-    private static string FormatGmsRank(NexonGmsRankApi.GmsRank g, RankServer server)
-    {
-        var lines = new List<string>
-        {
-            $"{g.Name} · Lv.{g.Level} · {g.Job}",
-        };
-        // EXP progress through the current level, as a text bar (omitted at the level cap, where it's null).
-        if (g.ExpPercent is double pct) lines.Add(ExpBar(pct));
-        lines.Add($"World: {g.World}");
-        // Rank is the command's headline and GMS's unique offering (the other servers don't expose a global
-        // rank). If it's somehow missing (degenerate row), show the server alone rather than a bogus "#0".
-        lines.Add(g.Rank > 0 ? $"{server.Label} · Rank #{g.Rank:N0}" : server.Label);
-        // Legion level is present only when the looked-up character is its account's Legion representative
-        // (its highest-level character); otherwise it's 0 and the line is omitted.
-        if (g.LegionLevel > 0) lines.Add($"Legion Lv.{g.LegionLevel:N0}");
-        return string.Join("\n", lines);
-    }
-
-    /// <summary>A fixed-width EXP progress bar from a 0–100 percentage, drawn with full/empty block cells
-    /// (e.g. <c>EXP ██████░░░░ 60.05%</c>) since the bubble renders the result as plain text.</summary>
-    private static string ExpBar(double pct)
-    {
-        const int width = 10;
-        int filled = (int)Math.Round(pct / 100.0 * width, MidpointRounding.AwayFromZero);
-        filled = Math.Clamp(filled, 0, width);
-        return $"EXP {new string('█', filled)}{new string('░', width - filled)} {pct:0.00}%";
     }
 
     /// <summary>Public, read-only view of a command for the say bar's dropdown — the same name, usage, and

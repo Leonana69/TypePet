@@ -46,7 +46,8 @@ public sealed class CommandManifest
     /// <summary>Optional facial expression(s) the pet wears after the command runs (any kind). When more than
     /// one is listed (<c>reaction: [smile|30, blink|20]</c>) one is chosen at random each run; a lone
     /// <c>reaction: smile|6</c> is just a one-element list. Each option carries its own optional hold time in
-    /// seconds (the number after <c>|</c>); null falls back to <see cref="HoldSeconds"/>.</summary>
+    /// seconds (the number after <c>|</c>); null falls back to a fixed default (10 s — see
+    /// <c>CommandInterpreter.DefaultExpressionSeconds</c>), independent of the bubble's <see cref="HoldSeconds"/>.</summary>
     public List<(string Expression, double? Seconds)> Reactions { get; set; } = new();
 
     // ---- kind payloads (exactly one is read per Kind) ----
@@ -61,12 +62,28 @@ public sealed class CommandManifest
     /// the model) picks an outcome with controlled odds — e.g. <c>roll: Boom:10, Rare:35, Epic:30</c>.</summary>
     public List<(string Value, int Weight)> Roll { get; set; } = new();
 
+    /// <summary>kind=script: the network allowlist — hostnames the script may reach via <c>httpGet</c>
+    /// (declared <c>hosts: a.com, b.com</c>). Empty ⇒ no network at all. A leaf entry also covers its
+    /// subdomains (<c>maple.gg</c> ⇒ <c>msea.maple.gg</c>). The capability is still gated on the user's
+    /// scripts toggle AND an explicit per-command approval (see <c>Settings.NetworkApprovedCommands</c>).</summary>
+    public List<string> Hosts { get; set; } = new();
+
     /// <summary>The markdown body after the frontmatter (prompt text / script source / pet steps).</summary>
     public string Body { get; set; } = "";
 
     /// <summary>The command word plus any aliases (non-empty).</summary>
     public IEnumerable<string> AllNames() =>
         new[] { Name }.Concat(Aliases).Where(n => !string.IsNullOrEmpty(n));
+
+    /// <summary>A stable signature of the (sanitized) host allowlist — sorted + joined — used to detect when
+    /// a command's declared <c>hosts:</c> change so a stored network approval is revoked until re-granted.
+    /// The instance form mirrors <see cref="Hosts"/>; the static form lets callers sign an arbitrary list.</summary>
+    public string HostsSignature() => HostsSignature(Hosts);
+
+    public static string HostsSignature(IEnumerable<string>? hosts) =>
+        string.Join(",", (hosts ?? Enumerable.Empty<string>())
+            .Select(h => (h ?? "").Trim().ToLowerInvariant())
+            .Where(h => h.Length > 0).Distinct().OrderBy(h => h, StringComparer.Ordinal));
 
     /// <summary>Normalize fields: lowercase names, default the usage, drop bad hold times.</summary>
     public void Sanitize()
@@ -76,7 +93,19 @@ public sealed class CommandManifest
         Usage = string.IsNullOrWhiteSpace(Usage) ? "/" + Name : Usage!.Trim();
         Help = (Help ?? "").Trim();
         if (HoldSeconds is { } h && (!double.IsFinite(h) || h <= 0)) HoldSeconds = null;
+        // Keep only plausible bare hostnames (letters/digits/'.'/'-', with a dot), lowercased + de-duped. A
+        // scheme, path, port or wildcard is dropped rather than half-honored, so the runtime allowlist check
+        // is a clean host comparison.
+        Hosts = (Hosts ?? new()).Select(x => (x ?? "").Trim().ToLowerInvariant())
+            .Where(IsValidHost).Distinct().ToList();
     }
+
+    /// <summary>A bare hostname for the <c>hosts:</c> allowlist: ASCII letters/digits/'.'/'-' only (an IDN must
+    /// be given in punycode <c>xn--…</c>), at least one dot, no scheme/slash/port/'*' and no leading/trailing
+    /// dot. ASCII-only so a stored entry matches the punycode <c>Uri.IdnHost</c> the fetch actually resolves.</summary>
+    public static bool IsValidHost(string h) =>
+        h.Length is > 0 and <= 253 && h.Contains('.') && h[0] != '.' && h[^1] != '.'
+        && h.All(c => c is (>= 'a' and <= 'z') or (>= '0' and <= '9') or '.' or '-');
 
     /// <summary>Null when the manifest is runnable, otherwise a short reason it isn't (shown in the UI).</summary>
     public string? Validate()
@@ -157,6 +186,10 @@ public sealed class CommandManifest
             case "link": (m.LinkTitle, m.LinkUrl) = ParseLink(val); break;
             case "requireschat": m.RequiresChat = !IsFalsey(val); break;
             case "roll": m.Roll = ParseRoll(val); break;
+            case "hosts": case "host":
+                m.Hosts = val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(h => h.ToLowerInvariant()).ToList();
+                break;
         }
     }
 

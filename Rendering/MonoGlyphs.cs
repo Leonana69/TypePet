@@ -5,23 +5,29 @@ namespace MaplePet.Rendering;
 
 /// <summary>
 /// Helpers for rendering Box Drawing / Block Elements glyphs (U+2500–U+259F) — e.g. the <c>/rank</c>
-/// EXP bar's full block <c>█</c> and light shade <c>░</c> — in a monospace font.
+/// EXP bar's full block <c>█</c> and light shade <c>░</c>.
 ///
-/// The app's default proportional font (<see cref="Typeface.Default"/>) renders these inconsistently on
-/// macOS: the shade glyph <c>░</c> is drawn shorter than the full block <c>█</c> and as a sparse dither
-/// with gaps between cells, so the bar looks ragged (the filled part sits higher than the track). A
-/// monospace face (Menlo / Consolas) tiles the whole family at a uniform cell height with no gaps, so the
-/// bar lines up the same way it already does on Windows. We switch ONLY these glyphs to monospace, leaving
-/// surrounding prose in the proportional font.
+/// Windows' default font (<see cref="Typeface.Default"/>, Segoe UI) already tiles <c>█</c>/<c>░</c> at a
+/// uniform height, so the bar renders cleanly with no override. macOS' default proportional font does not:
+/// it draws the shade <c>░</c> shorter than the full block <c>█</c> and as a sparse dither with gaps, so
+/// the bar looks ragged (the filled part sits higher than the track). There we switch ONLY these glyphs to
+/// a monospace face (Menlo), which tiles the whole family at a uniform cell height, leaving surrounding
+/// prose in the proportional font.
+///
+/// Hence <see cref="Mono"/> is <c>null</c> on Windows (no override) and a monospace family elsewhere. Note
+/// the obvious "use Consolas on Windows too" does the *opposite* of help: in Consolas <c>░</c> sits visibly
+/// higher than <c>█</c> — the regression this null-on-Windows split exists to avoid. Each font has its own
+/// vertical offset between the two glyphs, so there is no single family that aligns them everywhere.
 /// </summary>
 public static class MonoGlyphs
 {
-    /// <summary>A monospace family per platform (with in-family fallbacks). Menlo is verified to render
-    /// <c>█</c>/<c>░</c> at matching heights on macOS; Consolas does the same on Windows.</summary>
-    public static readonly FontFamily Mono = new(
-        System.OperatingSystem.IsWindows() ? "Consolas, Cascadia Mono, monospace"
-        : System.OperatingSystem.IsMacOS() ? "Menlo, Monaco, monospace"
-        : "DejaVu Sans Mono, Liberation Mono, monospace");
+    /// <summary>The monospace family to draw box/block glyphs in, or <c>null</c> when the platform's default
+    /// font already renders <c>█</c>/<c>░</c> at matching heights and no override is wanted. Null on Windows;
+    /// Menlo on macOS; DejaVu Sans Mono on Linux (each with in-family fallbacks).</summary>
+    public static readonly FontFamily? Mono =
+        System.OperatingSystem.IsWindows() ? null
+        : System.OperatingSystem.IsMacOS() ? new("Menlo, Monaco, monospace")
+        : new("DejaVu Sans Mono, Liberation Mono, monospace");
 
     /// <summary>True for Box Drawing (U+2500–U+257F) and Block Elements (U+2580–U+259F) glyphs — the
     /// characters we want drawn in <see cref="Mono"/>. Ordinary text never contains these.</summary>

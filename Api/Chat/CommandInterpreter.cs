@@ -27,18 +27,27 @@ public sealed class CommandInterpreter
 {
     private const int MaxPetSteps = 32;
 
+    /// <summary>How long the pet wears a <c>reaction:</c> face when that reaction doesn't carry its own
+    /// <c>|seconds</c> override. The bubble's <see cref="CommandManifest.HoldSeconds"/> is independent: a
+    /// reaction is a brief "afterward" face, so it no longer inherits the (often much longer) bubble hold —
+    /// and a command that sets a reaction but no hold no longer leaves the face stuck forever.</summary>
+    private const double DefaultExpressionSeconds = 10;
+
     private readonly Func<bool> _chatEnabled;
     private readonly Func<ChatSessionConfig?> _buildConfig;
     private readonly Func<IPetControl?> _pet;
     private readonly Func<bool> _scriptsEnabled;
+    private readonly Func<string, IReadOnlyCollection<string>, bool> _networkApproved;
 
     public CommandInterpreter(Func<bool> chatEnabled, Func<ChatSessionConfig?> buildConfig,
-        Func<IPetControl?> pet, Func<bool> scriptsEnabled)
+        Func<IPetControl?> pet, Func<bool> scriptsEnabled,
+        Func<string, IReadOnlyCollection<string>, bool>? networkApproved = null)
     {
         _chatEnabled = chatEnabled;
         _buildConfig = buildConfig;
         _pet = pet;
         _scriptsEnabled = scriptsEnabled;
+        _networkApproved = networkApproved ?? ((_, _) => false);
     }
 
     /// <summary>Build the handler for <paramref name="m"/> (its folder is <paramref name="dir"/>, used to
@@ -149,7 +158,7 @@ public sealed class CommandInterpreter
                 else
                 {
                     var (expr, secs) = m.PickReaction();
-                    if (!string.IsNullOrEmpty(expr)) _ = pet.Expression(expr!, secs ?? m.HoldSeconds);
+                    if (!string.IsNullOrEmpty(expr)) _ = pet.Expression(expr!, secs ?? DefaultExpressionSeconds);
                 }
             }
             catch { /* character may lack the expression — ignore */ }
@@ -236,7 +245,11 @@ public sealed class CommandInterpreter
     {
         if (!_scriptsEnabled())
             return Task.FromResult(CommandResult.Error($"/{m.Name}: user scripts are disabled (Settings → enable scripts)."));
-        return CommandScriptHost.RunAsync(m, args, _pet(), ct);
+        // Network is gated per command: it needs a declared hosts: allowlist AND a standing user approval
+        // for exactly that allowlist (keyed by the command's CommandStore id = its folder name).
+        string id = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        bool networkApproved = m.Hosts.Count > 0 && _networkApproved(id, m.Hosts);
+        return CommandScriptHost.RunAsync(m, args, _pet(), networkApproved, ct);
     }
 
     // -------------------------------------------------------------------- helpers
@@ -246,7 +259,7 @@ public sealed class CommandInterpreter
         if (string.IsNullOrEmpty(expr)) return;
         var pet = _pet();
         if (pet is null) return;
-        try { await pet.Expression(expr!, secs ?? m.HoldSeconds); }
+        try { await pet.Expression(expr!, secs ?? DefaultExpressionSeconds); }
         catch { /* the character may lack that expression — ignore */ }
     }
 

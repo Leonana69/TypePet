@@ -36,8 +36,8 @@ public sealed class Settings
     public List<ProviderProfile> Providers { get; set; } = new(); // configured LLM providers (seeded on first run)
     public string ActiveProviderId { get; set; } = "";        // which profile the chat uses (a Providers[].Id)
     public bool EnableWebSearch { get; set; } = true;         // keyless DuckDuckGo web_search + web_fetch tools
-    public bool EnableMapleKnowledge { get; set; } = true;    // curated MapleStory reference sites (maple_lookup) — keyless RAG
     public bool ChatHistoryVisible { get; set; } = true;      // input bar shows the conversation-history panel
+    // The curated game reference sites (maple_lookup, keyless RAG) are always on — no toggle.
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
 
@@ -45,14 +45,17 @@ public sealed class Settings
     public List<string> DisabledCommandIds { get; set; } = new(); // installed commands the user turned OFF (by CommandStore id)
     public bool EnableUserScripts { get; set; } = true;           // allow kind:script commands (sandboxed JS); off disables them all
 
+    /// <summary>Per-command network grants. A <c>kind:script</c> command that declares <c>hosts:</c> may
+    /// reach the network only after the user approves it in the Commands tab. Each grant pins the command's
+    /// CommandStore id to the host-allowlist signature it was approved for, so editing <c>hosts:</c> later
+    /// revokes the grant until it's re-approved. Empty by default ⇒ no command has network access.</summary>
+    public List<NetworkGrant> NetworkApprovedCommands { get; set; } = new();
+
     // ---- /remind reminders -------------------------------------------------------------------------
     // Persisted so recurring (daily/weekly/monthly) reminders survive a restart. One-off reminders are
     // kept too; on launch a one-off whose time already passed while the app was closed is dropped, and a
     // recurring reminder recomputes its next fire from "now". Rewritten by the scheduler on every change.
     public List<ReminderRecord> Reminders { get; set; } = new();
-
-    // The /rank chat command picks its MapleStory server per call via a leading flag (-na/-eu/-kr/-sea/-tw,
-    // default -na) — see RankServers — so the server is no longer a persisted setting.
 
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
@@ -126,6 +129,8 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
 
         DisabledCommandIds ??= new();
+        NetworkApprovedCommands ??= new();
+        NetworkApprovedCommands.RemoveAll(g => g is null || string.IsNullOrWhiteSpace(g.Id));
 
         Reminders ??= new();
         foreach (var r in Reminders) r.Sanitize();
@@ -150,6 +155,13 @@ public sealed class Settings
             double.IsFinite(value) && value > 0 ? value : fallback;
     }
 
+    /// <summary>True if command <paramref name="id"/> has a standing network grant whose approved host
+    /// signature still matches <paramref name="hostsSignature"/> (the command's current <c>hosts:</c>).
+    /// A changed allowlist won't match, so widening the hosts forces a fresh approval.</summary>
+    public bool IsNetworkApproved(string id, string hostsSignature) =>
+        NetworkApprovedCommands.Any(g => string.Equals(g.Id, id, StringComparison.OrdinalIgnoreCase)
+            && g.Hosts == hostsSignature);
+
     /// <summary>Seed the two prioritized presets on first run (keys are added by the user in Settings).</summary>
     private void SeedDefaultProviders()
     {
@@ -164,6 +176,16 @@ public sealed class Settings
             BaseUrl = "", Model = "claude-opus-4-8", UsesKey = true, MaxTokens = 2048,
         });
     }
+}
+
+/// <summary>A standing approval for one <c>kind:script</c> command to use the network. <see cref="Id"/> is
+/// its CommandStore id (folder name); <see cref="Hosts"/> is the host-allowlist signature
+/// (<see cref="CommandManifest.HostsSignature()"/>) the user approved — re-checked at run time so an edited
+/// allowlist revokes the grant.</summary>
+public sealed class NetworkGrant
+{
+    public string Id { get; set; } = "";
+    public string Hosts { get; set; } = "";
 }
 
 /// <summary>

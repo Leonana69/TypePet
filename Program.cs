@@ -44,7 +44,7 @@ internal static class Program
         if (Array.IndexOf(args, "--remind-test") >= 0)
             return MaplePet.Api.Chat.RemindTest.Run();
 
-        // Dev-only: smoke-test the MapleStory knowledge base (RAG). Needs Avalonia's asset loader for the
+        // Dev-only: smoke-test the game knowledge base (RAG). Needs Avalonia's asset loader for the
         // bundled catalog, so set up without starting the UI. Optional query: --rag-test "<question>".
         if (Array.IndexOf(args, "--rag-test") >= 0)
         {

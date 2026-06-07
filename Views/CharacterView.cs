@@ -31,7 +31,7 @@ public sealed class CharacterView : UserControl
     // otherwise reach past it.
     private const double ThumbFootMargin = 6;
 
-    // Where the user can build/obtain importable MapleStory character footage.
+    // Where the user can build/obtain importable character footage.
     private const string MapleSimUrl = "https://maple-sim.net/";
 
     // A thumbnail only ever draws the idle frame, so decode just that one pose (not the whole footage).
@@ -75,7 +75,7 @@ public sealed class CharacterView : UserControl
         hint.Classes.Add("caption");
 
         // Link out to maple-sim.net, where the importable character footage is built/exported.
-        var link = new Button { Content = "maple-sim.net ↗", VerticalAlignment = VerticalAlignment.Center };
+        var link = new Button { Content = "Build your character ↗", VerticalAlignment = VerticalAlignment.Center };
         link.Classes.Add("link");
         ToolTip.SetTip(link, "Open " + MapleSimUrl + " in your browser");
         link.Click += (_, _) => _ = OpenLinkAsync();

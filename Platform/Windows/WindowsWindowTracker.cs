@@ -38,6 +38,7 @@ public sealed class WindowsWindowTracker : IWindowTracker
             if (IsCloaked(h)) continue;                    // hidden UWP / other virtual desktop
             if (PInvoke.GetWindowTextLength(h) == 0) continue;
             if (IsToolWindow(h)) continue;
+            if (IsClickThrough(h)) continue;               // invisible click-through overlay/HUD, not a real surface
 
             var rect = GetVisibleRect(h);
             if (rect.Width < MinWindowSize || rect.Height < MinWindowSize) continue;
@@ -148,6 +149,16 @@ public sealed class WindowsWindowTracker : IWindowTracker
     {
         long ex = (long)PInvoke.GetWindowLongPtr(h, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         return (ex & (long)WINDOW_EX_STYLE.WS_EX_TOOLWINDOW) != 0;
+    }
+
+    /// <summary>True for click-through windows (WS_EX_TRANSPARENT): invisible overlays / HUDs the user
+    /// can't interact with — other pet apps, the Discord/RTSS/Afterburner OSD, a launcher's transparent
+    /// CEF popup surface, etc. They must never become platforms (the pet would stand on thin air); our
+    /// own overlay is also click-through but is already excluded via <see cref="ExcludeHwnd"/>.</summary>
+    private static bool IsClickThrough(HWND h)
+    {
+        long ex = (long)PInvoke.GetWindowLongPtr(h, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        return (ex & (long)WINDOW_EX_STYLE.WS_EX_TRANSPARENT) != 0;
     }
 
     private static unsafe bool IsCloaked(HWND h)

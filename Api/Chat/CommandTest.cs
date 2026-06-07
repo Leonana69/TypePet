@@ -36,7 +36,10 @@ public static class CommandTest
             pet: () => null,
             store: store,
             disabledIds: () => Array.Empty<string>(),
-            scriptsEnabled: () => true);
+            scriptsEnabled: () => true,
+            // Dev harness: trust every command's declared hosts: allowlist so kind:script network commands
+            // (e.g. /rank) can be exercised headlessly, mirroring how it already force-enables scripts.
+            networkApproved: (_, _) => true);
 
         Console.WriteLine($"\nMerged registry ({commands.Commands.Count}):");
         foreach (var c in commands.Commands)
