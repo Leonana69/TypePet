@@ -8,7 +8,7 @@ using Avalonia.Platform;
 namespace MaplePet.Rendering;
 
 /// <summary>
-/// The MapleStory character's drawable footage, loaded once from a
+/// The character's drawable sprite footage, loaded once from a
 /// <c>manifest.json</c> (exported by maple-character-builder). We render every equipped layer the
 /// manifest lists — Body, Head, Hair, Cap, Face, FaceAcc, Earring, Longcoat, Shoes, Weapon, Shield,
 /// and any item effects — in the manifest's order, which is already sorted back-to-front by z. Each

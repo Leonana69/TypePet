@@ -23,7 +23,7 @@ public static class MarkupTest
             "Sure do! The Aran class Discord invite is **discord.gg/WpJ4VDta8V** — straight from the Grandis Library guide page. It's a great place to go for in-depth tips and community help!",
             "Visit https://grandislibrary.com/explorers/hero for the full build.",
             "Try **bold**, *italic*, and ***both*** together.",
-            "Check www.maplestory.com today, e.g. at 3 p.m.",
+            "Check www.example.com today, e.g. at 3 p.m.",
             "Hero's link skill is **Invincible Belief** — see mapleskill.com/jobs/hero/ too.",
         };
 

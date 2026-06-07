@@ -22,7 +22,7 @@ public enum AttackKind { None, Any, Stab, Swing, Shoot }
 /// The footage poses that make up each attack kind. A character supports whichever subset its footage
 /// actually defines (a bare-handed default has only swing/stab; a gunner adds shoot); the control layer
 /// filters these against the worn character's poses and picks one at random. The names mirror the
-/// MapleStory attack stances exported by maple-character-builder (one-handed <c>O</c>, two-handed
+/// attack stances exported by maple-character-builder (one-handed <c>O</c>, two-handed
 /// <c>T</c>, polearm <c>P</c>). <c>proneStab</c> is deliberately NOT here — it's a distinct lie-down
 /// gesture (the <c>prone_stab</c> action), not a standing attack the random picker should land on.
 /// </summary>

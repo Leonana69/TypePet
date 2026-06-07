@@ -6,7 +6,7 @@ using MaplePet.Engine;
 namespace MaplePet.Rendering;
 
 /// <summary>
-/// Draws the pet as a MapleStory character: the Body + Head layers of the current animation frame,
+/// Draws the pet as a layered sprite character: the Body + Head layers of the current animation frame,
 /// pasted around the body navel. The navel is pinned to the world point <c>(CenterX, FeetY -
 /// FootToNavel)</c> so the feet stay planted while the body animates. Footage is canonical
 /// left-facing, so we mirror it horizontally (about the navel) when the pet faces right.

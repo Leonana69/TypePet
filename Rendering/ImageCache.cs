@@ -13,7 +13,7 @@ namespace MaplePet.Rendering;
 /// <summary>
 /// Loads small images for the chat/command UI and decodes them to an Avalonia <see cref="Bitmap"/>, cached
 /// by URL so each one is fetched once and reused by both the chat-history card and the pet's speech bubble.
-/// Two sources: remote http(s) images (the MapleStory character canvas the <c>/rank</c> command shows) and
+/// Two sources: remote http(s) images (the character canvas the <c>/rank</c> command shows) and
 /// bundled <c>avares://</c> app resources (e.g. the <c>/esfera</c> guide image). Only PERMANENT failures (a
 /// 4xx like 404, or any bundled-asset failure) cache as null; transient remote errors (timeout/5xx/
 /// connectivity) stay uncached so a later call retries. Bitmaps are small and kept for the process lifetime.

@@ -25,7 +25,7 @@ public partial class App : Application
     private ConfigWindow? _configWindow;
     private SayBarWindow? _sayBar;
     private PetChatAgent? _chatAgent;
-    private KnowledgeBase? _knowledge;          // bundled MapleStory RAG catalog, loaded once on first chat
+    private KnowledgeBase? _knowledge;          // bundled game RAG catalog, loaded once on first chat
     private ChatCommands? _commands;
     private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
 
@@ -375,7 +375,7 @@ public partial class App : Application
         try
         {
             var backend = ChatBackendFactory.Create(profile.Kind, profile.BaseUrl, key, profile.Model);
-            // Web search/fetch is keyless and toggleable; the MapleStory knowledge base is keyless and
+            // Web search/fetch is keyless and toggleable; the game knowledge base is keyless and
             // always on. The catalog is loaded once and reused (it's static, bundled data).
             WebTools? web = _settings.EnableWebSearch ? new WebTools() : null;
             KnowledgeBase? knowledge = _knowledge ??= KnowledgeBase.LoadBundled();

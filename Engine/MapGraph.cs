@@ -142,7 +142,7 @@ public sealed class MapGraph
                     // A down-jump only needs a shared column to fall through — no MinOverlap gate,
                     // otherwise a platform a ladder can climb ONTO (ladders need no overlap) but that
                     // overlaps the floor below by < MinOverlap would have no way back down (soft-lock).
-                    // Down-jumps go STRAIGHT DOWN when the column below is clear (MapleStory-style):
+                    // Down-jumps go STRAIGHT DOWN when the column below is clear (platformer-style):
                     // a leaning drop makes the pet launch one way and land the other, so it walks to
                     // the launch point then jumps backward. preferStraight tries the vertical hop first.
                     foreach (var (lx, tx) in ValidHops(lo, hi, x => HighestBelow(platforms, x, pa.Y) == b, preferStraight: true))

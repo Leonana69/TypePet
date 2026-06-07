@@ -37,7 +37,7 @@ public sealed class Settings
     public string ActiveProviderId { get; set; } = "";        // which profile the chat uses (a Providers[].Id)
     public bool EnableWebSearch { get; set; } = true;         // keyless DuckDuckGo web_search + web_fetch tools
     public bool ChatHistoryVisible { get; set; } = true;      // input bar shows the conversation-history panel
-    // The curated MapleStory reference sites (maple_lookup, keyless RAG) are always on — no toggle.
+    // The curated game reference sites (maple_lookup, keyless RAG) are always on — no toggle.
     // The input bar's open shortcut is SayInputHotkey (above). Provider API keys are NOT stored here —
     // they live encrypted in the platform secret store, keyed by the provider id. Web search is keyless.
 

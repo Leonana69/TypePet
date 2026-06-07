@@ -1,4 +1,4 @@
-// MaplePet default-character generator — ORIGINAL ART, no MapleStory assets.
+// MaplePet default-character generator — ORIGINAL ART, no third-party game assets.
 // Draws a small round "blob" mascot procedurally and emits one composited PNG per
 // animation frame plus a minimal manifest.json that the MaplePet renderer consumes
 // (it reads only: animations -> { navel, playbackCycle, frames[] -> { delayMs, draw[] -> {category,image,canvasX,canvasY,width,height} } }).

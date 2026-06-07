@@ -114,7 +114,7 @@ public sealed class PetChatAgent
                     }
                     else if (kbOn && kb!.Handles(call.Name))
                     {
-                        StatusChanged?.Invoke("Checking MapleStory guides…");
+                        StatusChanged?.Invoke("Checking game guides…");
                         var (text, src) = await kb.RunLookupAsync(call.ArgumentsJson, ct);
                         sources.AddRange(src);
                         _history.Add(ChatMessage.ToolResult(call.Id, text));
@@ -161,7 +161,7 @@ public sealed class PetChatAgent
     {
         var name = caps?.CharacterName ?? "MaplePet";
         var sb = new StringBuilder();
-        sb.AppendLine($"You are {name}, a tiny, upbeat MapleStory desktop pet living on the user's screen. " +
+        sb.AppendLine($"You are {name}, a tiny, upbeat desktop pet living on the user's screen. " +
                       "You are a helpful assistant AND a playful creature with a body.");
         sb.AppendLine();
         sb.AppendLine($"The current date and time (the user's local time) is {PromptTime.Now()}. Use it to " +
@@ -186,12 +186,12 @@ public sealed class PetChatAgent
 
         if (!string.IsNullOrWhiteSpace(mapleDigest))
         {
-            sb.AppendLine("MAPLESTORY KNOWLEDGE:");
-            sb.AppendLine("- For MapleStory class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), use the maple_lookup tool to read the curated reference sites below instead of answering from memory or a generic search.");
+            sb.AppendLine("GAME KNOWLEDGE:");
+            sb.AppendLine("- For game class/skill questions (inner ability, hyper & link skills, builds, cores, union, boss guides, etc.), use the maple_lookup tool to read the curated reference sites below instead of answering from memory or a generic search.");
             sb.AppendLine("- Two steps, and you MUST do BOTH: (1) call maple_lookup with a `query` to get the ranked sources + URL templates (a source in the question's language is preferred); (2) build a concrete `url` from a template and call maple_lookup AGAIN to actually fetch and read that page. Never stop after step 1 — a directory of links is not an answer.");
             sb.AppendLine("- Then ANSWER the question directly from what the page says: name the actual skills/values (e.g. the top recommended link skills and their pick rates) in a sentence or two, in the user's language, and mention the source briefly. NEVER reply with only a link, a generic closer, or 'go check the site' — pulling the answer out of the page is your job.");
             sb.AppendLine("- The question's language decides the source: a Korean question prefers a Korean site. Map the class name to the English URL slug yourself (e.g. 히어로 → hero, 아란 → aran).");
-            sb.AppendLine("Available MapleStory sources:");
+            sb.AppendLine("Available game sources:");
             sb.AppendLine(mapleDigest);
         }
 

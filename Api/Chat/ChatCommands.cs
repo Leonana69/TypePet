@@ -42,7 +42,7 @@ public sealed record CommandResult(
 /// — declarative <c>command.md</c> files loaded via <see cref="CommandStore"/> + <see cref="CommandInterpreter"/>,
 /// hot-reloaded and managed in the Commands tab. The built-ins are state-coupled glue: <c>/remind</c>,
 /// <c>/clear</c> (wipe the chat) and <c>/help</c>. Built-ins win on a name collision, so an uploaded command
-/// can't shadow them. (<c>/fortune</c>, the LLM-backed oracle, and <c>/rank</c>, the keyless MapleStory lookup,
+/// can't shadow them. (<c>/fortune</c>, the LLM-backed oracle, and <c>/rank</c>, the keyless ranking lookup,
 /// now ship as bundled commands — a <c>kind:prompt</c> and a network <c>kind:script</c> respectively — see
 /// <see cref="CommandInterpreter"/>.)
 /// </summary>

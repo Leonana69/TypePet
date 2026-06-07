@@ -31,7 +31,7 @@ public sealed class CharacterView : UserControl
     // otherwise reach past it.
     private const double ThumbFootMargin = 6;
 
-    // Where the user can build/obtain importable MapleStory character footage.
+    // Where the user can build/obtain importable character footage.
     private const string MapleSimUrl = "https://maple-sim.net/";
 
     // A thumbnail only ever draws the idle frame, so decode just that one pose (not the whole footage).

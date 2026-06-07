@@ -5,7 +5,7 @@ using System.Threading;
 namespace MaplePet.Api.Chat;
 
 /// <summary>
-/// Dev-only smoke test for the MapleStory knowledge base (RAG). Loads the bundled catalog, checks
+/// Dev-only smoke test for the game knowledge base (RAG). Loads the bundled catalog, checks
 /// language detection, and prints the language-prioritized ranking + the directory the model would see
 /// for a few queries (or a query passed on the command line). Handy when adding sources to
 /// <c>Assets/Program/Knowledge/sources.json</c> — run <c>--rag-test "이너어빌리티 히어로"</c> to see which
