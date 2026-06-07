@@ -361,7 +361,7 @@ To produce a MapleStory-style rank card whose EXP bar and layout are drawn by th
 with any of: `name`, `level`, `job` (or `class`), `world`, `expPercent` (0–100), `guild`, `rank`,
 `legionLevel`, `legionGrade`, `fame`, `imageUrl`, `serverLabel`, `infoTitle`, `infoUrl`. The core renders the
 text + EXP bar + image + profile link; calling `rank(...)` takes precedence over `say(...)`. The bundled
-`/rankx` command is a full worked example.
+`/rank` command is a full worked example.
 
 ---
 

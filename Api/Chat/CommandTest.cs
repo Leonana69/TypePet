@@ -38,7 +38,7 @@ public static class CommandTest
             disabledIds: () => Array.Empty<string>(),
             scriptsEnabled: () => true,
             // Dev harness: trust every command's declared hosts: allowlist so kind:script network commands
-            // (e.g. /rankx) can be exercised headlessly, mirroring how it already force-enables scripts.
+            // (e.g. /rank) can be exercised headlessly, mirroring how it already force-enables scripts.
             networkApproved: (_, _) => true);
 
         Console.WriteLine($"\nMerged registry ({commands.Commands.Count}):");

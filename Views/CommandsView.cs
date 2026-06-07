@@ -98,7 +98,7 @@ public sealed class CommandsView : UserControl
         {
             _list.Children.Add(new TextBlock
             {
-                Text = "No commands installed yet. Built-in commands (/rank, /fortune, /clear, /help) are always available.",
+                Text = "No commands installed yet. Built-in commands (/remind, /clear, /help) are always available.",
                 Foreground = FrostTheme.TextSecondary,
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(6, 10, 6, 0),

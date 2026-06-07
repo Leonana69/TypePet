@@ -57,9 +57,6 @@ public sealed class Settings
     // recurring reminder recomputes its next fire from "now". Rewritten by the scheduler on every change.
     public List<ReminderRecord> Reminders { get; set; } = new();
 
-    // The /rank chat command picks its MapleStory server per call via a leading flag (-na/-eu/-kr/-sea/-tw,
-    // default -na) — see RankServers — so the server is no longer a persisted setting.
-
     /// <summary>Path this instance was loaded from, used by <see cref="Save"/>. Not serialized.</summary>
     [JsonIgnore] public string SourcePath { get; set; } = "";
 

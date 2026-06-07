@@ -1,19 +1,20 @@
 ---
-name: rankx
+name: rank
 kind: script
 hosts: nexon.com, maple.gg, dakgg.io, maple-kit.com
-usage: /rankx [-na|-eu|-kr|-sea|-tw] <character>
-help: (JS port of /rank) MapleStory character lookup — -na/-eu = GMS (with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS. Network must be approved in the Commands tab.
+usage: /rank [-na|-eu|-kr|-sea|-tw] <character>
+help: Look up a MapleStory character by server: -na/-eu = GMS (default -na, with a global rank), -kr = KMS, -sea = MSEA, -tw = TMS. Network must be approved in the Commands tab.
 holdSeconds: 20
 ---
-// A user-definable port of the built-in /rank: it fetches and parses the ranking data here in JavaScript,
-// then hands a structured object to the core via rank({...}) — the EXP bar + layout are rendered by the app
-// (RankRenderer), so this file owns only the "where to fetch / how to parse" half.
+// /rank — a keyless MapleStory character lookup, implemented as an editable command: it fetches and parses
+// the ranking data here in JavaScript, then hands a structured object to the core via rank({...}) — the EXP
+// bar + layout are rendered by the app (RankRenderer), so this file owns only the "where to fetch / how to
+// parse" half. Fork it to add a server or change what's shown.
 //
 // Network: the `hosts:` allowlist above is enforced by the host; httpGet can only reach those (over HTTPS),
 // and only after you approve this command's network access in the Commands tab.
 
-// ---- server table (mirrors RankServers.cs) -----------------------------------------------------------
+// ---- server table ------------------------------------------------------------------------------------
 var SERVERS = {
   na:  { label: "GMS NA", kind: "gms", base: "https://www.nexon.com/api/maplestory/no-auth/ranking/v2", code: "na",
          infoSite: "MapleRanks", info: "https://mapleranks.com/u/{n}" },
@@ -295,7 +296,7 @@ var server = SERVERS[a.flag];
 if (!server) {
   say('Unknown flag "-' + a.flag + '" — use -na, -eu, -kr, -sea, -tw.');
 } else if (!a.name) {
-  say("Usage: /rankx [-na|-eu|-kr|-sea|-tw] <character name>");
+  say("Usage: /rank [-na|-eu|-kr|-sea|-tw] <character name>");
 } else if (server.kind === "gms") {
   doGms(server, a.name);
 } else if (server.kind === "maplegg") {

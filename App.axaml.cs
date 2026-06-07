@@ -303,7 +303,7 @@ public partial class App : Application
         if (_petWindow is not null) _petWindow.SuppressOverlayTopmost = false;
     }
 
-    /// <summary>Build the slash-command registry: the built-ins (/rank, /fortune, /clear, /help) merged
+    /// <summary>Build the slash-command registry: the built-ins (/remind, /clear, /help) merged
     /// with the enabled user commands from <see cref="_commandStore"/>. The same probes the say bar uses
     /// are forwarded so /fortune and prompt-kind commands can reach the active provider, plus the live pet
     /// control and the user's scripts-enabled / disabled-ids settings (read fresh each rebuild). The
