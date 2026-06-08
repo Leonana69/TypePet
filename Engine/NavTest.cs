@@ -346,6 +346,83 @@ public static class NavTest
                 atTarget && plat == 1 && launches <= 2, $"plat={plat} atTarget={atTarget} launches={launches}");
         }
 
+        // ===== Commanded JUMP / FLY (do_action "jump"/"fly") — END-TO-END runtime checks. =====
+        // Jump arcs onto a platform directly overhead within JumpHeight, else hops in place and returns.
+        // Fly glides onto the platform overhead at ANY height, else floats up a little and returns. The
+        // head-clearance ceiling (RoamMinY) excludes a maximized window's top edge from both.
+
+        // ---- Scenario V: jump onto a platform directly above WITHIN jump height (lands on it). ----
+        {
+            var floor = new Platform(400, 0, 200);
+            var above = new Platform(300, 0, 200); // 100px up (< JumpHeight 150), overlaps x
+            var world = new World(new[] { floor, above }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 10);
+            var (feetY, cx, standing, started) = pet.SimulateActionForTest(world, new Vec2(100, 400), fly: false, simDt, 1200);
+            Check("jump within reach lands on the platform above", started && standing
+                && System.Math.Abs(feetY - 300) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#} standing={standing}");
+        }
+
+        // ---- Scenario W: platform overhead is BEYOND jump height -> hop in place, back to the start. ----
+        {
+            var floor = new Platform(500, 0, 200);
+            var tooHigh = new Platform(300, 0, 200); // 200px up (> JumpHeight 150)
+            var world = new World(new[] { floor, tooHigh }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 11);
+            var (feetY, cx, standing, _) = pet.SimulateActionForTest(world, new Vec2(100, 500), fly: false, simDt, 1200);
+            Check("jump out of reach hops in place and returns to the same spot", standing
+                && System.Math.Abs(feetY - 500) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#}");
+        }
+
+        // ---- Scenario X: platform overhead is OFFSET in x (not above the pet) -> jump hops in place. ----
+        {
+            var floor = new Platform(500, 0, 200);
+            var offset = new Platform(420, 300, 500); // higher but not over x=100
+            var world = new World(new[] { floor, offset }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 12);
+            var (feetY, cx, standing, _) = pet.SimulateActionForTest(world, new Vec2(100, 500), fly: false, simDt, 1200);
+            Check("jump ignores a platform not directly overhead (hops in place)", standing
+                && System.Math.Abs(feetY - 500) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#}");
+        }
+
+        // ---- Scenario Y: FLY reaches a platform overhead FAR beyond jump height (no height limit). ----
+        {
+            var floor = new Platform(500, 0, 200);
+            var high = new Platform(200, 0, 200); // 300px up — unreachable by jump, fine for fly
+            var world = new World(new[] { floor, high }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 13);
+            var (feetY, cx, standing, started) = pet.SimulateActionForTest(world, new Vec2(100, 500), fly: true, simDt, 1200);
+            Check("fly lands on the platform above at any height", started && standing
+                && System.Math.Abs(feetY - 200) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#}");
+        }
+
+        // ---- Scenario Z: FLY with nothing overhead -> float up a little and drift back to the start. ----
+        {
+            var floor = new Platform(500, 0, 200);
+            var world = new World(new[] { floor }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 14);
+            var (feetY, cx, standing, _) = pet.SimulateActionForTest(world, new Vec2(100, 500), fly: true, simDt, 1200);
+            Check("fly with no platform above returns to the same spot", standing
+                && System.Math.Abs(feetY - 500) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#}");
+        }
+
+        // ---- Scenario AA: a maximized window's top edge (above the head-clearance ceiling) is NOT a ----
+        // fly target — the pet would vanish above it; instead it floats up a little and returns.
+        {
+            var floor = new Platform(500, 0, 800);
+            var maxTop = new Platform(40, 0, 800); // a maximized window's top edge, near the screen top
+            var world = new World(new[] { floor, maxTop }, System.Array.Empty<Ladder>());
+            var pet = new PetController(cfg, new Vec2(30, 38), seed: 15) { RoamMinY = 150 };
+            var (feetY, cx, standing, _) = pet.SimulateActionForTest(world, new Vec2(100, 500), fly: true, simDt, 1200);
+            Check("fly ignores a maximized-window top edge (stays on screen, returns)", standing
+                && System.Math.Abs(feetY - 500) < 1.0 && System.Math.Abs(cx - 100) < 2.0,
+                $"feetY={feetY:0.#} cx={cx:0.#}");
+        }
+
         sb.AppendLine();
         sb.AppendLine($"SUMMARY: {pass} passed, {fail} failed");
         File.WriteAllText(outFile, sb.ToString());

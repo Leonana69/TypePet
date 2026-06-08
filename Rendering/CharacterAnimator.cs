@@ -286,12 +286,14 @@ public sealed class CharacterAnimator
         PetState.Walk => "walk1",
         PetState.Rope => "ladder", // window side-edges read as ladders; swap to "rope" for the rope pose
         PetState.Jump => "jump",
+        PetState.Fly => "fly",     // commanded vertical glide shows the fly/float pose
         _ => "stand1",
     };
 
-    /// <summary>The poses this animator can actually display (one per <see cref="PetState"/>).
-    /// Used to size the drag hit-test to only the poses that are played. Keep in sync with
-    /// <see cref="PoseFor"/>.</summary>
+    /// <summary>The everyday locomotion poses, used to size the drag hit-test. Mirrors <see cref="PoseFor"/>
+    /// EXCEPT the commanded <see cref="PetState.Fly"/> pose ("fly"): it's wider (wings) and only shows for a
+    /// brief commanded glide, so — like the attack stances — it's kept out of the grab box to avoid
+    /// inflating it. ("fly" is still decoded for the live pet via <see cref="ActionPoses"/>.)</summary>
     public static readonly IReadOnlyCollection<string> ActivePoses =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1", "walk1", "ladder", "jump" };
 

@@ -9,6 +9,7 @@ public enum PetState
     Walk,  // walking left/right on a platform
     Rope,  // on a ladder (a window's side edge), climbing up or down
     Jump,  // airborne: jumping, falling, or being dragged
+    Fly,   // commanded float: gliding straight up to a platform above (or up-and-back), gravity off
 }
 
 /// <summary>
@@ -37,6 +38,11 @@ public sealed class PetController
     private const double DropClearance = 2;    // sink below the source platform before a down-jump
     private const double LadderJumpRise = 70;  // how high the jump-onto-a-ladder arc rises to grab
     private const double MinLadderJump = 16;   // below this climb, just step onto the rope (no arc)
+    private const double MinVerticalGap = 12;  // a platform must be at least this far above to count as "above"
+    private const double InPlaceHopFactor = 0.6; // a jump with no platform above hops this fraction of JumpHeight
+    private const double InPlaceHopMin = 50, InPlaceHopMax = 120; // clamp for the in-place hop rise
+    private const double FlySpeed = 150;       // px/second vertical glide while flying (gravity off)
+    private const double FlyHopRise = 70;      // "fly up a little" rise when there's no platform above
     private const double PanicMinSeconds = 0.10; // dragged-in-air panic: shortest hold before the next random turn
     private const double PanicMaxSeconds = 0.32; // ...and the longest, so the flailing looks erratic, not metronomic
     private const double PanicFlipChance = 0.75; // odds each turn actually flips facing (vs. re-picking the same way)
@@ -97,6 +103,15 @@ public sealed class PetController
     // (where the pet's x meets the ladder line) is reached.
     private bool _grabbingLadder;
     private double _grabLadderX;
+
+    // Fly execution (PetState.Fly): a gravity-free vertical glide. Rise straight up to _flyTargetFeetY;
+    // if _flyLanding it settles onto the platform there, otherwise it glides back down to _flyReturnFeetY
+    // (the spot it took off from) and stands. X is held constant throughout.
+    private enum FlyPhase { Rising, Returning }
+    private FlyPhase _flyPhase;
+    private bool _flyLanding;
+    private double _flyTargetFeetY;
+    private double _flyReturnFeetY;
 
     public double FeetY => Pos.Y + Size.Y;
     public double CenterX => Pos.X + Size.X / 2;
@@ -171,6 +186,7 @@ public sealed class PetController
             case PetState.Walk: UpdateWalk(world, dt); break;
             case PetState.Rope: UpdateRope(world, dt); break;
             case PetState.Jump: UpdateJump(world, dt); break;
+            case PetState.Fly: UpdateFly(world, dt); break;
         }
     }
 
@@ -249,7 +265,7 @@ public sealed class PetController
         _hasTarget = false;
         _pendingReplan = false;
         RoamingSuspended = false;
-        if (State is PetState.Walk or PetState.Rope) EnterStand();
+        if (State is PetState.Walk or PetState.Rope or PetState.Fly) EnterStand();
         else if (State == PetState.Jump) _standAfterLanding = true; // land, then stand (don't roam)
     }
 
@@ -273,7 +289,7 @@ public sealed class PetController
         _path = null;
         _hasTarget = false;
         _pendingReplan = false;
-        if (State == PetState.Walk) EnterStand();              // stop on the platform (it has support)
+        if (State is PetState.Walk or PetState.Fly) EnterStand();   // stop on the platform (it has support)
         else if (State == PetState.Jump) _standAfterLanding = true; // finish falling, then hold on landing
         // Stand / Rope: keep the current position and pose as-is (a laddered pet stays on the rope).
     }
@@ -307,6 +323,93 @@ public sealed class PetController
         var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
         if (support is null) return false;
         return RequestMoveTo(world, new Vec2(x, support.Value.Y));
+    }
+
+    /// <summary>
+    /// Commanded jump. If a platform sits directly overhead within the pet's <see cref="Settings.JumpHeight"/>,
+    /// arc straight up onto it (and stand there); otherwise hop straight up and drop back to this exact spot.
+    /// Must be grounded. Returns false if the pet isn't on a surface.
+    /// </summary>
+    public bool RequestJump(World world)
+    {
+        if (State is not (PetState.Stand or PetState.Walk)) return false;
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) return false;
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
+        _path = null; _hasTarget = false; _grabbingLadder = false;
+        _standAfterLanding = true; // a commanded jump lands and stands (it doesn't auto-walk a route)
+
+        if (PlatformDirectlyAbove(world, _cfg.JumpHeight) is Platform p)
+        {
+            LaunchArc(CenterX, p.Y); // straight-up ballistic arc onto the platform above
+        }
+        else
+        {
+            // Nothing within jump height overhead: hop straight up (vx = 0) and fall back to this spot.
+            double g = Math.Max(1.0, _cfg.Gravity);
+            double rise = Math.Clamp(_cfg.JumpHeight * InPlaceHopFactor, InPlaceHopMin, InPlaceHopMax);
+            if (!double.IsNegativeInfinity(RoamMinY)) rise = Math.Min(rise, Math.Max(20, FeetY - RoamMinY));
+            Vel = new Vec2(0, -Math.Sqrt(2 * g * rise));
+            State = PetState.Jump;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Commanded fly. Glide straight up to the platform directly overhead (NO height limit) and settle on
+    /// it; if there's none, float up a little and drift back down to this spot. Must be grounded. Returns
+    /// false if the pet isn't on a surface.
+    /// </summary>
+    public bool RequestFly(World world)
+    {
+        if (State is not (PetState.Stand or PetState.Walk)) return false;
+        var support = Physics.FindSupport(world, CenterX, FeetY, SupportTol);
+        if (support is null) return false;
+        Pos = new Vec2(Pos.X, support.Value.Y - Size.Y);
+        _path = null; _hasTarget = false; _grabbingLadder = false;
+        Vel = default;
+
+        double curFeet = FeetY;
+        _flyReturnFeetY = curFeet;
+        _flyPhase = FlyPhase.Rising;
+        if (PlatformDirectlyAbove(world, double.PositiveInfinity) is Platform p)
+        {
+            _flyLanding = true;
+            _flyTargetFeetY = p.Y;
+        }
+        else
+        {
+            // Already at/over the top: float up a little, then come back. Cap the rise at the
+            // head-clearance ceiling (RoamMinY) so the tall pet's head never goes off-screen.
+            _flyLanding = false;
+            double target = double.IsNegativeInfinity(RoamMinY) ? curFeet - FlyHopRise : Math.Max(curFeet - FlyHopRise, RoamMinY);
+            _flyTargetFeetY = Math.Min(target, curFeet - 1); // guarantee at least a 1px upward move
+        }
+        State = PetState.Fly;
+        return true;
+    }
+
+    /// <summary>
+    /// The closest platform directly overhead — one whose x-range covers the pet's <see cref="CenterX"/>,
+    /// at least <see cref="MinVerticalGap"/> above the feet and no more than <paramref name="maxRise"/>
+    /// above (use +∞ for fly's no-limit case). Platforms above the head-clearance ceiling
+    /// (<see cref="RoamMinY"/>) are excluded, which also keeps the pet off a maximized window's top edge
+    /// (it sits above the ceiling) where it would fly out of view. Null if there's nothing to land on.
+    /// </summary>
+    private Platform? PlatformDirectlyAbove(World world, double maxRise)
+    {
+        double curFeet = FeetY, cx = CenterX;
+        Platform? best = null;
+        double bestY = double.NegativeInfinity;
+        foreach (var p in world.Platforms)
+        {
+            double rise = curFeet - p.Y;
+            if (rise < MinVerticalGap || rise > maxRise) continue; // not above us, or out of reach
+            if (p.Y < RoamMinY) continue;                          // off-screen top / maximized-window top
+            if (!p.ContainsX(cx)) continue;                        // can't land at our current x
+            if (p.Y > bestY) { bestY = p.Y; best = p; }            // closest above = largest Y
+        }
+        return best;
     }
 
     /// <summary>Build the nav graph if it doesn't exist yet (the live loop normally keeps it fresh;
@@ -760,6 +863,48 @@ public sealed class PetController
         State = PetState.Jump;
     }
 
+    /// <summary>
+    /// Gravity-free vertical glide (PetState.Fly). Rise straight up to <see cref="_flyTargetFeetY"/>; if
+    /// <see cref="_flyLanding"/> settle onto the platform there, otherwise turn around and glide back down
+    /// to <see cref="_flyReturnFeetY"/>. Snaps to the real surface on arrival (and stands), so a window
+    /// that moved mid-flight is handled by the normal support check on the next standing tick.
+    /// </summary>
+    private void UpdateFly(World world, double dt)
+    {
+        double move = FlySpeed * dt;
+        if (_flyPhase == FlyPhase.Rising)
+        {
+            double feet = FeetY - move;
+            if (feet <= _flyTargetFeetY)
+            {
+                if (_flyLanding) { LandFlyAt(world, _flyTargetFeetY); return; }
+                SnapFeet(_flyTargetFeetY);
+                _flyPhase = FlyPhase.Returning;
+                return;
+            }
+            SnapFeet(feet);
+        }
+        else // Returning to the take-off spot
+        {
+            double feet = FeetY + move;
+            if (feet >= _flyReturnFeetY) { LandFlyAt(world, _flyReturnFeetY); return; }
+            SnapFeet(feet);
+        }
+    }
+
+    /// <summary>Settle the fly at <paramref name="feetY"/>: snap to the platform there if it still exists
+    /// (else hold the target Y and let the next standing tick fall), then stand.</summary>
+    private void LandFlyAt(World world, double feetY)
+    {
+        double landY = Physics.FindSupport(world, CenterX, feetY, SupportTol)?.Y ?? feetY;
+        Pos = new Vec2(Pos.X, landY - Size.Y);
+        Vel = default;
+        EnterStand();
+    }
+
+    /// <summary>Place the feet at <paramref name="feetY"/> keeping x fixed (used by the fly glide).</summary>
+    private void SnapFeet(double feetY) => Pos = new Vec2(Pos.X, feetY - Size.Y);
+
     private void UpdateJump(World world, double dt)
     {
         double vy = Vel.Y + _cfg.Gravity * dt;
@@ -876,6 +1021,35 @@ public sealed class PetController
                 return (_graph.PlatformAt(CenterX, FeetY), true, launches);
         }
         return (_graph.PlatformAt(CenterX, FeetY), false, launches);
+    }
+
+    /// <summary>
+    /// Test seam (destructive — throwaway controller only): place the pet on a surface at
+    /// <paramref name="fromCenterFeet"/>, command a jump (or fly when <paramref name="fly"/>), then DRIVE
+    /// the real physics by ticking <see cref="Update"/> until it stands again (or <paramref name="maxTicks"/>
+    /// elapses). Returns where it ended (feet point), whether it's standing, and how many distinct launches
+    /// it made. Set <see cref="RoamMinY"/> on the controller first to exercise the head-clearance ceiling.
+    /// </summary>
+    internal (double feetY, double centerX, bool standing, bool started) SimulateActionForTest(
+        World world, Vec2 fromCenterFeet, bool fly, double dt, int maxTicks)
+    {
+        _graph = MapGraph.Build(world, Params);
+        _graphParams = Params;
+        _graphWorld = world;
+        _spawned = true;
+        Pos = new Vec2(fromCenterFeet.X - Size.X / 2, fromCenterFeet.Y - Size.Y);
+        Vel = default;
+        State = PetState.Stand;
+
+        bool started = fly ? RequestFly(world) : RequestJump(world);
+        if (!started) return (FeetY, CenterX, true, false);
+
+        for (int i = 0; i < maxTicks; i++)
+        {
+            Update(world, dt);
+            if (State == PetState.Stand) return (FeetY, CenterX, true, true);
+        }
+        return (FeetY, CenterX, false, true);
     }
 
     private static double Clamp(double v, double lo, double hi) => v < lo ? lo : v > hi ? hi : v;

@@ -117,7 +117,7 @@ public static class PetRenderer
         {
             PetState.Stand => StandBody,
             PetState.Rope => RopeBody,
-            PetState.Jump => JumpBody,
+            PetState.Jump or PetState.Fly => JumpBody,
             _ => WalkBody,
         };
         var body = new Avalonia.Rect(pet.Pos.X, pet.Pos.Y, pet.Size.X, pet.Size.Y);

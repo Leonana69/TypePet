@@ -80,6 +80,19 @@ public sealed class PetControlService : IPetControl
         if (def.RequiresGrounded && pet.State is not (PetState.Stand or PetState.Walk))
             return Logged($"DoAction({def.Name})", ControlResult.Reject($"'{def.Name}' needs the pet on the ground (currently {pet.State})"));
 
+        // jump / fly drive a real vertical move; the pose comes from the resulting state (Jump/Fly), not a
+        // held action. Don't suspend roaming — the move ends on a platform and normal autonomy resumes.
+        if (def.IsMove)
+        {
+            var world = _world();
+            if (world is null) return Logged($"DoAction({def.Name})", ControlResult.Fail("world not ready"));
+            anim.SetAction(null); // clear any held pose so the Jump/Fly state pose shows
+            bool ok = def.Move == ActionMove.Jump ? pet.RequestJump(world) : pet.RequestFly(world);
+            if (!ok)
+                return Logged($"DoAction({def.Name})", ControlResult.Reject($"can't {def.Name} from here (the pet needs a surface to launch from)"));
+            return Logged($"DoAction({def.Name})", ControlResult.Success(def.Move == ActionMove.Jump ? "jumping" : "flying"));
+        }
+
         pet.SuspendRoaming();
         pet.StopAndIdle();
         if (def.IsAttack)

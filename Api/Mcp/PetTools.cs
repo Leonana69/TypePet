@@ -23,7 +23,7 @@ public sealed class PetTools
     public static Task<PetStatus> Describe(IPetControl pet) => pet.GetStatus();
 
     [McpServerTool(Name = "do_action")]
-    [Description("Play an action animation on the pet (e.g. prone, sit, alert, heal, fly, attack, stab, swing, shoot). 'attack' randomly stabs/swings/shoots with whatever the character carries, then stays alert briefly. Use a name from 'capabilities'.")]
+    [Description("Play an action animation on the pet (e.g. prone, sit, alert, heal, jump, fly, attack, stab, swing, shoot). 'jump' hops onto a platform directly above within jump height (else hops in place); 'fly' glides up onto the platform above at any height (else floats up a little and back). 'attack' randomly stabs/swings/shoots with whatever the character carries, then stays alert briefly. Use a name from 'capabilities'.")]
     public static Task<ControlResult> DoAction(
         IPetControl pet,
         [Description("Action name from capabilities, e.g. 'prone' or 'attack'.")] string action,
