@@ -31,9 +31,12 @@ public enum UpdateMode
 /// </summary>
 public sealed class HubClient
 {
-    /// <summary>The default registry URL — the hub repo's generated index, fronted by jsDelivr.</summary>
+    /// <summary>The default registry URL. Read from GitHub RAW (not jsDelivr) so it's always fresh: jsDelivr
+    /// caches branch (<c>@main</c>) URLs for ~12h, so newly published commands took hours to appear even after
+    /// a successful build. The per-version command zips (each entry's <c>download.url</c>) stay on jsDelivr —
+    /// they're immutable, so CDN caching is correct there — with a raw fallback baked into each entry.</summary>
     public const string DefaultIndexUrl =
-        "https://cdn.jsdelivr.net/gh/Leonana69/TypePet-Commands@main/dist/index.json";
+        "https://raw.githubusercontent.com/Leonana69/TypePet-Commands/main/dist/index.json";
 
     private const long MaxZipBytes = 25L * 1024 * 1024;
     private static readonly TimeSpan RefreshTtl = TimeSpan.FromHours(6);
