@@ -35,12 +35,12 @@ jobs:
       - name: Publish (Windows)
         if: matrix.head == 'windows'
         run: >
-          dotnet publish MaplePet.csproj -f ${{ matrix.tfm }} -r ${{ matrix.rid }}
+          dotnet publish TypePet.csproj -f ${{ matrix.tfm }} -r ${{ matrix.rid }}
           -c Release --self-contained true -o artifacts/win
       - uses: actions/upload-artifact@v4
         if: matrix.head == 'windows'
         with:
-          name: MaplePet-win-x64
+          name: TypePet-win-x64
           path: artifacts/win
 
       # --- macOS head -> .app bundle ---
@@ -49,12 +49,12 @@ jobs:
         run: ./packaging/macos/build-macos-bundle.sh osx-arm64 Release
       - name: Zip bundle
         if: matrix.head == 'macos'
-        run: ditto -c -k --keepParent artifacts/MaplePet.app artifacts/MaplePet-osx-arm64.zip
+        run: ditto -c -k --keepParent artifacts/TypePet.app artifacts/TypePet-osx-arm64.zip
       - uses: actions/upload-artifact@v4
         if: matrix.head == 'macos'
         with:
-          name: MaplePet-osx-arm64
-          path: artifacts/MaplePet-osx-arm64.zip
+          name: TypePet-osx-arm64
+          path: artifacts/TypePet-osx-arm64.zip
 
   # NOTE: Notarization (Tier C) is intentionally NOT in this credential-free workflow. Add a separate,
   # tag-triggered release.yml that does Developer ID sign + `xcrun notarytool submit --wait` +

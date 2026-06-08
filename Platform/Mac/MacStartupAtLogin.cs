@@ -1,7 +1,7 @@
 using System;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS "start at login" via <c>SMAppService.mainApp</c> (macOS 13+). Registers the running app bundle

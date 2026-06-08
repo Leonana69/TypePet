@@ -8,9 +8,9 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Loads small images for the chat/command UI and decodes them to an Avalonia <see cref="Bitmap"/>, cached
@@ -26,7 +26,7 @@ public static class ImageCache
     // (refuses private/loopback/link-local targets, DNS-rebind safe) and every fetch is https-only + byte
     // capped + time-boxed. See SafeHttp.
     private static readonly HttpClient Http =
-        SafeHttp.CreateClient("Mozilla/5.0 (Windows NT 10.0; Win64; x64) MaplePet");
+        SafeHttp.CreateClient("Mozilla/5.0 (Windows NT 10.0; Win64; x64) TypePet");
     private static readonly ConcurrentDictionary<string, Bitmap?> Cache = new();
     private static readonly ConcurrentDictionary<string, Task<Bitmap?>> InFlight = new();
 
@@ -44,7 +44,7 @@ public static class ImageCache
     }
 
     /// <summary>True for an Avalonia embedded-resource URI (a bundled app asset, e.g.
-    /// <c>avares://MaplePet/Assets/…</c>) or a local <c>file://</c> image (an uploaded command's own
+    /// <c>avares://TypePet/Assets/…</c>) or a local <c>file://</c> image (an uploaded command's own
     /// asset) — as opposed to a remote image. Both are shown WHOLE; only remote character canvases get
     /// center-cropped (see <see cref="CropCharacterCanvas"/>), and both negatively-cache a permanent
     /// failure (a missing/corrupt local or bundled file will never load).</summary>

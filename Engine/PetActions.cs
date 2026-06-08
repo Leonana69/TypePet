@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>How a commanded action animation plays.</summary>
 public enum ActionMode

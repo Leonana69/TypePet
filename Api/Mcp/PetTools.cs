@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
 
-namespace MaplePet.Api.Mcp;
+namespace TypePet.Api.Mcp;
 
 /// <summary>
 /// The MCP tool surface: one tool per <see cref="IPetControl"/> command. The <see cref="IPetControl"/>

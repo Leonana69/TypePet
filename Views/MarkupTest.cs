@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// Dev-only smoke test for <see cref="ChatMarkup"/>. Renders a few chat-reply strings through the real

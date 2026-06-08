@@ -7,9 +7,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Hub;
+namespace TypePet.Api.Hub;
 
 /// <summary>How an update replaces an installed command.</summary>
 public enum UpdateMode
@@ -41,7 +41,7 @@ public sealed class HubClient
     private const long MaxZipBytes = 25L * 1024 * 1024;
     private static readonly TimeSpan RefreshTtl = TimeSpan.FromHours(6);
 
-    private static readonly HttpClient Http = SafeHttp.CreateClient($"MaplePet/{AppInfo.Version}");
+    private static readonly HttpClient Http = SafeHttp.CreateClient($"TypePet/{AppInfo.Version}");
 
     private static readonly JsonSerializerOptions Json = new()
     {
@@ -279,7 +279,7 @@ public sealed class HubClient
             throw new InvalidDataException("the hub entry has no checksum; refusing to install.");
         string want = entry.Download.Sha256.Trim();
 
-        string tmp = Path.Combine(Path.GetTempPath(), "MaplePet_hub_" + Guid.NewGuid().ToString("N") + ".zip");
+        string tmp = Path.Combine(Path.GetTempPath(), "TypePet_hub_" + Guid.NewGuid().ToString("N") + ".zip");
         try
         {
             string? lastError = null;

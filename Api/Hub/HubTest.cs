@@ -4,9 +4,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Hub;
+namespace TypePet.Api.Hub;
 
 /// <summary>
 /// Dev-only headless check for the command hub client (no UI, no network). It builds local command zips in a
@@ -27,7 +27,7 @@ public static class HubTest
         if (!string.IsNullOrWhiteSpace(arg) && File.Exists(arg!))
             return VerifyRealIndex(arg!);
 
-        string sandbox = Path.Combine(Path.GetTempPath(), "MaplePet_hubtest_" + Guid.NewGuid().ToString("N"));
+        string sandbox = Path.Combine(Path.GetTempPath(), "TypePet_hubtest_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(sandbox);
         int fails = 0;
         try
@@ -48,7 +48,7 @@ public static class HubTest
     private static int VerifyRealIndex(string indexPath)
     {
         string indexDir = Path.GetDirectoryName(Path.GetFullPath(indexPath))!;
-        string sandbox = Path.Combine(Path.GetTempPath(), "MaplePet_hubverify_" + Guid.NewGuid().ToString("N"));
+        string sandbox = Path.Combine(Path.GetTempPath(), "TypePet_hubverify_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(sandbox);
         int fails = 0;
         try

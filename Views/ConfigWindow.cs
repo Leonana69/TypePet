@@ -3,7 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 public enum ConfigTab { Characters, Commands, Browse, Settings }
 
@@ -23,7 +23,7 @@ public sealed class ConfigWindow : FrostedWindow
     private readonly ContentControl _host;
     private readonly Button _tabCharacters, _tabCommands, _tabBrowse, _tabSettings;
 
-    public ConfigWindow(CharacterView charactersView, CommandsView commandsView, HubView hubView, SettingsView settingsView) : base("MaplePet")
+    public ConfigWindow(CharacterView charactersView, CommandsView commandsView, HubView hubView, SettingsView settingsView) : base("TypePet")
     {
         _charactersView = charactersView;
         _commandsView = commandsView;

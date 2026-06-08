@@ -1,18 +1,18 @@
 using System;
 using System.Diagnostics;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS <see cref="ISecretStore"/> backed by the login Keychain via the <c>security</c> CLI. Each
-/// secret is a generic-password item keyed by service <c>"MaplePet"</c> + account = the id. Avoids a
+/// secret is a generic-password item keyed by service <c>"TypePet"</c> + account = the id. Avoids a
 /// Security.framework P/Invoke for the same reason the rest of the Mac layer shells out where it can.
 /// Best-effort: a failed command degrades to "no secret".
 /// </summary>
 public sealed class MacSecretStore : ISecretStore
 {
-    private const string Service = "MaplePet";
+    private const string Service = "TypePet";
 
     public string? Get(string id)
     {

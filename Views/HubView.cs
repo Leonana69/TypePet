@@ -8,10 +8,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
-using MaplePet.Api.Hub;
-using MaplePet.Engine;
+using TypePet.Api.Hub;
+using TypePet.Engine;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Browse tab of <see cref="ConfigWindow"/> — discover + one-click install community commands from the

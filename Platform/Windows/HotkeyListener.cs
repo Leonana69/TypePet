@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// A system-wide low-level keyboard hook (WH_KEYBOARD_LL) that raises <see cref="Triggered"/> when a
@@ -51,7 +51,7 @@ public sealed class HotkeyListener : IGlobalHotkey
         {
             // The friendly overload returns a non-null-but-invalid handle on failure; drop it so a later
             // Install() can retry, and trace it (the hotkey is otherwise silently inert).
-            System.Diagnostics.Debug.WriteLine($"[MaplePet] keyboard hook install failed: {Marshal.GetLastWin32Error()}");
+            System.Diagnostics.Debug.WriteLine($"[TypePet] keyboard hook install failed: {Marshal.GetLastWin32Error()}");
             _hook?.Dispose();
             _hook = null;
         }

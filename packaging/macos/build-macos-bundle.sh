@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build a distributable, ad-hoc-signed MaplePet.app from the net10.0 head.
+# Build a distributable, ad-hoc-signed TypePet.app from the net10.0 head.
 # Usage: packaging/macos/build-macos-bundle.sh [rid] [config]
 #   rid    : osx-arm64 (default) | osx-x64
 #   config : Release (default) | Debug
@@ -14,19 +14,19 @@ cd "$(dirname "$0")/../.."   # repo root
 
 RID="${1:-osx-arm64}"
 CONFIG="${2:-Release}"
-APP_NAME="MaplePet"
+APP_NAME="TypePet"
 OUT="artifacts"
 PUBLISH="$OUT/publish/$RID"
 APP="$OUT/$APP_NAME.app"
 SRC_ICON="Assets/Program/icon.png"
 
-VERSION="$(dotnet msbuild MaplePet.csproj -getProperty:Version -p:TargetFramework=net10.0 -nologo 2>/dev/null || echo '1.0.0')"
-echo "==> MaplePet $VERSION  ($RID, $CONFIG)"
+VERSION="$(dotnet msbuild TypePet.csproj -getProperty:Version -p:TargetFramework=net10.0 -nologo 2>/dev/null || echo '1.0.0')"
+echo "==> TypePet $VERSION  ($RID, $CONFIG)"
 
 echo "==> Publishing self-contained payload..."
 rm -rf "$PUBLISH"
 # Do NOT single-file / IncludeNativeLibrariesForSelfExtract: both break CoreCLR startup inside a bundle.
-dotnet publish MaplePet.csproj -f net10.0 -r "$RID" -c "$CONFIG" \
+dotnet publish TypePet.csproj -f net10.0 -r "$RID" -c "$CONFIG" \
   --self-contained true -p:UseAppHost=true -o "$PUBLISH"
 
 echo "==> Generating $APP_NAME.icns..."

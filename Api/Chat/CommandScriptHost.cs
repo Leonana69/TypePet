@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Api;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Runs a <see cref="CommandKind.Script"/> command's body in a sandboxed scripting engine. The sandbox
@@ -22,10 +22,10 @@ public static partial class CommandScriptHost
         bool networkApproved, CancellationToken ct);
 }
 
-#if !MAPLEPET_SCRIPTING
+#if !TYPEPET_SCRIPTING
 /// <summary>Fallback when the scripting engine isn't compiled in: report a friendly error instead of
 /// running. The real sandboxed implementation (the other half of this partial) is compiled when the
-/// Jint package is referenced and the <c>MAPLEPET_SCRIPTING</c> constant is defined.</summary>
+/// Jint package is referenced and the <c>TYPEPET_SCRIPTING</c> constant is defined.</summary>
 public static partial class CommandScriptHost
 {
     public static partial Task<CommandResult> RunAsync(CommandManifest m, string args, IPetControl? pet,

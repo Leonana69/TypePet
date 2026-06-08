@@ -3,7 +3,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// A low-level mouse hook that swallows a left-button press (and its matching release) when it lands

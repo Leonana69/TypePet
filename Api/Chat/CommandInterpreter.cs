@@ -6,10 +6,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Api;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Turns a declarative <see cref="CommandManifest"/> into a runnable command — the same

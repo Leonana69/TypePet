@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Media;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Visualizes what the window tracker detects (M2): every window rectangle, the taskbar,

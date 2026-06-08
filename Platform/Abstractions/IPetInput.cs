@@ -1,7 +1,7 @@
 using System;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// Pet interaction delivered as GESTURES rather than raw cursor/button state. This is the seam that

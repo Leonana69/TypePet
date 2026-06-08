@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Controls;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>The macOS bundle of window-bound platform services, created once the overlay window exists.
 /// The overlay's NSWindow handle is reached lazily by the overlay/input impls in Step 8.</summary>
@@ -24,7 +24,7 @@ public sealed class MacPlatformServices : IPlatformServices
         // Exclude our own full-screen overlay from the captured world (the Windows bundle does the same
         // with ExcludeHwnd): match it by NSWindow.windowNumber, which CGWindowList reports as
         // kCGWindowNumber. The overlay's native handle already exists here (resolved in
-        // PetWindow.OnOpened), so the number is live before the first world poll. Other MaplePet windows
+        // PetWindow.OnOpened), so the number is live before the first world poll. Other TypePet windows
         // (the config/character window, the say bar) are left in the world as walkable platforms.
         _tracker.ExcludeWindowNumber = MacNative.NSWindowNumber(overlay.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
     }

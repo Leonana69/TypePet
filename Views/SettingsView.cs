@@ -10,11 +10,11 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using MaplePet.Api.Chat;
-using MaplePet.Engine;
-using MaplePet.Platform;
+using TypePet.Api.Chat;
+using TypePet.Engine;
+using TypePet.Platform;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Settings tab of <see cref="ConfigWindow"/>: the configurable parameters grouped into Movement /
@@ -123,7 +123,7 @@ public sealed class SettingsView : UserControl
         _startup = Toggle();
         _startup.IsChecked = PlatformServices.StartupAtLogin.IsEnabled();
         _startup.IsEnabled = PlatformServices.StartupAtLogin.IsSupported; // disabled on platforms that can't register (e.g. unbundled macOS)
-        rows.Children.Add(ToggleRow("Start at login", "Launch MaplePet automatically when you sign in", _startup));
+        rows.Children.Add(ToggleRow("Start at login", "Launch TypePet automatically when you sign in", _startup));
         _hideFullscreen = Toggle();
         _hideFullscreen.IsChecked = cfg.HideWhenFullscreen;
         rows.Children.Add(ToggleRow("Hide in fullscreen apps",

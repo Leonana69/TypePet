@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Dev-only deterministic checks for the roaming path planner against synthetic worlds (no OS, no

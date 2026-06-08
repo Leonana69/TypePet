@@ -5,11 +5,11 @@ using Windows.Win32.Graphics.Dwm;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.WindowsAndMessaging;
-using MaplePet.Engine;
-using MaplePet.Platform.Abstractions;
-using ERect = MaplePet.Engine.Rect;
+using TypePet.Engine;
+using TypePet.Platform.Abstractions;
+using ERect = TypePet.Engine.Rect;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// The only class that touches Win32. Enumerates visible top-level windows, filters out

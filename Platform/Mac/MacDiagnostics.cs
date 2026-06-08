@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>Dev-only: dumps the captured macOS world (CGWindowList → WorldGeometry) so coordinates can be
 /// sanity-checked against the real desktop without launching the GUI. Invoked via <c>--mac-windump</c>.</summary>
@@ -67,11 +67,11 @@ public static class MacDiagnostics
         key != IntPtr.Zero && MacNative.CFDictionaryGetValueIfPresent(d, key, out var v) && v != IntPtr.Zero
             ? MacNative.CFStringToString(v) : null;
 
-    private static MaplePet.Engine.Rect Bounds(IntPtr d, IntPtr key)
+    private static TypePet.Engine.Rect Bounds(IntPtr d, IntPtr key)
     {
         if (key != IntPtr.Zero && MacNative.CFDictionaryGetValueIfPresent(d, key, out var v) && v != IntPtr.Zero
             && MacNative.CGRectMakeWithDictionaryRepresentation(v, out var cg))
-            return new MaplePet.Engine.Rect(cg.X, cg.Y, cg.W, cg.H);
+            return new TypePet.Engine.Rect(cg.X, cg.Y, cg.W, cg.H);
         return default;
     }
 }

@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="MaplePet.App"
+             x:Class="TypePet.App"
              RequestedThemeVariant="Dark">
   <!--
     The config UI uses a "frosted glass" look: acrylic-blur windows, a dark teal surface, and a

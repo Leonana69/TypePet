@@ -1,6 +1,6 @@
 using System;
 
-namespace MaplePet.Api.Hub;
+namespace TypePet.Api.Hub;
 
 /// <summary>
 /// A tiny, lenient semantic-version comparison — the single home for "is version A newer than B" used by both

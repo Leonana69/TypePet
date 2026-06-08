@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>What a user command does. The kind selects which payload of <see cref="CommandManifest"/> is
 /// read and how the interpreter turns it into a result. <see cref="Unknown"/> is an unrecognized kind

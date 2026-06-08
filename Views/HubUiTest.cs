@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using MaplePet.Api.Hub;
-using MaplePet.Engine;
+using TypePet.Api.Hub;
+using TypePet.Engine;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// Dev-only construction smoke for <see cref="HubView"/>. Builds the view and runs its row rendering on the
@@ -18,7 +18,7 @@ public static class HubUiTest
     {
         try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
 
-        string tmp = Path.Combine(Path.GetTempPath(), "MaplePet_hubui_" + Guid.NewGuid().ToString("N"));
+        string tmp = Path.Combine(Path.GetTempPath(), "TypePet_hubui_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tmp);
         try
         {

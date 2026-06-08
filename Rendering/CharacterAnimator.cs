@@ -1,6 +1,6 @@
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Tracks which animation frame the character is showing. It maps the pet's <see cref="PetState"/>
@@ -298,8 +298,8 @@ public sealed class CharacterAnimator
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1", "walk1", "ladder", "jump" };
 
     /// <summary>The non-locomotion poses the control API can command via <c>DoAction</c> (mapped from
-    /// friendly names by <see cref="MaplePet.Engine.ActionRegistry"/>), including the whole attack
-    /// vocabulary (<see cref="MaplePet.Engine.Attacks.All"/>) so a random attack always has its stance
+    /// friendly names by <see cref="TypePet.Engine.ActionRegistry"/>), including the whole attack
+    /// vocabulary (<see cref="TypePet.Engine.Attacks.All"/>) so a random attack always has its stance
     /// decoded. Decoded for the live pet but deliberately excluded from the drag hit-test, so wide attack
     /// sprites don't inflate the grab box.</summary>
     public static readonly IReadOnlyCollection<string> ActionPoses = BuildActionPoses();
@@ -308,7 +308,7 @@ public sealed class CharacterAnimator
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "prone", "sit", "alert", "heal", "fly", "proneStab" };
-        foreach (var p in MaplePet.Engine.Attacks.All) set.Add(p);
+        foreach (var p in TypePet.Engine.Attacks.All) set.Add(p);
         return set;
     }
 

@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Records that an installed command came from the command hub, and at what version — written as a

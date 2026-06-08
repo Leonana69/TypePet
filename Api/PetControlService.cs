@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using MaplePet.Engine;
-using MaplePet.Rendering;
+using TypePet.Engine;
+using TypePet.Rendering;
 
-namespace MaplePet.Api;
+namespace TypePet.Api;
 
 /// <summary>
 /// The in-process implementation of <see cref="IPetControl"/>. It owns no runtime objects — it reads
@@ -27,7 +27,7 @@ public sealed class PetControlService : IPetControl
     private readonly Func<CharacterAnimator?> _animator;
     private readonly Func<CharacterSprites?> _sprites;
     private readonly Func<World?> _world;
-    private readonly Func<MaplePet.Engine.Rect> _bounds;
+    private readonly Func<TypePet.Engine.Rect> _bounds;
     private readonly Func<(string id, string name)> _character;
     private readonly Action<string?, double?, string?, string?, string?, bool> _setSpeech; // text, seconds, linkUrl, linkLabel, imageUrl, freezeMovement
 
@@ -43,7 +43,7 @@ public sealed class PetControlService : IPetControl
 
     public PetControlService(
         Func<PetController?> pet, Func<CharacterAnimator?> animator, Func<CharacterSprites?> sprites,
-        Func<World?> world, Func<MaplePet.Engine.Rect> bounds, Func<(string id, string name)> character,
+        Func<World?> world, Func<TypePet.Engine.Rect> bounds, Func<(string id, string name)> character,
         Action<string?, double?, string?, string?, string?, bool> setSpeech)
     {
         _pet = pet;
@@ -346,7 +346,7 @@ public sealed class PetControlService : IPetControl
 
     private static ControlResult Logged(string command, ControlResult result)
     {
-        Trace.WriteLine($"[MaplePet.Control] {command} -> {result.Status}{(result.Reason is null ? "" : $": {result.Reason}")}");
+        Trace.WriteLine($"[TypePet.Control] {command} -> {result.Status}{(result.Reason is null ? "" : $": {result.Reason}")}");
         return result;
     }
 }

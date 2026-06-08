@@ -1,4 +1,4 @@
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Builds the right <see cref="IChatBackend"/> for a provider profile. Kept free of Settings/Platform

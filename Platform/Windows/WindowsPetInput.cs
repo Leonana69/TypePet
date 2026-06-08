@@ -1,8 +1,8 @@
 using System;
-using MaplePet.Engine;
-using MaplePet.Platform.Abstractions;
+using TypePet.Engine;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// Windows pet input. The overlay stays permanently click-through (so it never occludes

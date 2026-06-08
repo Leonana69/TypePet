@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>One installed user command: its <see cref="Id"/> (the on-disk folder name, e.g.
 /// <c>cmd_1a2b3c4d</c>), the parsed <see cref="Name"/> + <see cref="Kind"/> + <see cref="Help"/> for the
@@ -59,7 +59,7 @@ public sealed class CommandStore
     /// <summary>
     /// Resolve the commands folder. Run from source it walks up to the project root and uses
     /// <c>&lt;repo&gt;/Assets/Commands</c> (beside the other assets); a published build with no project
-    /// file falls back to <c>%LOCALAPPDATA%\MaplePet\Commands</c> (writable per-user). Mirrors
+    /// file falls back to <c>%LOCALAPPDATA%\TypePet\Commands</c> (writable per-user). Mirrors
     /// <see cref="CharacterStore.ResolveDefaultRoot"/>.
     /// </summary>
     public static string ResolveDefaultRoot()
@@ -69,7 +69,7 @@ public sealed class CommandStore
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             while (dir is not null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "MaplePet.csproj")))
+                if (File.Exists(Path.Combine(dir.FullName, "TypePet.csproj")))
                     return Path.Combine(dir.FullName, "Assets", "Commands");
                 dir = dir.Parent;
             }
@@ -78,7 +78,7 @@ public sealed class CommandStore
 
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MaplePet", "Commands");
+            "TypePet", "Commands");
     }
 
     /// <summary>Every command folder under <see cref="Root"/> (parsed for name/kind/validity), sorted by id.
@@ -156,7 +156,7 @@ public sealed class CommandStore
         Directory.CreateDirectory(Root);
         string id = NewId();
         string dest = Path.Combine(Root, id);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_cmd_import_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_cmd_import_" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(temp);
@@ -179,7 +179,7 @@ public sealed class CommandStore
         var dir = DirectoryFor(id);
         if (dir is null) return;
         string folderName = SanitizeFileName(ReadManifest(id)?.Name ?? id);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_cmd_export_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_cmd_export_" + Guid.NewGuid().ToString("N"));
         string staging = Path.Combine(temp, folderName);
         try
         {
@@ -201,7 +201,7 @@ public sealed class CommandStore
     /// Throws on a zip with no manifest (the temp area is cleaned up).</summary>
     public StagedInstall PrepareInstall(string zipPath)
     {
-        string staging = Path.Combine(Path.GetTempPath(), "MaplePet_cmd_stage_" + Guid.NewGuid().ToString("N"));
+        string staging = Path.Combine(Path.GetTempPath(), "TypePet_cmd_stage_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
         try
         {

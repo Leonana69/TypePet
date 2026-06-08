@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Converts raw OS geometry (physical pixels, absolute virtual-screen coordinates) into

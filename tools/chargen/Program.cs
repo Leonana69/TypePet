@@ -1,6 +1,6 @@
-// MaplePet default-character generator — ORIGINAL ART, no third-party game assets.
+// TypePet default-character generator — ORIGINAL ART, no third-party game assets.
 // Draws a small round "blob" mascot procedurally and emits one composited PNG per
-// animation frame plus a minimal manifest.json that the MaplePet renderer consumes
+// animation frame plus a minimal manifest.json that the TypePet renderer consumes
 // (it reads only: animations -> { navel, playbackCycle, frames[] -> { delayMs, draw[] -> {category,image,canvasX,canvasY,width,height} } }).
 //
 // Dependency-free: a tiny supersampled software rasterizer + a hand-rolled PNG writer (BCL only).
@@ -545,7 +545,7 @@ class Program
     static void WriteManifest()
     {
         var sb = new StringBuilder();
-        sb.Append("{\"tool\":\"maplepet-chargen\",\"schema\":2,\"facing\":\"left\",\"flip\":false,\"scale\":1,");
+        sb.Append("{\"tool\":\"typepet-chargen\",\"schema\":2,\"facing\":\"left\",\"flip\":false,\"scale\":1,");
         sb.Append("\"items\":[{\"category\":\"Body\",\"folder\":\"Body\"}],");
         sb.Append("\"animations\":{");
         sb.Append(string.Join(",", AnimJson));

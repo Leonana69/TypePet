@@ -1,6 +1,6 @@
 using System;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// Native effects on the transparent overlay window itself: making it click-through, hiding/showing it

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Api;
+using TypePet.Api;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>Everything needed to run one chat turn against the active provider. Rebuilt per send by the
 /// app from current settings + the secret store, so a provider quick-switch or key edit takes effect on
@@ -159,7 +159,7 @@ public sealed class PetChatAgent
 
     private static string BuildSystemPrompt(CapabilitiesSnapshot? caps, bool searchOn, string? mapleDigest, bool remindersOn)
     {
-        var name = caps?.CharacterName ?? "MaplePet";
+        var name = caps?.CharacterName ?? "TypePet";
         var sb = new StringBuilder();
         sb.AppendLine($"You are {name}, a tiny, upbeat desktop pet living on the user's screen. " +
                       "You are a helpful assistant AND a playful creature with a body.");

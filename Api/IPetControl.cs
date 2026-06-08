@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace MaplePet.Api;
+namespace TypePet.Api;
 
 /// <summary>
 /// The programmatic control surface for the pet — the contract a future LLM connection (or the bundled

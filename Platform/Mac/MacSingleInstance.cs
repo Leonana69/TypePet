@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS single-instance guard. .NET named <see cref="Mutex"/> is cross-process on macOS (it's
@@ -16,7 +16,7 @@ public sealed class MacSingleInstance : ISingleInstance
 {
     // No "Local\" prefix: that's Windows kernel-namespace syntax; on Unix the name is a literal mapped
     // to a file, so keep it path-safe.
-    private const string MutexName = "MaplePet.SingleInstance.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
+    private const string MutexName = "TypePet.SingleInstance.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
 
     private readonly Mutex? _mutex;
 

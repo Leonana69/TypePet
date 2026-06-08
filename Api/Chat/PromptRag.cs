@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Retrieval-augmented prompt commands: expands inline retrieval directives in a <c>kind: prompt</c>
@@ -14,7 +14,7 @@ namespace MaplePet.Api.Chat;
 /// with a clearly fenced block of the retrieved text. Reuses the keyless <see cref="WebTools"/> the chat
 /// agent already uses, so behavior matches the <c>web_fetch</c> / <c>web_search</c> tools.
 ///
-/// Runs <em>after</em> <see cref="MaplePet.Engine.CommandManifest.Substitute"/> (so a url/query may itself
+/// Runs <em>after</em> <see cref="TypePet.Engine.CommandManifest.Substitute"/> (so a url/query may itself
 /// contain <c>{{1}}</c>/<c>{{args}}</c>, filled first). Best-effort like the rest of <see cref="WebTools"/>:
 /// a failed fetch injects its error text and the command carries on — it never throws.
 /// </summary>

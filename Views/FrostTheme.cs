@@ -1,6 +1,6 @@
 using Avalonia.Media;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The "frosted glass" palette, mirrored from <c>App.axaml</c> for the bits of UI built in

@@ -1,4 +1,4 @@
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// "Start at login" support. Windows: the per-user Run registry key. macOS: SMAppService.mainApp (needs

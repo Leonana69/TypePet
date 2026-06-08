@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Avalonia.Media;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Helpers for rendering Box Drawing / Block Elements glyphs (U+2500–U+259F) — e.g. the <c>/rank</c>

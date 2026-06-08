@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>A 2D vector / point in logical (device-independent) pixels.</summary>
 public readonly record struct Vec2(double X, double Y)

@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Threading;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// Windows overlay effects: makes the window click-through (WS_EX_TRANSPARENT|LAYERED|NOACTIVATE) and

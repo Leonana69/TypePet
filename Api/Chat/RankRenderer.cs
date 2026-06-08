@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Renders a <see cref="RankView"/> into the plain multi-line text the pet speaks for a <c>/rank</c> lookup.

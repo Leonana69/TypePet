@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// Single-instance guard. The first process to call <see cref="Acquire"/> creates and owns a named
@@ -20,8 +20,8 @@ public sealed class WindowsSingleInstance : ISingleInstance
 {
     // A fixed GUID keeps these names from colliding with any other app's kernel objects; the
     // "Local\" prefix scopes them to the current login session.
-    private const string MutexName  = @"Local\MaplePet.SingleInstance.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
-    private const string SignalName = @"Local\MaplePet.Activate.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
+    private const string MutexName  = @"Local\TypePet.SingleInstance.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
+    private const string SignalName = @"Local\TypePet.Activate.A3F1C2E4-7B9D-4E6A-9C2F-1D8E5B0A4C71";
 
     private readonly Mutex? _mutex;
     private readonly EventWaitHandle? _signal;

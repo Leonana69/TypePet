@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Bridges the file-only <see cref="CharacterStore"/> to the renderer: turns a character id into

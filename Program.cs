@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia;
 
-namespace MaplePet;
+namespace TypePet;
 
 /// <summary>Application-wide flags set from the command line.</summary>
 public static class AppState
@@ -36,25 +36,25 @@ internal static class Program
         // Dev-only: run the pure-engine path-planner checks and exit (no Avalonia needed).
         if (ParseOption(args, "--nav-test") is string navOut)
         {
-            MaplePet.Engine.NavTest.Run(navOut);
+            TypePet.Engine.NavTest.Run(navOut);
             return 0;
         }
 
         // Dev-only: check the /remind time parser + scheduler bookkeeping. Pure (no Avalonia needed).
         if (Array.IndexOf(args, "--remind-test") >= 0)
-            return MaplePet.Api.Chat.RemindTest.Run();
+            return TypePet.Api.Chat.RemindTest.Run();
 
         // Dev-only: exercise the command-hub client (index parse, sha256-verified staged install, provenance,
         // dirty-local detection, overwrite update) headlessly with local zips. Pure (no Avalonia/network).
         if (Array.IndexOf(args, "--hub-test") >= 0)
-            return MaplePet.Api.Hub.HubTest.Run(ParseOption(args, "--hub-test"));
+            return TypePet.Api.Hub.HubTest.Run(ParseOption(args, "--hub-test"));
 
         // Dev-only: smoke-test the game knowledge base (RAG). Needs Avalonia's asset loader for the
         // bundled catalog, so set up without starting the UI. Optional query: --rag-test "<question>".
         if (Array.IndexOf(args, "--rag-test") >= 0)
         {
             BuildAvaloniaApp().SetupWithoutStarting();
-            return MaplePet.Api.Chat.RagTest.Run(ParseOption(args, "--rag-test"));
+            return TypePet.Api.Chat.RagTest.Run(ParseOption(args, "--rag-test"));
         }
 
         // Dev-only: smoke-test chat inline-markup rendering (bold/italic + clickable links). Builds real
@@ -62,7 +62,7 @@ internal static class Program
         if (Array.IndexOf(args, "--markup-test") >= 0)
         {
             BuildAvaloniaApp().SetupWithoutStarting();
-            return MaplePet.Views.MarkupTest.Run();
+            return TypePet.Views.MarkupTest.Run();
         }
 
         // Dev-only: construct the Browse-tab HubView headlessly and run its row rendering (regression guard
@@ -70,7 +70,7 @@ internal static class Program
         if (Array.IndexOf(args, "--hub-ui-test") >= 0)
         {
             BuildAvaloniaApp().SetupWithoutStarting();
-            return MaplePet.Views.HubUiTest.Run();
+            return TypePet.Views.HubUiTest.Run();
         }
 
         // Dev-only: validate the user command library + merged registry headlessly, and optionally run one
@@ -79,7 +79,7 @@ internal static class Program
         if (Array.IndexOf(args, "--commands-test") >= 0)
         {
             BuildAvaloniaApp().SetupWithoutStarting();
-            return MaplePet.Api.Chat.CommandTest.Run(ParseOption(args, "--commands-test"));
+            return TypePet.Api.Chat.CommandTest.Run(ParseOption(args, "--commands-test"));
         }
 
         // Dev-only: print exactly what web_fetch / maple_lookup would extract from a page (incl. annotated
@@ -87,7 +87,7 @@ internal static class Program
         if (ParseOption(args, "--fetch-test") is string fetchUrl)
         {
             try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
-            Console.WriteLine(MaplePet.Api.Chat.WebTools.FetchReadableAsync(fetchUrl, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
+            Console.WriteLine(TypePet.Api.Chat.WebTools.FetchReadableAsync(fetchUrl, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
             return 0;
         }
 
@@ -96,7 +96,7 @@ internal static class Program
         if (ParseOption(args, "--prompt-rag-test") is string ragText)
         {
             try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
-            Console.WriteLine(MaplePet.Api.Chat.PromptRag.ExpandAsync(ragText, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
+            Console.WriteLine(TypePet.Api.Chat.PromptRag.ExpandAsync(ragText, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
             return 0;
         }
 
@@ -104,12 +104,12 @@ internal static class Program
         // Dev-only: dump the captured macOS world (CGWindowList geometry) and exit.
         if (Array.IndexOf(args, "--mac-windump") >= 0)
         {
-            MaplePet.Platform.Mac.MacDiagnostics.DumpWorld();
+            TypePet.Platform.Mac.MacDiagnostics.DumpWorld();
             return 0;
         }
         if (Array.IndexOf(args, "--mac-windows-all") >= 0)
         {
-            MaplePet.Platform.Mac.MacDiagnostics.DumpAllWindows();
+            TypePet.Platform.Mac.MacDiagnostics.DumpAllWindows();
             return 0;
         }
 #endif
@@ -118,10 +118,10 @@ internal static class Program
         // (--render-poses, --smoke) are exempt: they're short-lived and shouldn't be blocked by — or
         // register as — the live instance.
         bool interactiveRun = AppState.RenderPosesDir is null && AppState.SmokeSeconds <= 0;
-        MaplePet.Platform.Abstractions.ISingleInstance? instance = null;
+        TypePet.Platform.Abstractions.ISingleInstance? instance = null;
         if (interactiveRun)
         {
-            instance = MaplePet.Platform.PlatformServices.AcquireSingleInstance();
+            instance = TypePet.Platform.PlatformServices.AcquireSingleInstance();
             if (!instance.IsOwner)
             {
                 instance.SignalOwner(); // poke the already-running pet to acknowledge, then bow out
@@ -145,7 +145,7 @@ internal static class Program
     {
         try
         {
-            var path = Path.Combine(MaplePet.Platform.PlatformServices.AppPaths.DataRoot, "crash.log");
+            var path = Path.Combine(TypePet.Platform.PlatformServices.AppPaths.DataRoot, "crash.log");
             File.AppendAllText(path, $"[{DateTime.Now:u}] {source}: {ex}\n\n");
         }
         catch { /* nothing more we can do */ }

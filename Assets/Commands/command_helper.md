@@ -1,6 +1,6 @@
-# Writing a MaplePet command
+# Writing a TypePet command
 
-This is a guide to authoring your own `/slash` commands for MaplePet. Commands are plain files — no
+This is a guide to authoring your own `/slash` commands for TypePet. Commands are plain files — no
 coding required for most of them — and they hot-reload, so you can edit and see the result without
 restarting the app.
 
@@ -44,8 +44,8 @@ The command shows up the moment you save the file — no restart.
   type (`/hello`) comes from the `name:` field, **not** the folder name.
 - All command folders live under the **commands root**:
   - Running from source: `&lt;repo&gt;/Assets/Commands`
-  - Installed build: `%LOCALAPPDATA%\MaplePet\Commands` (Windows) /
-    `~/Library/Application Support/MaplePet/Commands` (macOS)
+  - Installed build: `%LOCALAPPDATA%\TypePet\Commands` (Windows) /
+    `~/Library/Application Support/TypePet/Commands` (macOS)
   - The **Commands** tab (tray → “Commands…”) has an **Open folder** link that takes you there.
 - **Hot-reload:** add, edit, rename, or delete a folder and the change applies within ~0.5 s.
 - **Uploading / sharing:** a command is just a folder — zip it up and the recipient drops it into their

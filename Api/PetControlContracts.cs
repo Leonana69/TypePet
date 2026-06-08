@@ -1,4 +1,4 @@
-namespace MaplePet.Api;
+namespace TypePet.Api;
 
 /// <summary>The outcome category of a control command. <see cref="Rejected"/> = a valid request the
 /// pet can't honour right now (e.g. acting while dragged); <see cref="Unsupported"/> = the current

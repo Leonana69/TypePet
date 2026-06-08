@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>A web result surfaced to the chat bar's "Sources" list.</summary>
 public sealed record WebSource(string Title, string Url, string Snippet);

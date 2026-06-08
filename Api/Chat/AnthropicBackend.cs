@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Anthropic;
 using Anthropic.Models.Messages;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// <see cref="IChatBackend"/> for Claude via the official <c>Anthropic</c> SDK. Non-streaming: one

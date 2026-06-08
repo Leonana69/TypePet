@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using MaplePet.Api;
+using TypePet.Api;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Bridges the chatbot to the pet's body. The provider-neutral analog of <see cref="Mcp.PetTools"/>:

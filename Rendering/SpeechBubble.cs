@@ -3,7 +3,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Draws a small speech bubble above (or, if there's no room, below) the pet — the control API's
@@ -39,8 +39,8 @@ public static class SpeechBubble
     /// can hit-test clicks on it; otherwise null.</summary>
     private const int MaxChars = 700; // a speech bubble shouldn't show a wall of text; long replies are clipped
 
-    public static MaplePet.Engine.Rect? Draw(DrawingContext ctx, string text, string? linkLabel, IImage? image,
-        double anchorX, double topY, MaplePet.Engine.Rect screen)
+    public static TypePet.Engine.Rect? Draw(DrawingContext ctx, string text, string? linkLabel, IImage? image,
+        double anchorX, double topY, TypePet.Engine.Rect screen)
     {
         text = Sanitize(text);
         if (string.IsNullOrEmpty(text)) return null;
@@ -134,7 +134,7 @@ public static class SpeechBubble
         double underlineY = y + fl.Height - 1.5;
         ctx.DrawLine(LinkUnderline, new Point(linkX, underlineY), new Point(linkX + fl.Width, underlineY));
         // The clickable region (in the same logical coords as `screen`), handed back for hit-testing.
-        return new MaplePet.Engine.Rect(linkX, y, fl.Width, fl.Height);
+        return new TypePet.Engine.Rect(linkX, y, fl.Width, fl.Height);
     }
 
     /// <summary>Make arbitrary text safe to render: drop control characters (stray ANSI/escape codes from

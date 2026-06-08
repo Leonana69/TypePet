@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Shared SSRF-safe networking primitives for fetching UNTRUSTED remote resources (hub-distributed command
@@ -16,7 +16,7 @@ namespace MaplePet.Engine;
 /// allowlisted hostname (re)resolves to one (DNS-rebind safe) — and callers cap the response size. The IP
 /// gate is the same fail-closed logic the Jint script sandbox uses (<c>CommandScriptHost.Jint.cs</c>);
 /// centralized here so non-scripting code paths (ImageCache, the hub client) share one audited filter and are
-/// safe regardless of the <c>MAPLEPET_SCRIPTING</c> build flag.
+/// safe regardless of the <c>TYPEPET_SCRIPTING</c> build flag.
 /// </summary>
 public static class SafeHttp
 {

@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Threading;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Dev-only headless check for the <c>/remind</c> time parser and scheduler bookkeeping. The parser is pure

@@ -11,10 +11,10 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using MaplePet.Api.Hub;
-using MaplePet.Engine;
+using TypePet.Api.Hub;
+using TypePet.Engine;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Commands tab of <see cref="ConfigWindow"/> — the management surface for the user command library.
@@ -381,7 +381,7 @@ public sealed class CommandsView : UserControl
             e.Name,
             login => WithMeta(files, login, e, manifest),
             title: $"Add /{e.Name}",
-            body: "Submitted from MaplePet. Please review before merging.",
+            body: "Submitted from TypePet. Please review before merging.",
             CancellationToken.None);
 
         if (result.Ok)
@@ -451,7 +451,7 @@ public sealed class CommandsView : UserControl
             ShowInTaskbar = false,
         };
 
-        var intro = new TextBlock { Text = "Enter this code on GitHub to authorize MaplePet to open a pull request as you:", TextWrapping = TextWrapping.Wrap };
+        var intro = new TextBlock { Text = "Enter this code on GitHub to authorize TypePet to open a pull request as you:", TextWrapping = TextWrapping.Wrap };
         intro.Classes.Add("rowLabel");
         var code = new TextBlock
         {

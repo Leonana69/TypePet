@@ -6,9 +6,9 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
-using MaplePet.Rendering;
+using TypePet.Rendering;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// Lightweight inline-markdown rendering for chat replies. The model's answer is plain text that may

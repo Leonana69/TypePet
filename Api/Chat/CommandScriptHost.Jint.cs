@@ -1,4 +1,4 @@
-#if MAPLEPET_SCRIPTING
+#if TYPEPET_SCRIPTING
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 using Jint;
 using Jint.Native;
 using Jint.Native.Object;
-using MaplePet.Api;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// The sandboxed implementation of <see cref="CommandScriptHost"/> for <c>kind:script</c> commands, using
@@ -50,7 +50,7 @@ public static partial class CommandScriptHost
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(8);   // per request
     private static readonly TimeSpan NetBudgetTotal = TimeSpan.FromSeconds(15);  // total across the run
     private const string DefaultUserAgent =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 MaplePet";
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 TypePet";
     private static readonly string[] AllowedRequestHeaders = { "User-Agent", "Accept", "Accept-Language", "Referer" };
 
     // A network httpGet uses synchronous I/O, so each net-enabled run parks its thread-pool thread for up to the

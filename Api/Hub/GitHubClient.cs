@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Api.Hub;
+namespace TypePet.Api.Hub;
 
 /// <summary>
 /// Creates a pull request to the hub repo (<c>Leonana69/TypePet-Commands</c>) straight from the app, so a
@@ -48,7 +48,7 @@ public sealed class GitHubClient
         // GitHub is a fixed public host, so the SafeHttp SSRF gate isn't needed here; set the headers the API
         // requires (a User-Agent is mandatory or GitHub returns 403).
         var c = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        c.DefaultRequestHeaders.UserAgent.ParseAdd($"MaplePet/{AppInfo.Version}");
+        c.DefaultRequestHeaders.UserAgent.ParseAdd($"TypePet/{AppInfo.Version}");
         c.DefaultRequestHeaders.Accept.ParseAdd("application/json");
         return c;
     }

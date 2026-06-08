@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 public enum PetState
 {

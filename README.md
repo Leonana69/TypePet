@@ -1,4 +1,4 @@
-# MaplePet
+# TypePet
 
 **Version 1.0.0** · see [`CHANGELOG.md`](CHANGELOG.md)
 
@@ -44,15 +44,15 @@ a non-Windows host (it just can't *run* there).
 
 **Windows:**
 ```powershell
-dotnet run --project MaplePet.csproj -f net10.0-windows
+dotnet run --project TypePet.csproj -f net10.0-windows
 ```
 
 **macOS:**
 ```bash
-dotnet run --project MaplePet.csproj -f net10.0
+dotnet run --project TypePet.csproj -f net10.0
 # or build a double-clickable, ad-hoc-signed app bundle (no Apple account needed):
-./packaging/macos/build-macos-bundle.sh        # produces artifacts/MaplePet.app
-open artifacts/MaplePet.app
+./packaging/macos/build-macos-bundle.sh        # produces artifacts/TypePet.app
+open artifacts/TypePet.app
 ```
 
 You'll see your detected windows outlined, the derived platforms/ladders drawn on top,
@@ -65,7 +65,7 @@ in its console).
 Smoke test (auto-closes after N seconds, useful for CI):
 
 ```bash
-dotnet run --project MaplePet.csproj -f net10.0 -- --smoke 3      # (-f net10.0-windows on Windows)
+dotnet run --project TypePet.csproj -f net10.0 -- --smoke 3      # (-f net10.0-windows on Windows)
 ```
 
 ## Configuration
@@ -119,7 +119,7 @@ the macOS `.app` bundle. `Platform/Mac/MacDiagnostics.cs` adds dev-only `--mac-w
 
 ## License
 
-MaplePet's **source code** is free software: you can redistribute it and/or modify it under the terms of
+TypePet's **source code** is free software: you can redistribute it and/or modify it under the terms of
 the **GNU General Public License, version 3 or (at your option) any later version** — see [`LICENSE`](LICENSE).
 It is distributed WITHOUT ANY WARRANTY; see the license for details.
 

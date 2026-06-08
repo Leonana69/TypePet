@@ -8,7 +8,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// Base class for the app's "frosted glass" windows. It strips the OS title bar, fills the window

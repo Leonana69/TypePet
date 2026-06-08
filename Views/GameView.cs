@@ -1,9 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Media;
-using MaplePet.Engine;
-using MaplePet.Rendering;
+using TypePet.Engine;
+using TypePet.Rendering;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The drawing surface that fills the overlay. It holds references to the latest world/pet
@@ -22,7 +22,7 @@ public sealed class GameView : Control
     public Avalonia.Media.IImage? SpeechImage { get; set; } // optional character image drawn atop the bubble
     // The clickable link's bounds in logical overlay px, recomputed each Render (null when no link is drawn).
     // PetWindow reads this to publish a hit rect to the input layer.
-    public MaplePet.Engine.Rect? SpeechLinkRect { get; private set; }
+    public TypePet.Engine.Rect? SpeechLinkRect { get; private set; }
     public bool ShowDebug { get; set; } = false; // driven by Settings.ShowOverlay via PetWindow
 
     public GameView()
@@ -55,13 +55,13 @@ public sealed class GameView : Control
                     // when footage didn't load).
                     double topY = Sprites is { } s ? pet.FeetY - s.HeightAboveFeet : pet.Pos.Y;
                     SpeechLinkRect = SpeechBubble.Draw(context, Speech!, SpeechLink, SpeechImage, pet.CenterX, topY,
-                        new MaplePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
+                        new TypePet.Engine.Rect(0, 0, Bounds.Width, Bounds.Height));
                 }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MaplePet] render failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[TypePet] render failed: {ex.Message}");
         }
     }
 }

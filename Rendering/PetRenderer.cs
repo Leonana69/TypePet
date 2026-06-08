@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Draws the pet as a layered sprite character: the Body + Head layers of the current animation frame,
