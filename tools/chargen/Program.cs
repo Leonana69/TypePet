@@ -43,8 +43,39 @@ class Program
     static readonly StringBuilder Manifest = new();
     static readonly List<string> AnimJson = new();
 
+    // all-pose preview capture (first frame of each pose, full 120x116 buffer)
+    static bool CapturePreview = false;
+    static readonly List<(string pose, byte[] full)> PreviewShots = new();
+
     static int Main(string[] args)
     {
+        // --arm-preview <outDir>: render a side-by-side sheet of the candidate arm styles
+        // on the idle (stand1) pose so the user can pick one. Does not touch the real assets.
+        if (args.Length > 0 && args[0] == "--arm-preview")
+        {
+            string dir = args.Length > 1 ? args[1] : Path.Combine(Directory.GetCurrentDirectory(), "ArmPreview");
+            ArmPreview(dir);
+            Console.WriteLine($"Arm preview -> {dir}");
+            return 0;
+        }
+
+        // --all-preview <outDir>: render every pose's first frame into one labelled grid.
+        if (args.Length > 0 && args[0] == "--all-preview")
+        {
+            string dir = args.Length > 1 ? args[1] : Path.Combine(Directory.GetCurrentDirectory(), "AllPreview");
+            AllPreview(dir);
+            Console.WriteLine($"All-pose preview -> {dir}");
+            return 0;
+        }
+
+        // --arm <style> <outDir>: generate the full character set using the chosen arm style.
+        if (args.Length > 0 && args[0] == "--arm")
+        {
+            ArmMode = Enum.Parse<ArmStyle>(args[1], ignoreCase: true);
+            OutDir = args.Length > 2 ? args[2] : Path.Combine(Directory.GetCurrentDirectory(), "DefaultCharacterNew");
+            args = new[] { OutDir }; // fall through to normal generation
+        }
+
         OutDir = args.Length > 0 ? args[0] : Path.Combine(Directory.GetCurrentDirectory(), "DefaultCharacterNew");
         Directory.CreateDirectory(Path.Combine(OutDir, "Body"));
 
@@ -69,6 +100,15 @@ class Program
     // =====================================================================
     //  Pose options + the creature draw routine
     // =====================================================================
+
+    // Arm rendering style. Droop = the original (long capsules hanging in front).
+    // The rest are the shorter / not-in-front candidates the user is choosing between.
+    enum ArmStyle { Droop, Stub, Paw, Fin, Tuck }
+
+    // The arm style used by the real generation. User picked "side fins" (drawn behind
+    // the body so only the outer curve peeks past the silhouette). Override with `--arm`.
+    static ArmStyle ArmMode = ArmStyle.Fin;
+
     class Opt
     {
         public double bodyW = 46, bodyH = 54;     // capsule size
@@ -78,9 +118,11 @@ class Program
         // feet (relative to Cx; absolute y). null y => hidden
         public double footLx = -13, footLy = 95, footRx = 13, footRy = 95;
         public bool feet = true;
-        // hands (relative to Cx; absolute y)
-        public double handLx = -27, handLy = 80, handRx = 27, handRy = 80;
+        // hands (relative to Cx; absolute y) — Fin resting tuck (peeks at the sides)
+        public double handLx = -28, handLy = 74, handRx = 28, handRy = 74;
         public bool arms = true;
+        // arm style; defaults to the globally-selected mode so every pose follows the pick
+        public ArmStyle arm = ArmMode;
         // face
         public string eyes = "open";   // open | blink | happy | wide
         public string mouth = "smile"; // smile | open | small | none
@@ -126,6 +168,9 @@ class Program
             OutlinedEllipse(o.bodyCx + o.footRx, o.footRy, 9, 5.5, FOOT);
         }
 
+        // arms drawn BEHIND the body (Fin) — only the outer part peeks past the silhouette
+        if (o.arms && o.arm == ArmStyle.Fin) DrawArms(o, bx, by, bw, bh);
+
         // body
         OutlinedRound(bx, by, bw, bh, Math.Min(bw, bh) / 2, BODY);
         // belly highlight
@@ -142,18 +187,62 @@ class Program
         }
         if (o.mouth != "none") DrawMouth(bx, fy + 9, o.mouth);
 
-        // arms (in front)
-        if (o.arms)
-        {
-            double shLy = by + 2, shRy = by + 2;
-            OutlinedCapsule(bx - bw * 0.42, shLy, o.bodyCx + o.handLx, o.handLy, 4.5, BODY_D);
-            OutlinedCapsule(bx + bw * 0.42, shRy, o.bodyCx + o.handRx, o.handRy, 4.5, BODY_D);
-        }
+        // arms drawn IN FRONT of the body (all styles except Fin)
+        if (o.arms && o.arm != ArmStyle.Fin) DrawArms(o, bx, by, bw, bh);
 
         // floating plus marks (heal)
         if (o.plus)
         {
             Plus(bx - 16, by - 34); Plus(bx + 12, by - 30); Plus(bx - 2, by - 42);
+        }
+    }
+
+    // Draw the two arms for a non-prone creature. The hand targets (o.handL*/handR*)
+    // are the arm END points; the style controls where the arm attaches to the body,
+    // its thickness, whether it ends in a distinct round hand, and its colour.
+    static void DrawArms(Opt o, double bx, double by, double bw, double bh)
+    {
+        double hlx = o.bodyCx + o.handLx, hly = o.handLy;
+        double hrx = o.bodyCx + o.handRx, hry = o.handRy;
+        switch (o.arm)
+        {
+            case ArmStyle.Droop: // original: long capsules from high on the body, in front
+            {
+                double sh = by + 2;
+                OutlinedCapsule(bx - bw * 0.42, sh, hlx, hly, 4.5, BODY_D);
+                OutlinedCapsule(bx + bw * 0.42, sh, hrx, hry, 4.5, BODY_D);
+                break;
+            }
+            case ArmStyle.Stub: // short tapered nubs attached low at the sides
+            {
+                double sh = by + bh * 0.16;
+                OutlinedCapsule(bx - bw * 0.40, sh, hlx, hly, 3.8, BODY_D);
+                OutlinedCapsule(bx + bw * 0.40, sh, hrx, hry, 3.8, BODY_D);
+                break;
+            }
+            case ArmStyle.Paw: // short thin connector ending in a distinct round paw
+            {
+                double sh = by + bh * 0.12;
+                OutlinedCapsule(bx - bw * 0.40, sh, hlx, hly, 2.8, BODY_D);
+                OutlinedCapsule(bx + bw * 0.40, sh, hrx, hry, 2.8, BODY_D);
+                OutlinedEllipse(hlx, hly, 4.6, 4.6, BODY_D);
+                OutlinedEllipse(hrx, hry, 4.6, 4.6, BODY_D);
+                break;
+            }
+            case ArmStyle.Fin: // flipper drawn behind the body; only the outer curve shows
+            {
+                double sh = by + bh * 0.02;
+                OutlinedCapsule(bx - bw * 0.28, sh, hlx, hly, 5.0, BODY_D);
+                OutlinedCapsule(bx + bw * 0.28, sh, hrx, hry, 5.0, BODY_D);
+                break;
+            }
+            case ArmStyle.Tuck: // tiny body-colour bumps that merge into the silhouette
+            {
+                double sh = by + bh * 0.20;
+                OutlinedCapsule(bx - bw * 0.42, sh, hlx, hly, 5.2, BODY);
+                OutlinedCapsule(bx + bw * 0.42, sh, hrx, hry, 5.2, BODY);
+                break;
+            }
         }
     }
 
@@ -226,29 +315,30 @@ class Program
     static void BuildWalk()
     {
         var frames = new List<(int, Action)>();
-        // stride A: left foot fwd (toward -x = facing left), arms opposite
+        // Fin paddle: side fins bob up/down opposite the feet. (x kept out so they peek.)
+        // stride A: left foot fwd (toward -x = facing left), left fin up / right fin down
         frames.Add((170, () => DrawCreature(new Opt
         {
             lean = -2, footLx = -18, footLy = 96, footRx = 9, footRy = 93,
-            handLx = -24, handLy = 84, handRx = 30, handRy = 78,
+            handLx = -29, handLy = 70, handRx = 29, handRy = 82,
         })));
-        // passing + bob up
+        // passing + bob up: fins level
         frames.Add((170, () => DrawCreature(new Opt
         {
             sy = 1.03, bodyCy = 65, footLx = -12, footLy = 94, footRx = 12, footRy = 94,
-            handLx = -28, handLy = 80, handRx = 28, handRy = 80,
+            handLx = -28, handLy = 76, handRx = 28, handRy = 76,
         })));
-        // stride B: right foot fwd
+        // stride B: right foot fwd, right fin up / left fin down
         frames.Add((170, () => DrawCreature(new Opt
         {
             lean = -2, footLx = -9, footLy = 93, footRx = 18, footRy = 96,
-            handLx = -30, handLy = 78, handRx = 24, handRy = 84,
+            handLx = -29, handLy = 82, handRx = 29, handRy = 70,
         })));
         // passing + bob up
         frames.Add((170, () => DrawCreature(new Opt
         {
             sy = 1.03, bodyCy = 65, footLx = -12, footLy = 94, footRx = 12, footRy = 94,
-            handLx = -28, handLy = 80, handRx = 28, handRy = 80,
+            handLx = -28, handLy = 76, handRx = 28, handRy = 76,
         })));
         EmitPose("walk1", 68, frames, new[] { 0, 1, 2, 3 });
     }
@@ -256,17 +346,18 @@ class Program
     static void BuildLadder()
     {
         var frames = new List<(int, Action)>();
-        // climbing: narrow body, arms up alternating, feet alternating
+        // climbing: narrow body, side fins reach high/low alternately (kept OUT past the
+        // silhouette so the behind-body fin actually shows), feet alternating to match.
         frames.Add((260, () => DrawCreature(new Opt
         {
             sx = 0.90, eyes = "open", mouth = "small", cheeks = false,
-            handLx = -16, handLy = 44, handRx = 18, handRy = 64,
+            handLx = -29, handLy = 50, handRx = 28, handRy = 76,
             footLx = -11, footLy = 92, footRx = 12, footRy = 97,
         })));
         frames.Add((260, () => DrawCreature(new Opt
         {
             sx = 0.90, eyes = "open", mouth = "small", cheeks = false,
-            handLx = -18, handLy = 64, handRx = 16, handRy = 44,
+            handLx = -28, handLy = 76, handRx = 29, handRy = 50,
             footLx = -12, footLy = 97, footRx = 11, footRy = 92,
         })));
         EmitPose("ladder", 68, frames, new[] { 0, 1 });
@@ -274,14 +365,33 @@ class Program
 
     static void BuildJump()
     {
+        // Animated fin swing: both side-fins sweep up→mid→down (like arms swinging on a jump)
+        // with a small volume-preserving squash/stretch synced to the swing. Feet stay put so the
+        // body just squashes from the foot line. Frame 0 (fins up) is the launch — it always shows
+        // first because a new jump restarts the pose from frame 0, so even a brief hop reads right.
         var frames = new List<(int, Action)>();
-        frames.Add((200, () => DrawCreature(new Opt
+        // up — launch: stretched tall, fins flung high
+        frames.Add((120, () => DrawCreature(new Opt
         {
-            sx = 0.92, sy = 1.10, bodyCy = 62, eyes = "wide", mouth = "open",
-            handLx = -30, handLy = 50, handRx = 30, handRy = 50,
+            sx = 0.92, sy = 1.12, bodyCy = 62, eyes = "wide", mouth = "open",
+            handLx = -30, handLy = 49, handRx = 30, handRy = 49,
             footLx = -10, footLy = 86, footRx = 10, footRy = 86,
         })));
-        EmitPose("jump", 64, frames, new[] { 0 });
+        // mid — fins sweeping down past the sides
+        frames.Add((110, () => DrawCreature(new Opt
+        {
+            sx = 0.96, sy = 1.05, bodyCy = 62, eyes = "wide", mouth = "open",
+            handLx = -31, handLy = 63, handRx = 31, handRy = 63,
+            footLx = -10, footLy = 86, footRx = 10, footRy = 86,
+        })));
+        // down — fins low at the sides, body squashed back to neutral
+        frames.Add((120, () => DrawCreature(new Opt
+        {
+            sx = 1.00, sy = 1.00, bodyCy = 63, eyes = "wide", mouth = "open",
+            handLx = -29, handLy = 77, handRx = 29, handRy = 77,
+            footLx = -10, footLy = 86, footRx = 10, footRy = 86,
+        })));
+        EmitPose("jump", 64, frames, new[] { 0, 1, 2, 1 });
     }
 
     static void BuildProne()
@@ -413,6 +523,7 @@ class Program
         {
             Clear();
             frames[i].draw();
+            if (CapturePreview) PreviewShots.Add(($"{pose}_f{i}", DownsampleFull()));
             var (rgba, w, h, ox, oy) = Downsample();
             string img = $"Body/{pose}_f{i:00}.png";
             WritePng(Path.Combine(OutDir, img.Replace('/', Path.DirectorySeparatorChar)), w, h, rgba);
@@ -440,6 +551,184 @@ class Program
         sb.Append(string.Join(",", AnimJson));
         sb.Append("}}");
         File.WriteAllText(Path.Combine(OutDir, "manifest.json"), sb.ToString());
+    }
+
+    // =====================================================================
+    //  Arm-style preview (compare candidates on the idle pose)
+    // =====================================================================
+    static void ArmPreview(string outDir)
+    {
+        Directory.CreateDirectory(outDir);
+
+        // label, style, idle (stand1) resting hand X offset + Y for that style
+        var opts = new (string label, ArmStyle style, double hx, double hy)[]
+        {
+            ("0", ArmStyle.Droop, 27, 80),  // current — for reference
+            ("1", ArmStyle.Stub,  25, 74),
+            ("2", ArmStyle.Paw,   26, 77),
+            ("3", ArmStyle.Fin,   28, 74),
+            ("4", ArmStyle.Tuck,  24, 76),
+        };
+
+        var fulls = new List<byte[]>();
+        foreach (var op in opts)
+        {
+            Clear();
+            DrawCreature(new Opt { arm = op.style, handLx = -op.hx, handRx = op.hx, handLy = op.hy, handRy = op.hy });
+            var full = DownsampleFull();
+            fulls.Add(full);
+            var c = CropAndScale(full, 5);
+            WritePng(Path.Combine(outDir, $"opt{op.label}.png"), c.w, c.h, c.rgba);
+        }
+
+        BuildSheet(Path.Combine(outDir, "arm-options.png"), opts, fulls);
+    }
+
+    static void BuildSheet(string path, (string label, ArmStyle style, double hx, double hy)[] opts, List<byte[]> fulls)
+    {
+        const int Z = 5;                                  // sprite zoom in the sheet
+        const int x0 = 16, y0 = 30, winW = 88, winH = 78; // source window in the 120x116 canvas
+        const int S = 6;                                  // digit pixel size
+        int cellW = winW * Z, cellH = winH * Z, gap = 18, labelH = 5 * S + 12;
+        int n = opts.Length;
+        int sheetW = gap + n * (cellW + gap);
+        int sheetH = labelH + cellH + gap;
+        var sh = new byte[sheetW * sheetH * 4];
+        for (int i = 0; i < sheetW * sheetH; i++) { sh[i * 4] = 236; sh[i * 4 + 1] = 239; sh[i * 4 + 2] = 242; sh[i * 4 + 3] = 255; }
+
+        for (int k = 0; k < n; k++)
+        {
+            int cellX = gap + k * (cellW + gap), cellY = labelH;
+            var full = fulls[k];
+            for (int sy = 0; sy < winH; sy++)
+                for (int sx = 0; sx < winW; sx++)
+                {
+                    int si = ((y0 + sy) * CW + (x0 + sx)) * 4;
+                    double a = full[si + 3] / 255.0;
+                    if (a <= 0) continue;
+                    var c = ((int)full[si], (int)full[si + 1], (int)full[si + 2]);
+                    for (int dy = 0; dy < Z; dy++)
+                        for (int dx = 0; dx < Z; dx++)
+                            SheetBlend(sh, sheetW, cellX + sx * Z + dx, cellY + sy * Z + dy, c, a);
+                }
+            DrawDigit(sh, sheetW, opts[k].label[0], cellX + cellW / 2 - (3 * S) / 2, 6, S, (40, 50, 60));
+        }
+        WritePng(path, sheetW, sheetH, sh);
+    }
+
+    static void SheetBlend(byte[] sh, int sw, int x, int y, (int r, int g, int b) c, double a)
+    {
+        if (x < 0 || y < 0 || x >= sw) return;
+        int o = (y * sw + x) * 4;
+        if (o < 0 || o + 3 >= sh.Length) return;
+        sh[o + 0] = (byte)Math.Clamp(c.r * a + sh[o + 0] * (1 - a), 0, 255);
+        sh[o + 1] = (byte)Math.Clamp(c.g * a + sh[o + 1] * (1 - a), 0, 255);
+        sh[o + 2] = (byte)Math.Clamp(c.b * a + sh[o + 2] * (1 - a), 0, 255);
+        sh[o + 3] = 255;
+    }
+
+    static string[] Glyph(char c) => c switch
+    {
+        '0' => new[] { "###", "#.#", "#.#", "#.#", "###" },
+        '1' => new[] { ".#.", "##.", ".#.", ".#.", "###" },
+        '2' => new[] { "###", "..#", "###", "#..", "###" },
+        '3' => new[] { "###", "..#", "###", "..#", "###" },
+        '4' => new[] { "#.#", "#.#", "###", "..#", "..#" },
+        '5' => new[] { "###", "#..", "###", "..#", "###" },
+        '6' => new[] { "###", "#..", "###", "#.#", "###" },
+        '7' => new[] { "###", "..#", "..#", "..#", "..#" },
+        '8' => new[] { "###", "#.#", "###", "#.#", "###" },
+        '9' => new[] { "###", "#.#", "###", "..#", "###" },
+        _   => new[] { "...", "...", "...", "...", "..." },
+    };
+
+    static void DrawDigit(byte[] sh, int sw, char ch, int x, int y, int S, (int, int, int) col)
+    {
+        var g = Glyph(ch);
+        for (int ry = 0; ry < 5; ry++)
+            for (int rx = 0; rx < 3; rx++)
+                if (g[ry][rx] == '#')
+                    for (int dy = 0; dy < S; dy++)
+                        for (int dx = 0; dx < S; dx++)
+                            SheetBlend(sh, sw, x + rx * S + dx, y + ry * S + dy, col, 1);
+    }
+
+    static void DrawNumber(byte[] sh, int sw, int n, int x, int y, int S, (int, int, int) col)
+    {
+        string s = n.ToString(CultureInfo.InvariantCulture);
+        for (int i = 0; i < s.Length; i++)
+            DrawDigit(sh, sw, s[i], x + i * (4 * S), y, S, col);
+    }
+
+    // Render the first frame of every pose into one labelled grid so all poses can be
+    // eyeballed at once (the app's --render-poses skips the attack stances).
+    static void AllPreview(string outDir)
+    {
+        Directory.CreateDirectory(outDir);
+        Directory.CreateDirectory(Path.Combine(outDir, "Body"));
+        OutDir = outDir;
+        CapturePreview = true;
+        BuildStand1(); BuildStand2(); BuildWalk(); BuildLadder(); BuildJump();
+        BuildProne(); BuildSit(); BuildAlert(); BuildHeal(); BuildFly(); BuildSwing(); BuildStab();
+
+        int n = PreviewShots.Count;
+        const int Z = 3, x0 = 8, y0 = 14, winW = 104, winH = 96, S = 4;
+        int cols = 5, rows = (n + cols - 1) / cols;
+        int cellW = winW * Z, cellH = winH * Z, gap = 12, labelH = 5 * S + 8;
+        int cw = cellW + gap, ch = labelH + cellH + gap;
+        int sheetW = gap + cols * cw, sheetH = gap + rows * ch;
+        var sh = new byte[sheetW * sheetH * 4];
+        for (int i = 0; i < sheetW * sheetH; i++) { sh[i * 4] = 236; sh[i * 4 + 1] = 239; sh[i * 4 + 2] = 242; sh[i * 4 + 3] = 255; }
+
+        for (int k = 0; k < n; k++)
+        {
+            int cxi = k % cols, cyi = k / cols;
+            int cellX = gap + cxi * cw, baseY = gap + cyi * ch;
+            DrawNumber(sh, sheetW, k, cellX + 2, baseY, S, (40, 50, 60));
+            int cellY = baseY + labelH;
+            var full = PreviewShots[k].full;
+            for (int sy = 0; sy < winH; sy++)
+                for (int sx = 0; sx < winW; sx++)
+                {
+                    int si = ((y0 + sy) * CW + (x0 + sx)) * 4;
+                    double a = full[si + 3] / 255.0;
+                    if (a <= 0) continue;
+                    var c = ((int)full[si], (int)full[si + 1], (int)full[si + 2]);
+                    for (int dy = 0; dy < Z; dy++)
+                        for (int dx = 0; dx < Z; dx++)
+                            SheetBlend(sh, sheetW, cellX + sx * Z + dx, cellY + sy * Z + dy, c, a);
+                }
+        }
+        WritePng(Path.Combine(outDir, "all-poses.png"), sheetW, sheetH, sh);
+        for (int k = 0; k < n; k++) Console.WriteLine($"  [{k}] {PreviewShots[k].pose}");
+    }
+
+    // Crop a full 120x116 render to its tight alpha bbox and nearest-neighbour scale by Z.
+    static (byte[] rgba, int w, int h) CropAndScale(byte[] full, int Z)
+    {
+        int minx = CW, miny = CH, maxx = -1, maxy = -1;
+        for (int y = 0; y < CH; y++)
+            for (int x = 0; x < CW; x++)
+                if (full[(y * CW + x) * 4 + 3] > 2)
+                {
+                    if (x < minx) minx = x; if (x > maxx) maxx = x;
+                    if (y < miny) miny = y; if (y > maxy) maxy = y;
+                }
+        if (maxx < 0) return (new byte[4], 1, 1);
+        int w = maxx - minx + 1, h = maxy - miny + 1;
+        var outp = new byte[w * Z * h * Z * 4];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                int si = ((y + miny) * CW + (x + minx)) * 4;
+                for (int dy = 0; dy < Z; dy++)
+                    for (int dx = 0; dx < Z; dx++)
+                    {
+                        int di = ((y * Z + dy) * (w * Z) + (x * Z + dx)) * 4;
+                        outp[di] = full[si]; outp[di + 1] = full[si + 1]; outp[di + 2] = full[si + 2]; outp[di + 3] = full[si + 3];
+                    }
+            }
+        return (outp, w * Z, h * Z);
     }
 
     // =====================================================================
@@ -530,8 +819,8 @@ class Program
         Capsule(x0, y0, x1, y1, r, fill, 1);
     }
 
-    // Average SS x SS blocks (premultiplied) -> 8-bit straight RGBA, then crop to tight alpha bbox.
-    static (byte[] rgba, int w, int h, int ox, int oy) Downsample()
+    // Average SS x SS blocks (premultiplied) -> 8-bit straight RGBA over the full 120x116 canvas.
+    static byte[] DownsampleFull()
     {
         var full = new byte[CW * CH * 4];
         for (int y = 0; y < CH; y++)
@@ -556,6 +845,13 @@ class Program
                 }
                 full[o + 3] = (byte)Math.Clamp(oa * 255.0, 0, 255);
             }
+        return full;
+    }
+
+    // Full render cropped to its tight alpha bbox (what each emitted frame PNG uses).
+    static (byte[] rgba, int w, int h, int ox, int oy) Downsample()
+    {
+        var full = DownsampleFull();
 
         // tight bbox
         int minx = CW, miny = CH, maxx = -1, maxy = -1;
