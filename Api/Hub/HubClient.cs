@@ -270,36 +270,43 @@ public sealed class HubClient
     private static bool IsScript(StagedInstall staged) => staged.Manifest?.Kind == CommandKind.Script;
 
     // ------------------------------------------------------------------ download + verify
+    /// <summary>Download the zip and return a temp path only if its sha256 matches the index. Tries the
+    /// primary URL then the fallback, moving on to the next source on EITHER a transport error OR a checksum
+    /// mismatch — so a CDN serving a stale/wrong copy can't block an install when another source is good.</summary>
     private async Task<string> DownloadVerifiedZipAsync(HubEntry entry, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(entry.Download.Sha256))
             throw new InvalidDataException("the hub entry has no checksum; refusing to install.");
+        string want = entry.Download.Sha256.Trim();
 
         string tmp = Path.Combine(Path.GetTempPath(), "MaplePet_hub_" + Guid.NewGuid().ToString("N") + ".zip");
         try
         {
-            byte[] bytes = await DownloadAsync(entry.Download.Url, entry.Download.FallbackUrl, ct).ConfigureAwait(false);
-            string actual;
-            using (var sha = SHA256.Create())
-                actual = Convert.ToHexString(sha.ComputeHash(bytes)).ToLowerInvariant();
-            if (!string.Equals(actual, entry.Download.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("checksum mismatch — the download was rejected.");
-            await File.WriteAllBytesAsync(tmp, bytes, ct).ConfigureAwait(false);
-            return tmp;
+            string? lastError = null;
+            foreach (var url in new[] { entry.Download.Url, entry.Download.FallbackUrl })
+            {
+                if (string.IsNullOrWhiteSpace(url)) continue;
+                byte[] bytes;
+                try { bytes = await GetBytesAsync(url!, ct).ConfigureAwait(false); }
+                catch (Exception ex) { lastError = ex.Message; continue; }   // transport error -> try next source
+
+                string actual;
+                using (var sha = SHA256.Create())
+                    actual = Convert.ToHexString(sha.ComputeHash(bytes)).ToLowerInvariant();
+                if (!string.Equals(actual, want, StringComparison.OrdinalIgnoreCase))
+                {
+                    lastError = "checksum mismatch (a CDN may be serving a stale copy)";
+                    continue;   // stale/wrong bytes -> try the next source rather than failing
+                }
+                await File.WriteAllBytesAsync(tmp, bytes, ct).ConfigureAwait(false);
+                return tmp;
+            }
+            throw new InvalidDataException(lastError ?? "the download could not be verified.");
         }
         catch
         {
             TryDelete(tmp);
             throw;
-        }
-    }
-
-    private async Task<byte[]> DownloadAsync(string url, string? fallbackUrl, CancellationToken ct)
-    {
-        try { return await GetBytesAsync(url, ct).ConfigureAwait(false); }
-        catch when (!string.IsNullOrWhiteSpace(fallbackUrl))
-        {
-            return await GetBytesAsync(fallbackUrl!, ct).ConfigureAwait(false);
         }
     }
 
