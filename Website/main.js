@@ -378,34 +378,6 @@
     }
   }
 
-  function initTabs() {
-    const tabs = document.getElementById("tabs");
-    if (!tabs) return;
-    const tabEls = Array.from(tabs.querySelectorAll(".tab"));
-    const panels = document.querySelectorAll(".tabpanel");
-    function activate(tab, focus) {
-      tabEls.forEach((t) => {
-        const on = t === tab;
-        t.classList.toggle("is-active", on);
-        t.setAttribute("aria-selected", on ? "true" : "false");
-        t.tabIndex = on ? 0 : -1;
-      });
-      panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === tab.dataset.tab));
-      if (focus) tab.focus();
-    }
-    tabEls.forEach((tab, i) => {
-      tab.addEventListener("click", () => activate(tab, false));
-      tab.addEventListener("keydown", (e) => {
-        let n = -1;
-        if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % tabEls.length;
-        else if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (i - 1 + tabEls.length) % tabEls.length;
-        else if (e.key === "Home") n = 0;
-        else if (e.key === "End") n = tabEls.length - 1;
-        if (n >= 0) { e.preventDefault(); activate(tabEls[n], true); }
-      });
-    });
-  }
-
   function initReveal() {
     const items = document.querySelectorAll(".reveal");
     if (reduceMotion || !("IntersectionObserver" in window)) { items.forEach((i) => i.classList.add("in")); return; }
@@ -448,7 +420,6 @@
   // ----- boot --------------------------------------------------------------
   function boot() {
     initNav();
-    initTabs();
     initReveal();
     initCopy();
     initToTop();
@@ -456,7 +427,6 @@
     initChat();
     initCommands();
     initScene("sceneStage", "heroPet", "heroPetImg", "heroBubble");
-    initScene("windowsStage", "windowsPet", "windowsPetImg", null);
     if (!reduceMotion) requestAnimationFrame(tick);
   }
 

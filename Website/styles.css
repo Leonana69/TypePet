@@ -327,6 +327,38 @@ h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.08; color: var
 .feature__tag { display: inline-block; margin-top: .9rem; font-family: var(--font-pixel); font-size: .5rem;
   color: var(--cap-deep); background: rgba(255, 122, 26, .1); padding: .5em .7em; border-radius: 8px; }
 
+/* ----- "What it does" list (brief, no cards) ----------------------------- */
+.func-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 2.6rem; max-width: 980px; margin: 0 auto; }
+.func { display: flex; gap: 1rem; align-items: flex-start; }
+.func__ic { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
+  background: linear-gradient(160deg, rgba(255, 179, 92, .26), rgba(255, 122, 26, .14));
+  border: 1.5px solid rgba(255, 122, 26, .28); color: var(--cap-deep); }
+.func__ic svg { width: 23px; height: 23px; }
+.func__tx strong { display: block; font-family: var(--font-display); font-size: 1.18rem; color: var(--ink); margin-bottom: .1rem; }
+.func__tx span { color: var(--ink-soft); font-size: .98rem; line-height: 1.5; }
+.func__tx code { font-family: var(--font-mono); background: var(--bg-alt); padding: .05em .35em; border-radius: 5px; font-size: .9em; }
+@media (max-width: 720px) { .func-list { grid-template-columns: 1fr; gap: 1.35rem; } }
+
+/* ----- Download buttons -------------------------------------------------- */
+.download-row { display: flex; flex-wrap: wrap; gap: 1.2rem; justify-content: center; }
+.dl-card { display: flex; align-items: center; gap: 1rem; flex: 0 1 350px; min-width: 290px;
+  background: var(--surface); border: 2px solid var(--line-strong); border-radius: var(--radius);
+  padding: 1.05rem 1.25rem; box-shadow: var(--shadow-sm); color: var(--ink);
+  transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease; }
+.dl-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--cap); color: var(--ink); }
+.dl-card__ic { flex: none; width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(160deg, #2e2a3e, #1c1830); color: #fff; }
+.dl-card__ic svg { width: 26px; height: 26px; }
+.dl-card__tx { flex: 1; min-width: 0; }
+.dl-card__tx strong { display: block; font-family: var(--font-display); font-size: 1.14rem; line-height: 1.2; }
+.dl-card__tx span { color: var(--ink-soft); font-size: .85rem; font-weight: 700; }
+.dl-card__tx code { font-family: var(--font-mono); font-size: .92em; }
+.dl-card__dl { flex: none; color: var(--cap-deep); transition: transform .2s ease; }
+.dl-card:hover .dl-card__dl { transform: translateY(2px); }
+.dl-card__dl svg { width: 22px; height: 22px; }
+.dl-note { text-align: center; color: var(--ink-soft); font-size: .95rem; margin: 1.7rem auto 0; max-width: 62ch; }
+.dl-note code { font-family: var(--font-mono); background: var(--bg-alt); padding: .05em .35em; border-radius: 5px; font-size: .9em; }
+
 /* ----- Explain (windows mechanic) --------------------------------------- */
 .explain { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
 .explain__media .scene { aspect-ratio: 1 / 1; }
