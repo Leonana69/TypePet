@@ -44,6 +44,11 @@ internal static class Program
         if (Array.IndexOf(args, "--remind-test") >= 0)
             return MaplePet.Api.Chat.RemindTest.Run();
 
+        // Dev-only: exercise the command-hub client (index parse, sha256-verified staged install, provenance,
+        // dirty-local detection, overwrite update) headlessly with local zips. Pure (no Avalonia/network).
+        if (Array.IndexOf(args, "--hub-test") >= 0)
+            return MaplePet.Api.Hub.HubTest.Run(ParseOption(args, "--hub-test"));
+
         // Dev-only: smoke-test the game knowledge base (RAG). Needs Avalonia's asset loader for the
         // bundled catalog, so set up without starting the UI. Optional query: --rag-test "<question>".
         if (Array.IndexOf(args, "--rag-test") >= 0)
@@ -58,6 +63,14 @@ internal static class Program
         {
             BuildAvaloniaApp().SetupWithoutStarting();
             return MaplePet.Views.MarkupTest.Run();
+        }
+
+        // Dev-only: construct the Browse-tab HubView headlessly and run its row rendering (regression guard
+        // for the construction-time crash). Builds real controls, so set up Avalonia without starting the UI.
+        if (Array.IndexOf(args, "--hub-ui-test") >= 0)
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            return MaplePet.Views.HubUiTest.Run();
         }
 
         // Dev-only: validate the user command library + merged registry headlessly, and optionally run one

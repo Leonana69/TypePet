@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using MaplePet.Api.Chat;
+using MaplePet.Api.Hub;
 using MaplePet.Engine;
 using MaplePet.Platform;
 using MaplePet.Platform.Abstractions;
@@ -20,6 +21,8 @@ public partial class App : Application
     private CharacterStore? _store;
     private CommandStore? _commandStore;        // the user command library (hot-reloaded skill library)
     private CommandWatcher? _commandWatcher;    // watches the library and rebuilds the registry on change
+    private HubClient? _hubClient;              // browse/install/update community commands from the hub
+    private GitHubClient? _github;              // one-click "Submit to hub" (device-flow PR)
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
@@ -73,6 +76,10 @@ public partial class App : Application
             // marshals its rebuild onto the UI thread (the registry's snapshot is read by the say bar).
             _commandStore = new CommandStore(paths.CommandsRoot);
             SeedBundledCommands(_commandStore.Root);
+            // The command hub: anonymous browse/install (index cached under DataRoot) + one-click submit
+            // (GitHub device-flow PR; uses the platform secret store for the token).
+            _hubClient = new HubClient(paths.DataRoot);
+            _github = new GitHubClient(PlatformServices.SecretStore);
             _commands = BuildCommands();
             // Re-arm any persisted /remind reminders (recurring ones recompute their next fire; one-offs
             // whose time passed while closed are dropped). Safe before the pet is ready — the scheduler
@@ -146,6 +153,9 @@ public partial class App : Application
         var commandsItem = new NativeMenuItem("Commands…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         commandsItem.Click += (_, _) => ShowCommands();
 
+        var browseItem = new NativeMenuItem("Browse hub…") { Icon = glyphs.Render(TrayGlyph.Contact, accent) };
+        browseItem.Click += (_, _) => ShowBrowse();
+
         var settingsItem = new NativeMenuItem("Settings…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
@@ -157,6 +167,7 @@ public partial class App : Application
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(charactersItem);
         menu.Items.Add(commandsItem);
+        menu.Items.Add(browseItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
@@ -202,6 +213,7 @@ public partial class App : Application
     private void ShowSettings() => ShowConfig(ConfigTab.Settings);
     private void ShowCharacters() => ShowConfig(ConfigTab.Characters);
     private void ShowCommands() => ShowConfig(ConfigTab.Commands);
+    private void ShowBrowse() => ShowConfig(ConfigTab.Browse);
 
     /// <summary>Open (or re-focus) the single config window on the requested tab.</summary>
     private void ShowConfig(ConfigTab tab)
@@ -226,8 +238,15 @@ public partial class App : Application
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename
         });
         // Toggling/deleting a command persists to settings and rebuilds the live registry at once.
-        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild());
-        _configWindow = new ConfigWindow(charactersView, commandsView, settingsView);
+        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild(), _github);
+        // Installing/updating from the hub rebuilds the live registry AND refreshes the Commands list (so a
+        // newly installed command shows there without reopening the window).
+        var hubView = new HubView(_hubClient!, _commandStore, _settings, () =>
+        {
+            _commands?.Rebuild();
+            commandsView.Refresh();
+        });
+        _configWindow = new ConfigWindow(charactersView, commandsView, hubView, settingsView);
         _configWindow.Select(tab);
         _configWindow.Closed += (_, _) => _configWindow = null;
         CenterOnPetScreen(_configWindow, 660, 600); // ConfigWindow's fixed logical size

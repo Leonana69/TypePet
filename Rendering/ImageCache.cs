@@ -2,11 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using MaplePet.Engine;
 
 namespace MaplePet.Rendering;
 
@@ -20,17 +22,16 @@ namespace MaplePet.Rendering;
 /// </summary>
 public static class ImageCache
 {
-    private static readonly HttpClient Http = CreateHttp();
+    // Remote images are UNTRUSTED (a /rank avatar URL, or a hub command's image): the client is SSRF-safe
+    // (refuses private/loopback/link-local targets, DNS-rebind safe) and every fetch is https-only + byte
+    // capped + time-boxed. See SafeHttp.
+    private static readonly HttpClient Http =
+        SafeHttp.CreateClient("Mozilla/5.0 (Windows NT 10.0; Win64; x64) MaplePet");
     private static readonly ConcurrentDictionary<string, Bitmap?> Cache = new();
     private static readonly ConcurrentDictionary<string, Task<Bitmap?>> InFlight = new();
 
-    private static HttpClient CreateHttp()
-    {
-        var c = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        c.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MaplePet");
-        return c;
-    }
+    /// <summary>Hard cap on a single remote image download (a character canvas / small guide image is tiny).</summary>
+    private const long MaxImageBytes = 8L * 1024 * 1024;
 
     /// <summary>Return the decoded bitmap for <paramref name="url"/> (cached), or null if it can't be loaded.
     /// Accepts a remote http(s) URL or a bundled <c>avares://</c> app-resource URI. Safe to call repeatedly
@@ -97,7 +98,14 @@ public static class ImageCache
             }
             else
             {
-                byte[] bytes = await Http.GetByteArrayAsync(url).ConfigureAwait(false);
+                // Remote image: https-only to a public host, time-boxed, size-capped.
+                if (!SafeHttp.IsAllowedHttpsUrl(url))
+                    throw new HttpRequestException("blocked image URL (must be https to a public host)");
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                using var resp = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token)
+                    .ConfigureAwait(false);
+                resp.EnsureSuccessStatusCode();
+                byte[] bytes = await SafeHttp.ReadCappedAsync(resp, MaxImageBytes, cts.Token).ConfigureAwait(false);
                 using var ms = new MemoryStream(bytes);
                 bmp = new Bitmap(ms);
             }
