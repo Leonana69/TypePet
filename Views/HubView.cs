@@ -241,17 +241,24 @@ public sealed class HubView : UserControl
 
         if (_installed.TryGetValue(e.Id, out var inst))
         {
-            if (SemVer.Compare(inst.Prov.Version, e.Version) < 0)
+            var remove = new Button { Content = "Remove", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+            remove.Classes.Add("danger");
+            remove.IsEnabled = !_busy;
+            remove.Click += (_, _) => _ = RemoveAsync(e, inst.InstalledId);
+
+            // Up to date → just Remove. Update available → Update + Remove side by side.
+            if (SemVer.Compare(inst.Prov.Version, e.Version) >= 0)
+                return remove;
+
+            var upd = new Button { Content = $"Update → {e.Version}", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+            upd.Classes.Add("accent");
+            upd.IsEnabled = !_busy;
+            upd.Click += (_, _) => _ = UpdateAsync(e, inst.InstalledId);
+            return new StackPanel
             {
-                var upd = new Button { Content = $"Update → {e.Version}", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-                upd.Classes.Add("accent");
-                upd.IsEnabled = !_busy;
-                upd.Click += (_, _) => _ = UpdateAsync(e, inst.InstalledId);
-                return upd;
-            }
-            var done = new Button { Content = "Installed", FontSize = 11, IsEnabled = false, VerticalAlignment = VerticalAlignment.Center };
-            done.Classes.Add("ghost");
-            return done;
+                Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center,
+                Children = { upd, remove },
+            };
         }
 
         var install = new Button { Content = "Install", FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
@@ -310,6 +317,28 @@ public sealed class HubView : UserControl
         if (r.Ok) _onChanged();
         RefreshInstalled();
         Status(r.Message, error: !r.Ok);
+    }
+
+    /// <summary>Uninstall a hub command: delete its folder and drop its settings (disable flag + network
+    /// grant), then rebuild the registry and refresh the views. Runs entirely on the UI thread.</summary>
+    private async Task RemoveAsync(HubEntry e, string installedId)
+    {
+        if (_busy) return;
+        if (!await ConfirmAsync($"Remove /{e.Name}?",
+                $"This uninstalls \"/{e.Name}\" and deletes its files. You can reinstall it from the hub anytime.",
+                "Remove", danger: true))
+            return;
+
+        _busy = true; RenderRows();
+        Status($"Removing /{e.Name}…");
+        _store.Delete(installedId);
+        _cfg.DisabledCommandIds.RemoveAll(x => string.Equals(x, installedId, StringComparison.OrdinalIgnoreCase));
+        _cfg.NetworkApprovedCommands.RemoveAll(g => g is not null && string.Equals(g.Id, installedId, StringComparison.OrdinalIgnoreCase));
+        _cfg.Save();
+        _busy = false;
+        _onChanged();          // rebuild the live registry + refresh the Commands tab
+        RefreshInstalled();    // recompute this view's installed state + re-render (button → Install)
+        Status($"Removed /{e.Name}.");
     }
 
     // ------------------------------------------------------------------ dialogs
