@@ -339,7 +339,7 @@ public sealed class CommandsView : UserControl
         };
 
         var ok = new Button { Content = okText, MinWidth = 88, IsDefault = true, HorizontalContentAlignment = HorizontalAlignment.Center };
-        if (danger) ok.Classes.Add("danger");
+        ok.Classes.Add(danger ? "danger" : "accent");
         var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 88, HorizontalContentAlignment = HorizontalAlignment.Center };
         cancel.Classes.Add("ghost");
         ok.Click += (_, _) => { tcs.TrySetResult(true); dlg.Close(); };
