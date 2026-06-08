@@ -391,7 +391,6 @@ public sealed class SettingsView : UserControl
             Watermark = "model id",
             FilterMode = AutoCompleteFilterMode.ContainsOrdinal,
             MinimumPrefixLength = 0,
-            VerticalAlignment = VerticalAlignment.Center,
         };
         model.TextChanged += (_, _) => { p.Model = model.Text ?? ""; _cfg.Save(); };
         panel.Children.Add(Row("Model", "Pick or type the model id", model, topAlign: true));

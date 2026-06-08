@@ -250,6 +250,12 @@
     <Style Selector="RepeatButton#PART_DecreaseButton /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="CornerRadius" Value="0,8,8,0" />
     </Style>
+    <!-- Center the AutoCompleteBox's text vertically. Like NumericUpDown, the Fluent template renders
+         its text via an inner PART_TextBox and doesn't flow VerticalContentAlignment down to it, so the
+         text inherits the top-biased Fluent default (most visible on macOS). Target PART_TextBox directly. -->
+    <Style Selector="AutoCompleteBox /template/ TextBox#PART_TextBox">
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
     <Style Selector="ScrollViewer">
       <Setter Property="Background" Value="Transparent" />
     </Style>
