@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Threading;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// A fixed-cadence tick scheduler built on Avalonia's <see cref="DispatcherTimer"/>

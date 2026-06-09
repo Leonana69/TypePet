@@ -1,6 +1,6 @@
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// The seam between the shared engine and OS-specific window enumeration. Returns the current

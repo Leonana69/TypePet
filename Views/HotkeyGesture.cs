@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Input;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// Parses/formats the say-input hotkey as a compact <c>"Ctrl+Alt+Space"</c> string and maps the

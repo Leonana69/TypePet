@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// User-editable configuration (see IMPLEMENTATION_PLAN.md section 7). Loaded from

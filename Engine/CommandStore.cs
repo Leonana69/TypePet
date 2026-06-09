@@ -3,15 +3,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>One installed user command: its <see cref="Id"/> (the on-disk folder name, e.g.
 /// <c>cmd_1a2b3c4d</c>), the parsed <see cref="Name"/> + <see cref="Kind"/> + <see cref="Help"/> for the
 /// management UI, its <see cref="Directory"/>, and whether it parsed/validated (<see cref="Valid"/> /
 /// <see cref="Error"/>). An invalid entry is listed (so the user can see why) but never run.</summary>
 public sealed record CommandEntry(
-    string Id, string Name, string Kind, string Help, string Directory, bool Valid, string? Error);
+    string Id, string Name, string Kind, string Help, string Directory, bool Valid, string? Error,
+    string? Version = null, string? Author = null, HubProvenance? Hub = null);
+
+/// <summary>A command extracted + validated into a temp staging area but NOT yet published into the watched
+/// store root. The hub installer writes provenance + records settings (e.g. disabling a script) against the
+/// reserved <see cref="Id"/> while the folder is still invisible, THEN calls
+/// <see cref="CommandStore.CompleteInstall"/> to publish it atomically — so a freshly installed script is
+/// already recorded/disabled no matter when the file watcher fires (no race). Use
+/// <see cref="CommandStore.DiscardStaged"/> to abandon it instead.</summary>
+public sealed record StagedInstall(
+    string Id, string SourceDir, string StagingRoot, CommandManifest? Manifest, bool Valid, string? Error);
 
 /// <summary>
 /// The on-disk library of user commands — the command counterpart of <see cref="CharacterStore"/>. Each
@@ -27,6 +40,13 @@ public sealed class CommandStore
 {
     public const string ManifestFile = "command.md";
 
+    /// <summary>The hub-provenance sidecar written into an installed command's folder (see
+    /// <see cref="HubProvenance"/>). Distinct from the hub repo's source-side <c>hub.meta.json</c>.</summary>
+    public const string ProvenanceFile = "hub.provenance.json";
+
+    private static readonly JsonSerializerOptions HubJson =
+        new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
+
     /// <summary>The directory user commands live in. Created on construction if missing.</summary>
     public string Root { get; }
 
@@ -39,7 +59,7 @@ public sealed class CommandStore
     /// <summary>
     /// Resolve the commands folder. Run from source it walks up to the project root and uses
     /// <c>&lt;repo&gt;/Assets/Commands</c> (beside the other assets); a published build with no project
-    /// file falls back to <c>%LOCALAPPDATA%\MaplePet\Commands</c> (writable per-user). Mirrors
+    /// file falls back to <c>%LOCALAPPDATA%\TypePet\Commands</c> (writable per-user). Mirrors
     /// <see cref="CharacterStore.ResolveDefaultRoot"/>.
     /// </summary>
     public static string ResolveDefaultRoot()
@@ -49,7 +69,7 @@ public sealed class CommandStore
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             while (dir is not null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "MaplePet.csproj")))
+                if (File.Exists(Path.Combine(dir.FullName, "TypePet.csproj")))
                     return Path.Combine(dir.FullName, "Assets", "Commands");
                 dir = dir.Parent;
             }
@@ -58,7 +78,7 @@ public sealed class CommandStore
 
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MaplePet", "Commands");
+            "TypePet", "Commands");
     }
 
     /// <summary>Every command folder under <see cref="Root"/> (parsed for name/kind/validity), sorted by id.
@@ -71,28 +91,8 @@ public sealed class CommandStore
             if (!Directory.Exists(Root)) return result;
             foreach (var dir in Directory.GetDirectories(Root).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
             {
-                var file = Path.Combine(dir, ManifestFile);
-                if (!File.Exists(file)) continue;
-                string id = Path.GetFileName(dir);
-                try
-                {
-                    var (m, err) = CommandManifest.Parse(File.ReadAllText(file));
-                    if (m is null)
-                    {
-                        result.Add(new CommandEntry(id, id, "", "", dir, false, err ?? "invalid"));
-                        continue;
-                    }
-                    m.Sanitize();
-                    string? verr = m.Validate();
-                    result.Add(new CommandEntry(
-                        id, string.IsNullOrEmpty(m.Name) ? id : m.Name,
-                        m.Kind == CommandKind.Unknown ? (m.RawKind ?? "") : m.Kind.ToString().ToLowerInvariant(),
-                        m.Help ?? "", dir, verr is null, verr));
-                }
-                catch (Exception ex)
-                {
-                    result.Add(new CommandEntry(id, id, "", "", dir, false, ex.Message));
-                }
+                if (!File.Exists(Path.Combine(dir, ManifestFile))) continue;
+                result.Add(EntryFor(Path.GetFileName(dir), dir));
             }
         }
         catch { /* a transient IO error just yields what we have */ }
@@ -156,7 +156,7 @@ public sealed class CommandStore
         Directory.CreateDirectory(Root);
         string id = NewId();
         string dest = Path.Combine(Root, id);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_cmd_import_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_cmd_import_" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(temp);
@@ -164,12 +164,7 @@ public sealed class CommandStore
             string srcRoot = FindManifestRoot(temp)
                 ?? throw new InvalidDataException("The zip does not contain a command.md.");
             MoveDirectory(srcRoot, dest);
-            var (m, _) = CommandManifest.Parse(File.ReadAllText(Path.Combine(dest, ManifestFile)));
-            m?.Sanitize();
-            string? verr = m?.Validate();
-            return new CommandEntry(id, m?.Name ?? id,
-                m is null || m.Kind == CommandKind.Unknown ? "" : m.Kind.ToString().ToLowerInvariant(),
-                m?.Help ?? "", dest, m is not null && verr is null, verr);
+            return EntryFor(id, dest);
         }
         finally
         {
@@ -184,7 +179,7 @@ public sealed class CommandStore
         var dir = DirectoryFor(id);
         if (dir is null) return;
         string folderName = SanitizeFileName(ReadManifest(id)?.Name ?? id);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_cmd_export_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_cmd_export_" + Guid.NewGuid().ToString("N"));
         string staging = Path.Combine(temp, folderName);
         try
         {
@@ -195,6 +190,131 @@ public sealed class CommandStore
         finally
         {
             try { if (Directory.Exists(temp)) Directory.Delete(temp, true); } catch { }
+        }
+    }
+
+    // ---------------------------------------------------------------- hub install (race-proof, staged)
+    /// <summary>Stage a hub command from a zip WITHOUT publishing it into the watched root yet: extract +
+    /// validate into a temp dir and reserve a fresh id. The caller writes provenance into
+    /// <see cref="StagedInstall.SourceDir"/> and records settings against the reserved id, THEN calls
+    /// <see cref="CompleteInstall"/> — so the command is fully recorded before the file watcher can see it.
+    /// Throws on a zip with no manifest (the temp area is cleaned up).</summary>
+    public StagedInstall PrepareInstall(string zipPath)
+    {
+        string staging = Path.Combine(Path.GetTempPath(), "TypePet_cmd_stage_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(staging);
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, staging);
+            string srcRoot = FindManifestRoot(staging)
+                ?? throw new InvalidDataException("The zip does not contain a command.md.");
+            var (m, _) = CommandManifest.Parse(File.ReadAllText(Path.Combine(srcRoot, ManifestFile)));
+            m?.Sanitize();
+            string? verr = m?.Validate();
+            return new StagedInstall(NewId(), srcRoot, staging, m, m is not null && verr is null, verr);
+        }
+        catch
+        {
+            try { Directory.Delete(staging, true); } catch { }
+            throw;
+        }
+    }
+
+    /// <summary>Publish a previously <see cref="PrepareInstall"/>ed command into the store root atomically and
+    /// return its entry. The staging area is cleaned up afterward.</summary>
+    public CommandEntry CompleteInstall(StagedInstall staged)
+    {
+        Directory.CreateDirectory(Root);
+        string dest = Path.Combine(Root, staged.Id);
+        try { MoveDirectory(staged.SourceDir, dest); }
+        finally { try { if (Directory.Exists(staged.StagingRoot)) Directory.Delete(staged.StagingRoot, true); } catch { } }
+        return EntryFor(staged.Id, dest);
+    }
+
+    /// <summary>Abandon a staged install (e.g. the user cancelled), deleting its temp area.</summary>
+    public void DiscardStaged(StagedInstall staged)
+    {
+        try { if (Directory.Exists(staged.StagingRoot)) Directory.Delete(staged.StagingRoot, true); } catch { }
+    }
+
+    // ---------------------------------------------------------------- hub provenance + content hashing
+    /// <summary>Read the hub-provenance sidecar for <paramref name="id"/>, or null if absent/unreadable.</summary>
+    public HubProvenance? ReadProvenance(string id)
+    {
+        var dir = SafeDir(id);
+        return dir is null ? null : ReadProvenanceFromDir(dir);
+    }
+
+    private static HubProvenance? ReadProvenanceFromDir(string dir)
+    {
+        try
+        {
+            var f = Path.Combine(dir, ProvenanceFile);
+            return File.Exists(f) ? JsonSerializer.Deserialize<HubProvenance>(File.ReadAllText(f), HubJson) : null;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Write the hub-provenance sidecar for <paramref name="id"/> (best effort).</summary>
+    public void WriteProvenance(string id, HubProvenance p)
+    {
+        var dir = SafeDir(id);
+        if (dir is not null) WriteProvenanceFile(dir, p);
+    }
+
+    /// <summary>Write the provenance sidecar into an arbitrary folder (used for a staged install dir, before
+    /// it is published into the store).</summary>
+    public static void WriteProvenanceFile(string dir, HubProvenance p)
+    {
+        try { File.WriteAllText(Path.Combine(dir, ProvenanceFile), JsonSerializer.Serialize(p, HubJson)); }
+        catch { /* best effort */ }
+    }
+
+    /// <summary>A deterministic hash over a command folder's files — sorted relative paths + bytes, EXCLUDING
+    /// the <see cref="ProvenanceFile"/> itself — so it reflects only the command's own content. Used to detect
+    /// local edits before an update overwrites them. Returns "" on any IO error.</summary>
+    public static string ComputeContentHash(string dir)
+    {
+        try
+        {
+            var files = Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)
+                .Select(f => (rel: Path.GetRelativePath(dir, f).Replace('\\', '/'), full: f))
+                .Where(x => !x.rel.Equals(ProvenanceFile, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x.rel, StringComparer.Ordinal)
+                .ToList();
+            using var ih = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            foreach (var (rel, full) in files)
+            {
+                ih.AppendData(Encoding.UTF8.GetBytes(rel + "\n"));
+                ih.AppendData(File.ReadAllBytes(full));
+            }
+            return Convert.ToHexString(ih.GetHashAndReset()).ToLowerInvariant();
+        }
+        catch { return ""; }
+    }
+
+    /// <summary>Build a <see cref="CommandEntry"/> for an on-disk command folder: parse + sanitize + validate
+    /// its manifest and attach any hub provenance. Shared by <see cref="List"/>, <see cref="Import"/>, and
+    /// <see cref="CompleteInstall"/> so they report identical metadata.</summary>
+    private CommandEntry EntryFor(string id, string dir)
+    {
+        HubProvenance? hub = ReadProvenanceFromDir(dir);
+        var file = Path.Combine(dir, ManifestFile);
+        if (!File.Exists(file)) return new CommandEntry(id, id, "", "", dir, false, "no command.md", Hub: hub);
+        try
+        {
+            var (m, err) = CommandManifest.Parse(File.ReadAllText(file));
+            if (m is null) return new CommandEntry(id, id, "", "", dir, false, err ?? "invalid", Hub: hub);
+            m.Sanitize();
+            string? verr = m.Validate();
+            return new CommandEntry(
+                id, string.IsNullOrEmpty(m.Name) ? id : m.Name,
+                m.Kind == CommandKind.Unknown ? (m.RawKind ?? "") : m.Kind.ToString().ToLowerInvariant(),
+                m.Help ?? "", dir, verr is null, verr, m.Version, m.Author, hub);
+        }
+        catch (Exception ex)
+        {
+            return new CommandEntry(id, id, "", "", dir, false, ex.Message, Hub: hub);
         }
     }
 

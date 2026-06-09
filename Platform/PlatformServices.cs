@@ -1,13 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Media;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 #if WINDOWS
-using MaplePet.Platform.Windows;
+using TypePet.Platform.Windows;
 #else
-using MaplePet.Platform.Mac;
+using TypePet.Platform.Mac;
 #endif
 
-namespace MaplePet.Platform;
+namespace TypePet.Platform;
 
 /// <summary>
 /// Resolves the concrete platform-service bundle for the running OS. This is the ONLY place that names

@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,9 +11,10 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using MaplePet.Engine;
+using TypePet.Api.Hub;
+using TypePet.Engine;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Commands tab of <see cref="ConfigWindow"/> — the management surface for the user command library.
@@ -24,17 +29,20 @@ public sealed class CommandsView : UserControl
     private readonly CommandStore _store;
     private readonly Settings _cfg;
     private readonly Action _onChanged;   // rebuild the live registry after a toggle/delete
+    private readonly GitHubClient? _github; // for one-click "Submit to hub" (null/unconfigured => export fallback)
 
     private readonly StackPanel _list;
     private readonly TextBlock _status;
 
     /// <param name="onChanged">Invoked after the library is mutated (toggle/delete) so the host can rebuild
     /// the live command registry immediately.</param>
-    public CommandsView(CommandStore store, Settings cfg, Action onChanged)
+    /// <param name="github">Optional GitHub client enabling in-app "Submit to hub" (PR creation).</param>
+    public CommandsView(CommandStore store, Settings cfg, Action onChanged, GitHubClient? github = null)
     {
         _store = store;
         _cfg = cfg;
         _onChanged = onChanged;
+        _github = github;
 
         _list = new StackPanel { Spacing = 6, Margin = new Thickness(14, 8, 14, 12) };
         var scroll = new ScrollViewer
@@ -88,6 +96,10 @@ public sealed class CommandsView : UserControl
 
         Rebuild();
     }
+
+    /// <summary>Re-read the installed library and rebuild the rows. Called by the host after a hub install/
+    /// update lands a command, so this tab reflects it without reopening the window.</summary>
+    public void Refresh() => Rebuild();
 
     /// <summary>Recreate the rows from the current store + enabled set.</summary>
     private void Rebuild()
@@ -175,9 +187,13 @@ public sealed class CommandsView : UserControl
             Child = grid,
         };
 
+        var submit = new MenuItem { Header = "Submit to hub…", IsEnabled = e.Valid };
+        submit.Click += (_, _) => _ = SubmitAsync(e);
+        var export = new MenuItem { Header = "Export…" };
+        export.Click += (_, _) => _ = ExportAsync(e);
         var delete = new MenuItem { Header = "Delete" };
         delete.Click += (_, _) => _ = DeleteAsync(e);
-        card.ContextMenu = new ContextMenu { Items = { delete } };
+        card.ContextMenu = new ContextMenu { Items = { submit, export, delete } };
 
         return card;
     }
@@ -311,6 +327,173 @@ public sealed class CommandsView : UserControl
         }
     }
 
+    // ------------------------------------------------------------------ export + submit to hub
+    private const string HubRepoUrl = "https://github.com/Leonana69/TypePet-Commands";
+
+    /// <summary>Save the command as a re-importable zip.</summary>
+    private async Task ExportAsync(CommandEntry e)
+    {
+        try
+        {
+            var top = TopLevel.GetTopLevel(this);
+            if (top is null) return;
+            var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = $"Export /{e.Name}",
+                SuggestedFileName = e.Name + ".zip",
+                DefaultExtension = "zip",
+                FileTypeChoices = new[] { new FilePickerFileType("Zip archive") { Patterns = new[] { "*.zip" } } },
+            });
+            if (file is null) return;
+            string path = file.Path.LocalPath;
+            await Task.Run(() => _store.Export(e.Id, path));
+            Status($"Exported /{e.Name} to {path}.");
+        }
+        catch (Exception ex) { Status("Export failed: " + ex.Message, error: true); }
+    }
+
+    /// <summary>Submit the command to the hub as a GitHub pull request (device-flow sign-in the first time).
+    /// Falls back to export + opening the repo's submit page when no OAuth client is configured in the build.</summary>
+    private async Task SubmitAsync(CommandEntry e)
+    {
+        if (_github is null || !_github.IsConfigured)
+        {
+            Status("Exporting — attach the zip on the hub's submit page.");
+            await ExportAsync(e);
+            await OpenUrlAsync(HubRepoUrl + "/issues/new");
+            return;
+        }
+
+        var dir = _store.DirectoryFor(e.Id);
+        if (dir is null) { Status("Command files not found.", error: true); return; }
+        var files = CollectFiles(dir);
+        if (files.Count == 0) { Status("Nothing to submit.", error: true); return; }
+
+        if (!_github.HasToken && !await RunDeviceFlowAsync())
+        {
+            Status("GitHub sign-in didn't complete.", error: true);
+            return;
+        }
+
+        Status($"Submitting /{e.Name} to the hub…");
+        var manifest = _store.ReadManifest(e.Id);
+        var result = await _github.CreatePullRequestAsync(
+            e.Name,
+            login => WithMeta(files, login, e, manifest),
+            title: $"Add /{e.Name}",
+            body: "Submitted from TypePet. Please review before merging.",
+            CancellationToken.None);
+
+        if (result.Ok)
+        {
+            Status(result.Message);
+            if (!string.IsNullOrEmpty(result.PrUrl)) await OpenUrlAsync(result.PrUrl!);
+        }
+        else Status(result.Message, error: true);
+    }
+
+    /// <summary>Read the command's files (relative path → bytes), excluding install-time-only sidecars.</summary>
+    private static Dictionary<string, byte[]> CollectFiles(string dir)
+    {
+        var map = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var full in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+        {
+            string rel = Path.GetRelativePath(dir, full).Replace('\\', '/');
+            if (rel.Equals(CommandStore.ProvenanceFile, StringComparison.OrdinalIgnoreCase)) continue; // local state
+            if (rel.Equals("hub.meta.json", StringComparison.OrdinalIgnoreCase)) continue;             // regenerated below
+            try { map[rel] = File.ReadAllBytes(full); } catch { /* skip unreadable */ }
+        }
+        return map;
+    }
+
+    /// <summary>Add a generated <c>hub.meta.json</c> (author = the verified GitHub login) to the file set.</summary>
+    private static IReadOnlyDictionary<string, byte[]> WithMeta(
+        Dictionary<string, byte[]> files, string login, CommandEntry e, CommandManifest? m)
+    {
+        var meta = new
+        {
+            id = e.Name,
+            name = e.Name,
+            title = e.Name,
+            version = m?.Version ?? "1.0.0",
+            author = login,
+            license = "GPL-3.0-or-later",
+            description = m?.Help ?? "",
+            kind = e.Kind,
+            tags = m?.Tags ?? new List<string>(),
+            minAppVersion = m?.MinAppVersion,
+        };
+        var bytes = System.Text.Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(meta, new JsonSerializerOptions { WriteIndented = true }));
+        return new Dictionary<string, byte[]>(files, StringComparer.OrdinalIgnoreCase) { ["hub.meta.json"] = bytes };
+    }
+
+    private async Task<bool> RunDeviceFlowAsync()
+    {
+        try
+        {
+            var info = await _github!.StartDeviceFlowAsync(CancellationToken.None);
+            return await ShowDeviceFlowDialogAsync(info);
+        }
+        catch (Exception ex) { Status("GitHub sign-in failed: " + ex.Message, error: true); return false; }
+    }
+
+    private async Task<bool> ShowDeviceFlowDialogAsync(GitHubClient.DeviceCodeInfo info)
+    {
+        if (TopLevel.GetTopLevel(this) is not Window owner) return false;
+        var cts = new CancellationTokenSource();
+        var tcs = new TaskCompletionSource<bool>();
+        var dlg = new FrostedWindow("Sign in to GitHub")
+        {
+            Width = 380,
+            SizeToContent = SizeToContent.Height,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = false,
+        };
+
+        var intro = new TextBlock { Text = "Enter this code on GitHub to authorize TypePet to open a pull request as you:", TextWrapping = TextWrapping.Wrap };
+        intro.Classes.Add("rowLabel");
+        var code = new TextBlock
+        {
+            Text = info.UserCode, FontSize = 22, FontWeight = FontWeight.Bold,
+            Foreground = FrostTheme.TextPrimary, HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        var waiting = new TextBlock { Text = "Waiting for authorization…", Foreground = FrostTheme.TextSecondary };
+        waiting.Classes.Add("caption");
+        var open = new Button { Content = "Open GitHub ↗" };
+        open.Classes.Add("accent");
+        open.Click += (_, _) => _ = OpenUrlAsync(info.VerificationUri);
+        var cancel = new Button { Content = "Cancel", IsCancel = true };
+        cancel.Classes.Add("ghost");
+        cancel.Click += (_, _) => { cts.Cancel(); tcs.TrySetResult(false); dlg.Close(); };
+        dlg.Closed += (_, _) => { cts.Cancel(); tcs.TrySetResult(false); };
+
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Right, Children = { cancel, open } };
+        dlg.SetDialogBody(new StackPanel { Margin = new Thickness(20, 6, 20, 18), Spacing = 14, Children = { intro, code, waiting, buttons } });
+
+        // Open the verification page right away, then poll in the background; close the dialog when it resolves.
+        _ = OpenUrlAsync(info.VerificationUri);
+        _ = Task.Run(async () =>
+        {
+            string? token = null;
+            try { token = await _github!.PollForTokenAsync(info, cts.Token); } catch { /* cancelled */ }
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => { tcs.TrySetResult(token is not null); try { dlg.Close(); } catch { } });
+        });
+
+        await dlg.ShowDialog(owner);
+        return await tcs.Task;
+    }
+
+    private async Task OpenUrlAsync(string url)
+    {
+        try
+        {
+            var top = TopLevel.GetTopLevel(this);
+            if (top is not null) await top.Launcher.LaunchUriAsync(new Uri(url));
+        }
+        catch { /* best effort */ }
+    }
+
     // ------------------------------------------------------------------ small modal confirm
     /// <summary>The delete confirmation (a danger-styled "Delete" button).</summary>
     private Task<bool> ConfirmAsync(string message) =>
@@ -339,7 +522,7 @@ public sealed class CommandsView : UserControl
         };
 
         var ok = new Button { Content = okText, MinWidth = 88, IsDefault = true, HorizontalContentAlignment = HorizontalAlignment.Center };
-        if (danger) ok.Classes.Add("danger");
+        ok.Classes.Add(danger ? "danger" : "accent");
         var cancel = new Button { Content = "Cancel", IsCancel = true, MinWidth = 88, HorizontalContentAlignment = HorizontalAlignment.Center };
         cancel.Classes.Add("ghost");
         ok.Click += (_, _) => { tcs.TrySetResult(true); dlg.Close(); };

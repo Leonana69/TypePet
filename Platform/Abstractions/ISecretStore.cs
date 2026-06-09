@@ -1,4 +1,4 @@
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// Per-user, encrypted-at-rest storage for secrets the chatbot needs — provider API keys and the

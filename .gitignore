@@ -8,6 +8,13 @@ artifacts/
 
 # User-imported pet characters (runtime store; read from disk, not committed)
 Assets/Characters/
+
+# Installed commands (runtime store); keep embedded commands tracked
+Assets/Commands/cmd_*/
+!Assets/Commands/cmd_roll/
+!Assets/Commands/cmd_roll/**
+!Assets/Commands/cmd_wave/
+!Assets/Commands/cmd_wave/**
 .claude
 api.txt
 Scripts/

@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Pure geometry/physics helpers shared by every pet state. No OS calls, no mutation.

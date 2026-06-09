@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MaplePet.Api;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>The outcome of a slash command, displayed exactly like a chat reply: <see cref="Text"/> is
 /// spoken by the pet (and shown in history when it's open), <see cref="Sources"/> are optional links shown

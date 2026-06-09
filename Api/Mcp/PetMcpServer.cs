@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MaplePet.Api.Mcp;
+namespace TypePet.Api.Mcp;
 
 /// <summary>
 /// Hosts the pet's <see cref="IPetControl"/> as a local MCP tool server over Streamable HTTP on

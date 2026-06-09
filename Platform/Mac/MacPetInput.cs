@@ -2,10 +2,10 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using MaplePet.Engine;
-using MaplePet.Platform.Abstractions;
+using TypePet.Engine;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS pet input — the permission-free grab. The overlay is click-through (ignoresMouseEvents=true) by

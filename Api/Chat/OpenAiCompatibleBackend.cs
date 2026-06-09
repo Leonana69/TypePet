@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using OpenAI;
 using OAI = OpenAI.Chat;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// <see cref="IChatBackend"/> for the OpenAI Chat Completions wire format via the official <c>OpenAI</c>

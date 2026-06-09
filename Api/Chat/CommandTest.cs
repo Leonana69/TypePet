@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Dev-only headless check for the user command library: loads the on-disk store, prints every command's

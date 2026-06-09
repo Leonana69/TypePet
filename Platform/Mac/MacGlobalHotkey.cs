@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS global say-bar hotkey via Carbon <c>RegisterEventHotKey</c> — permission-free for a registered

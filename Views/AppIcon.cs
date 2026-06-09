@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The app's mushroom icon (<c>Assets/Program/icon.png</c>), loaded once from the embedded Avalonia
@@ -12,8 +12,8 @@ namespace MaplePet.Views;
 /// </summary>
 internal static class AppIcon
 {
-    private static readonly Uri PngUri = new("avares://MaplePet/Assets/Program/icon.png");
-    private static readonly Uri IcoUri = new("avares://MaplePet/Assets/Program/icon.ico");
+    private static readonly Uri PngUri = new("avares://TypePet/Assets/Program/icon.png");
+    private static readonly Uri IcoUri = new("avares://TypePet/Assets/Program/icon.ico");
     private static Bitmap? _bitmap;
     private static bool _tried;
 

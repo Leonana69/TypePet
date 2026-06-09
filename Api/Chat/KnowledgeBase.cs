@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// One curated reference site the chatbot may read to answer game questions, loaded from the
@@ -68,7 +68,7 @@ public sealed class KnowledgeBase
     public const string LookupToolName = "maple_lookup";
 
     // One source per .json file lives in this folder; the whole folder is enumerated at load.
-    private const string CatalogDir = "avares://MaplePet/Assets/Program/Knowledge/";
+    private const string CatalogDir = "avares://TypePet/Assets/Program/Knowledge/";
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {

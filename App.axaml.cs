@@ -5,14 +5,15 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using MaplePet.Api.Chat;
-using MaplePet.Engine;
-using MaplePet.Platform;
-using MaplePet.Platform.Abstractions;
-using MaplePet.Rendering;
-using MaplePet.Views;
+using TypePet.Api.Chat;
+using TypePet.Api.Hub;
+using TypePet.Engine;
+using TypePet.Platform;
+using TypePet.Platform.Abstractions;
+using TypePet.Rendering;
+using TypePet.Views;
 
-namespace MaplePet;
+namespace TypePet;
 
 public partial class App : Application
 {
@@ -20,6 +21,8 @@ public partial class App : Application
     private CharacterStore? _store;
     private CommandStore? _commandStore;        // the user command library (hot-reloaded skill library)
     private CommandWatcher? _commandWatcher;    // watches the library and rebuilds the registry on change
+    private HubClient? _hubClient;              // browse/install/update community commands from the hub
+    private GitHubClient? _github;              // one-click "Submit to hub" (device-flow PR)
     private PetWindow? _petWindow;
     private TrayIcon? _trayIcon;
     private ConfigWindow? _configWindow;
@@ -27,9 +30,9 @@ public partial class App : Application
     private PetChatAgent? _chatAgent;
     private KnowledgeBase? _knowledge;          // bundled game RAG catalog, loaded once on first chat
     private ChatCommands? _commands;
-    private MaplePet.Api.Mcp.PetMcpServer? _mcpServer;
+    private TypePet.Api.Mcp.PetMcpServer? _mcpServer;
 
-    // The tray header ("MaplePet — <character>"), refreshed when the worn character changes.
+    // The tray header ("TypePet — <character>"), refreshed when the worn character changes.
     private NativeMenuItem? _wearingItem;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
@@ -43,7 +46,7 @@ public partial class App : Application
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    try { MaplePet.Rendering.PoseRenderTest.Run(dir, AppState.RenderPosesFrom); }
+                    try { TypePet.Rendering.PoseRenderTest.Run(dir, AppState.RenderPosesFrom); }
                     catch (Exception ex) { File.WriteAllText(Path.Combine(dir, "ERROR.txt"), ex.ToString()); }
                     desktop.Shutdown();
                 });
@@ -53,7 +56,7 @@ public partial class App : Application
 
             // Resolve writable on-disk locations per platform (a signed macOS .app bundle's
             // Contents/MacOS is read-only, so settings/characters live under ~/Library/Application
-            // Support/MaplePet there; Windows and dev runs keep their existing locations).
+            // Support/TypePet there; Windows and dev runs keep their existing locations).
             var paths = PlatformServices.AppPaths;
             try { Directory.CreateDirectory(paths.DataRoot); } catch { /* best effort */ }
             _settings = Settings.Load(paths.SettingsPath);
@@ -73,6 +76,10 @@ public partial class App : Application
             // marshals its rebuild onto the UI thread (the registry's snapshot is read by the say bar).
             _commandStore = new CommandStore(paths.CommandsRoot);
             SeedBundledCommands(_commandStore.Root);
+            // The command hub: anonymous browse/install (index cached under DataRoot) + one-click submit
+            // (GitHub device-flow PR; uses the platform secret store for the token).
+            _hubClient = new HubClient(paths.DataRoot);
+            _github = new GitHubClient(PlatformServices.SecretStore);
             _commands = BuildCommands();
             // Re-arm any persisted /remind reminders (recurring ones recompute their next fire; one-offs
             // whose time passed while closed are dropped). Safe before the pet is ready — the scheduler
@@ -103,10 +110,10 @@ public partial class App : Application
                             ?? System.Threading.Tasks.Task.FromResult(CommandResult.Error("Reminders aren't ready yet.")));
             };
 
-            // Re-launching MaplePet while it's running exits the second process at once (see Program.Main),
+            // Re-launching TypePet while it's running exits the second process at once (see Program.Main),
             // but it pokes us on the way out; acknowledge with a quick speech bubble so the double-click
             // isn't silent. The poke arrives on a thread-pool thread, so marshal onto the UI thread.
-            if (MaplePet.Platform.PlatformServices.SingleInstance is { } single)
+            if (TypePet.Platform.PlatformServices.SingleInstance is { } single)
                 single.Activated += () =>
                     Avalonia.Threading.Dispatcher.UIThread.Post(AcknowledgeSecondInstance);
 
@@ -118,7 +125,7 @@ public partial class App : Application
                 _petWindow.ControlReady += () =>
                 {
                     if (_petWindow?.Control is { } control)
-                        _mcpServer = MaplePet.Api.Mcp.PetMcpServer.Start(control, port);
+                        _mcpServer = TypePet.Api.Mcp.PetMcpServer.Start(control, port);
                 };
                 desktop.Exit += (_, _) => _mcpServer?.Stop();
             }
@@ -146,6 +153,9 @@ public partial class App : Application
         var commandsItem = new NativeMenuItem("Commands…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         commandsItem.Click += (_, _) => ShowCommands();
 
+        var browseItem = new NativeMenuItem("Browse hub…") { Icon = glyphs.Render(TrayGlyph.Contact, accent) };
+        browseItem.Click += (_, _) => ShowBrowse();
+
         var settingsItem = new NativeMenuItem("Settings…") { Icon = glyphs.Render(TrayGlyph.Settings, accent) };
         settingsItem.Click += (_, _) => ShowSettings();
 
@@ -157,6 +167,7 @@ public partial class App : Application
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(charactersItem);
         menu.Items.Add(commandsItem);
+        menu.Items.Add(browseItem);
         menu.Items.Add(settingsItem);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitItem);
@@ -184,7 +195,7 @@ public partial class App : Application
     private string WearingLabel()
     {
         var name = _store?.Get(_settings?.CurrentCharacterId ?? CharacterStore.DefaultId)?.DisplayName ?? "Default";
-        return $"MaplePet — {name}";
+        return $"TypePet — {name}";
     }
 
     /// <summary>The running pet's response to a blocked second launch — a brief speech bubble so the
@@ -202,6 +213,7 @@ public partial class App : Application
     private void ShowSettings() => ShowConfig(ConfigTab.Settings);
     private void ShowCharacters() => ShowConfig(ConfigTab.Characters);
     private void ShowCommands() => ShowConfig(ConfigTab.Commands);
+    private void ShowBrowse() => ShowConfig(ConfigTab.Browse);
 
     /// <summary>Open (or re-focus) the single config window on the requested tab.</summary>
     private void ShowConfig(ConfigTab tab)
@@ -226,8 +238,15 @@ public partial class App : Application
             if (_wearingItem is not null) _wearingItem.Header = WearingLabel(); // refresh after a rename
         });
         // Toggling/deleting a command persists to settings and rebuilds the live registry at once.
-        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild());
-        _configWindow = new ConfigWindow(charactersView, commandsView, settingsView);
+        var commandsView = new CommandsView(_commandStore, _settings, () => _commands?.Rebuild(), _github);
+        // Installing/updating from the hub rebuilds the live registry AND refreshes the Commands list (so a
+        // newly installed command shows there without reopening the window).
+        var hubView = new HubView(_hubClient!, _commandStore, _settings, () =>
+        {
+            _commands?.Rebuild();
+            commandsView.Refresh();
+        });
+        _configWindow = new ConfigWindow(charactersView, commandsView, hubView, settingsView);
         _configWindow.Select(tab);
         _configWindow.Closed += (_, _) => _configWindow = null;
         CenterOnPetScreen(_configWindow, 660, 600); // ConfigWindow's fixed logical size
@@ -316,7 +335,7 @@ public partial class App : Application
         () => (IReadOnlyCollection<string>?)_settings?.DisabledCommandIds ?? Array.Empty<string>(),
         () => _settings?.EnableUserScripts ?? true,
         (id, hosts) => _settings is not null
-            && _settings.IsNetworkApproved(id, MaplePet.Engine.CommandManifest.HostsSignature(hosts)),
+            && _settings.IsNetworkApproved(id, TypePet.Engine.CommandManifest.HostsSignature(hosts)),
         PersistReminders);
 
     /// <summary>Write the current reminders back to <c>settings.json</c>. Marshaled onto the UI thread so
@@ -330,7 +349,7 @@ public partial class App : Application
     });
 
     /// <summary>On first run (an empty library), copy the bundled starter commands out of the app bundle
-    /// (<c>avares://MaplePet/Assets/Commands/**</c>) into the writable commands root. A non-empty root —
+    /// (<c>avares://TypePet/Assets/Commands/**</c>) into the writable commands root. A non-empty root —
     /// already seeded, or the repo's own <c>Assets/Commands</c> in a dev run — is left untouched, so user
     /// edits are never clobbered. Best-effort: a failure just leaves the library empty.</summary>
     private static void SeedBundledCommands(string root)
@@ -342,7 +361,7 @@ public partial class App : Application
 
             const string marker = "/Assets/Commands/";
             foreach (var asset in Avalonia.Platform.AssetLoader.GetAssets(
-                         new Uri("avares://MaplePet/Assets/Commands/"), null))
+                         new Uri("avares://TypePet/Assets/Commands/"), null))
             {
                 int idx = asset.AbsolutePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
                 if (idx < 0) continue;

@@ -8,10 +8,10 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using MaplePet.Engine;
-using MaplePet.Rendering;
+using TypePet.Engine;
+using TypePet.Rendering;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Characters tab of <see cref="ConfigWindow"/>. Shows one card per available character — the

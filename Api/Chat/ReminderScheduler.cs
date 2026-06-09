@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using MaplePet.Api;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Holds pending <c>/remind</c> reminders and speaks them through the pet when their time arrives. Each

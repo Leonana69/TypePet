@@ -13,11 +13,11 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using MaplePet.Api;
-using MaplePet.Api.Chat;
-using MaplePet.Engine;
+using TypePet.Api;
+using TypePet.Api.Chat;
+using TypePet.Engine;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The single input bar — a macOS-Spotlight-style frosted bar near the bottom-center, opened by
@@ -84,7 +84,7 @@ public sealed class SayBarWindow : Window
         Closed += (_, _) => _commands.CommandsChanged -= OnCommandsChanged;
 
         // Frosted-glass plumbing (borderless acrylic, DWM round/shadow on Win11).
-        Title = "MaplePet";
+        Title = "TypePet";
         SystemDecorations = SystemDecorations.Full;
         CanResize = false;
         ExtendClientAreaToDecorationsHint = true;
@@ -578,7 +578,7 @@ public sealed class SayBarWindow : Window
     {
         try
         {
-            var img = await MaplePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
+            var img = await TypePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
             if (img is not null) target.Source = img;
         }
         catch { /* ignore image failures */ }

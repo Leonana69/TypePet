@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Formats "now" for injection into LLM system prompts. Both the in-app chatbot (<see cref="PetChatAgent"/>)

@@ -5,7 +5,7 @@ using System.Text.Json;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// The character's drawable sprite footage, loaded once from a
@@ -135,7 +135,7 @@ public sealed class CharacterSprites : IDisposable
     /// <paramref name="loadExpressions"/> additionally loads the Face item's swappable expressions
     /// (only the live pet needs them — thumbnails skip the extra decode).
     /// </summary>
-    public static CharacterSprites? Load(string assemblyName = "MaplePet", string footageDir = "Assets/footage",
+    public static CharacterSprites? Load(string assemblyName = "TypePet", string footageDir = "Assets/footage",
         IReadOnlyCollection<string>? hitTestPoses = null, IReadOnlyCollection<string>? posesToLoad = null,
         bool loadExpressions = false)
     {
@@ -147,7 +147,7 @@ public sealed class CharacterSprites : IDisposable
             {
                 // Surfaced via Trace (survives Release) because a missing manifest means the overlay
                 // silently shows only the placeholder — most likely the footage wasn't shipped/embedded.
-                System.Diagnostics.Trace.WriteLine($"[MaplePet] character footage not found at {baseUri}/manifest.json");
+                System.Diagnostics.Trace.WriteLine($"[TypePet] character footage not found at {baseUri}/manifest.json");
                 return null;
             }
 
@@ -180,7 +180,7 @@ public sealed class CharacterSprites : IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Trace.WriteLine($"[MaplePet] character footage load failed: {ex}");
+            System.Diagnostics.Trace.WriteLine($"[TypePet] character footage load failed: {ex}");
             return null;
         }
     }
@@ -200,7 +200,7 @@ public sealed class CharacterSprites : IDisposable
             string manifestPath = Path.Combine(directory, "manifest.json");
             if (!File.Exists(manifestPath))
             {
-                System.Diagnostics.Trace.WriteLine($"[MaplePet] character manifest not found at {manifestPath}");
+                System.Diagnostics.Trace.WriteLine($"[TypePet] character manifest not found at {manifestPath}");
                 return null;
             }
 
@@ -232,7 +232,7 @@ public sealed class CharacterSprites : IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Trace.WriteLine($"[MaplePet] character footage load failed from '{directory}': {ex}");
+            System.Diagnostics.Trace.WriteLine($"[TypePet] character footage load failed from '{directory}': {ex}");
             return null;
         }
     }
@@ -263,7 +263,7 @@ public sealed class CharacterSprites : IDisposable
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.WriteLine($"[MaplePet] skipping malformed pose '{poseProp.Name}': {ex.Message}");
+                System.Diagnostics.Trace.WriteLine($"[TypePet] skipping malformed pose '{poseProp.Name}': {ex.Message}");
             }
         }
 
@@ -412,7 +412,7 @@ public sealed class CharacterSprites : IDisposable
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.WriteLine($"[MaplePet] skipping malformed expression '{ep.Name}': {ex.Message}");
+                System.Diagnostics.Trace.WriteLine($"[TypePet] skipping malformed expression '{ep.Name}': {ex.Message}");
             }
         }
     }

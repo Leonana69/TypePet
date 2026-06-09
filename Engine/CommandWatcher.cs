@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Timers;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// Watches the user-commands root and fires a single debounced callback after the directory tree settles,

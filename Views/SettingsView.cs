@@ -10,11 +10,11 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using MaplePet.Api.Chat;
-using MaplePet.Engine;
-using MaplePet.Platform;
+using TypePet.Api.Chat;
+using TypePet.Engine;
+using TypePet.Platform;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The Settings tab of <see cref="ConfigWindow"/>: the configurable parameters grouped into Movement /
@@ -111,8 +111,10 @@ public sealed class SettingsView : UserControl
             Height = FieldHeight,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        rows.Children.Add(Row("Provider", "Which LLM the chat uses", _provider));
-        _providerHost = new StackPanel { Margin = new Thickness(0, 2, 0, 0) };
+        rows.Children.Add(Row("Provider", "Which LLM the chat uses", _provider, topAlign: true));
+        // No extra margin here: each Row already carries Thickness(0, 6), so the host must add nothing
+        // or the Provider→API-key gap would exceed the uniform 12px spacing of the rows below it.
+        _providerHost = new StackPanel();
         rows.Children.Add(_providerHost);
         RebuildProviderPanel();
 
@@ -121,7 +123,7 @@ public sealed class SettingsView : UserControl
         _startup = Toggle();
         _startup.IsChecked = PlatformServices.StartupAtLogin.IsEnabled();
         _startup.IsEnabled = PlatformServices.StartupAtLogin.IsSupported; // disabled on platforms that can't register (e.g. unbundled macOS)
-        rows.Children.Add(ToggleRow("Start at login", "Launch MaplePet automatically when you sign in", _startup));
+        rows.Children.Add(ToggleRow("Start at login", "Launch TypePet automatically when you sign in", _startup));
         _hideFullscreen = Toggle();
         _hideFullscreen.IsChecked = cfg.HideWhenFullscreen;
         rows.Children.Add(ToggleRow("Hide in fullscreen apps",
@@ -377,7 +379,7 @@ public sealed class SettingsView : UserControl
 
         panel.Children.Add(TextRow("API key",
             p.Kind == "anthropic" ? "Anthropic key (sk-ant-…)" : "Provider key (blank for keyless local servers)",
-            secrets.Get(p.Id) ?? "", 240, v => secrets.Set(p.Id, v), passwordChar: '•'));
+            secrets.Get(p.Id) ?? "", 240, v => secrets.Set(p.Id, v), passwordChar: '•', topAlign: true));
 
         // Model picklist: an AutoCompleteBox that shows the full fetched list on focus (MinimumPrefixLength
         // = 0) and still allows typing a custom id if the list is empty/unavailable.
@@ -389,14 +391,13 @@ public sealed class SettingsView : UserControl
             Watermark = "model id",
             FilterMode = AutoCompleteFilterMode.ContainsOrdinal,
             MinimumPrefixLength = 0,
-            VerticalAlignment = VerticalAlignment.Center,
         };
         model.TextChanged += (_, _) => { p.Model = model.Text ?? ""; _cfg.Save(); };
-        panel.Children.Add(Row("Model", "Pick or type the model id", model));
+        panel.Children.Add(Row("Model", "Pick or type the model id", model, topAlign: true));
 
         if (p.Kind != "anthropic")
             panel.Children.Add(TextRow("Base URL", "OpenAI-compatible endpoint (blank = provider default)",
-                p.BaseUrl, 240, v => { p.BaseUrl = v; _cfg.Save(); }));
+                p.BaseUrl, 240, v => { p.BaseUrl = v; _cfg.Save(); }, topAlign: true));
 
         // Populate the picklist from the provider (best-effort; stays free-text on failure).
         if (!p.UsesKey || !string.IsNullOrEmpty(secrets.Get(p.Id)))
@@ -424,7 +425,7 @@ public sealed class SettingsView : UserControl
     /// <summary>A text-input row. <paramref name="onChanged"/> fires on edits only (the initial value is
     /// set before the handler is attached). Pass <paramref name="passwordChar"/> to mask a secret.</summary>
     private static Control TextRow(string label, string caption, string initial, double width,
-        Action<string> onChanged, char? passwordChar = null)
+        Action<string> onChanged, char? passwordChar = null, bool topAlign = false)
     {
         var box = new TextBox
         {
@@ -435,7 +436,7 @@ public sealed class SettingsView : UserControl
         };
         if (passwordChar is char pc) box.PasswordChar = pc;
         box.TextChanged += (_, _) => onChanged(box.Text ?? "");
-        return Row(label, caption, box);
+        return Row(label, caption, box, topAlign);
     }
 
     /// <summary>The right-hand "v1.0.0" value for the About row (version comes from <see cref="AppInfo"/>).</summary>
@@ -446,19 +447,25 @@ public sealed class SettingsView : UserControl
         return t;
     }
 
-    private static Control Row(string label, string caption, Control control)
+    // topAlign anchors the label/caption and the control to the row's top instead of centering them.
+    // Use it for rows whose caption can wrap to a 2nd line (chatbot fields): centering would pad the
+    // extra height ABOVE the control, so a single tall row would widen the gap to the row before it.
+    // Top-anchoring keeps every box on the same rhythm and lets the wrapped caption hang below.
+    private static Control Row(string label, string caption, Control control, bool topAlign = false)
     {
         var labelBlock = new TextBlock { Text = label };
         labelBlock.Classes.Add("rowLabel");
         var captionBlock = new TextBlock { Text = caption, Margin = new Thickness(0, 1, 0, 0) };
         captionBlock.Classes.Add("caption");
 
+        var align = topAlign ? VerticalAlignment.Top : VerticalAlignment.Center;
         var text = new StackPanel
         {
-            VerticalAlignment = VerticalAlignment.Center,
+            VerticalAlignment = align,
             Margin = new Thickness(0, 0, 12, 0),
             Children = { labelBlock, captionBlock },
         };
+        if (topAlign) control.VerticalAlignment = VerticalAlignment.Top;
 
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(0, 6) };
         Grid.SetColumn(text, 0);

@@ -2,7 +2,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>Win32 helpers for the overlay window itself (click-through toggle, cursor/mouse polling).</summary>
 public static class WindowsInterop

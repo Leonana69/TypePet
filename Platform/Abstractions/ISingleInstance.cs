@@ -1,6 +1,6 @@
 using System;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// Single-instance guard. The first process to acquire it becomes the owner and runs; a later process

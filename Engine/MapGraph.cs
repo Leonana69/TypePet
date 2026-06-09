@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>How the pet travels along a path edge.</summary>
 public enum MoveKind

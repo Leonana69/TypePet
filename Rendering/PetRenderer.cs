@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Rendering;
+namespace TypePet.Rendering;
 
 /// <summary>
 /// Draws the pet as a layered sprite character: the Body + Head layers of the current animation frame,
@@ -117,7 +117,7 @@ public static class PetRenderer
         {
             PetState.Stand => StandBody,
             PetState.Rope => RopeBody,
-            PetState.Jump => JumpBody,
+            PetState.Jump or PetState.Fly => JumpBody,
             _ => WalkBody,
         };
         var body = new Avalonia.Rect(pet.Pos.X, pet.Pos.Y, pet.Size.X, pet.Size.Y);

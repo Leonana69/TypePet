@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>
 /// Dev-only smoke test for the game knowledge base (RAG). Loads the bundled catalog, checks

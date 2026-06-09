@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using MaplePet.Engine;
-using MaplePet.Platform.Abstractions;
+using TypePet.Engine;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS window tracker. Enumerates on-screen windows with CGWindowListCopyWindowInfo — which returns
@@ -29,7 +29,7 @@ public sealed class MacWindowTracker : IWindowTracker
     /// <summary>Our own full-screen overlay's window number (NSWindow.windowNumber == CGWindowList's
     /// kCGWindowNumber), excluded from the captured world — the macOS analogue of the Windows tracker's
     /// <c>ExcludeHwnd</c>. The overlay spans the whole screen and would otherwise read as a giant
-    /// platform; every other MaplePet window (the config/character window, the say bar) is an ordinary
+    /// platform; every other TypePet window (the config/character window, the say bar) is an ordinary
     /// window and stays walkable. 0 disables the match — in the normal case the overlay is still kept out
     /// by the window-level filter below, since it floats at screen-saver level.</summary>
     public long ExcludeWindowNumber { get; set; }
@@ -53,7 +53,7 @@ public sealed class MacWindowTracker : IWindowTracker
                     if (dict == IntPtr.Zero) continue;
 
                     // Skip only our own full-screen overlay, matched by window number (like the Windows
-                    // tracker's ExcludeHwnd). Other MaplePet windows — the config/character window and the
+                    // tracker's ExcludeHwnd). Other TypePet windows — the config/character window and the
                     // say bar — are ordinary windows and stay walkable, so the pet can perch on them too.
                     if (ExcludeWindowNumber != 0 && ReadNumber(dict, KeyWindowNumber) == ExcludeWindowNumber) continue;
                     string? owner = ReadString(dict, KeyOwnerName);

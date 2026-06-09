@@ -5,13 +5,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
-using MaplePet.Api;
-using MaplePet.Engine;
-using MaplePet.Platform;
-using MaplePet.Platform.Abstractions;
-using MaplePet.Rendering;
+using TypePet.Api;
+using TypePet.Engine;
+using TypePet.Platform;
+using TypePet.Platform.Abstractions;
+using TypePet.Rendering;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
 /// <summary>
 /// The transparent, click-through, topmost overlay that covers the whole virtual screen.
@@ -231,7 +231,7 @@ public partial class PetWindow : Window
     /// <summary>The current display in LOGICAL overlay px. The overlay covers exactly the current display,
     /// so this is simply its content rect; the world is clipped to it (a no-op confinement) and the
     /// control facade reports it as the movement range.</summary>
-    private MaplePet.Engine.Rect CurrentDisplayLogical() => new(0, 0, Width, Height);
+    private TypePet.Engine.Rect CurrentDisplayLogical() => new(0, 0, Width, Height);
 
     /// <summary>Move the single overlay onto a different display and remap the pet into the new overlay's
     /// coordinate space so it keeps its on-screen position. No-op if already on that display. This is how
@@ -412,8 +412,8 @@ public partial class PetWindow : Window
         if (_input is null) return;
         bool visible = TryPetHitBoxLogical(out double l, out double t, out double r, out double b);
         var pet = visible
-            ? new MaplePet.Platform.Abstractions.HitRect(true, l, t, r, b)
-            : MaplePet.Platform.Abstractions.HitRect.None;
+            ? new TypePet.Platform.Abstractions.HitRect(true, l, t, r, b)
+            : TypePet.Platform.Abstractions.HitRect.None;
 
         // The bubble link's clickable box (computed by the renderer last frame, logical px). The link line is
         // always DRAWN; we only publish it as a hit target when:
@@ -422,8 +422,8 @@ public partial class PetWindow : Window
         //  - no focusable window is up (SuppressOverlayTopmost), so the rect can't swallow a press meant for
         //    an open say bar that overlaps the bubble (history shows the same link there to click instead).
         var link = (_speechLinkUrl is not null && !SuppressOverlayTopmost && View.SpeechLinkRect is { } lr)
-            ? new MaplePet.Platform.Abstractions.HitRect(true, lr.Left, lr.Top, lr.Right, lr.Bottom)
-            : MaplePet.Platform.Abstractions.HitRect.None;
+            ? new TypePet.Platform.Abstractions.HitRect(true, lr.Left, lr.Top, lr.Right, lr.Bottom)
+            : TypePet.Platform.Abstractions.HitRect.None;
 
         _input.Tick(_screen, pet, link);
     }
@@ -467,7 +467,7 @@ public partial class PetWindow : Window
         {
             // Transient capture errors (a window dying mid-enumeration) must not crash the
             // overlay; the next poll recovers. Trace it so it isn't fully invisible in dev.
-            System.Diagnostics.Debug.WriteLine($"[MaplePet] world poll failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[TypePet] world poll failed: {ex.Message}");
         }
     }
 
@@ -476,13 +476,13 @@ public partial class PetWindow : Window
     /// supplies a per-display ground (the Dock/taskbar top, or a bottom strip) already satisfies this —
     /// this is a cross-platform safety net for any display that escaped enumeration. The synthesized
     /// floor spans the display's bottom edge.</summary>
-    private static World EnsureFloor(World world, MaplePet.Engine.Rect clip)
+    private static World EnsureFloor(World world, TypePet.Engine.Rect clip)
     {
         const double band = 160; // a Dock/taskbar/strip within this of the bottom already counts as a floor
         foreach (var p in world.Platforms)
             if (p.Y >= clip.Bottom - band && p.Y <= clip.Bottom + 1 && p.Width >= 4) return world;
-        var platforms = new System.Collections.Generic.List<MaplePet.Engine.Platform>(world.Platforms)
-            { new MaplePet.Engine.Platform(clip.Bottom - 4, clip.Left, clip.Right) };
+        var platforms = new System.Collections.Generic.List<TypePet.Engine.Platform>(world.Platforms)
+            { new TypePet.Engine.Platform(clip.Bottom - 4, clip.Left, clip.Right) };
         return new World(platforms, world.Ladders);
     }
 
@@ -619,7 +619,7 @@ public partial class PetWindow : Window
     /// hasn't since changed the URL, so a slow load can't pop a stale image onto a different message.</summary>
     private async System.Threading.Tasks.Task LoadBubbleImageAsync(string url)
     {
-        var img = await MaplePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
+        var img = await TypePet.Rendering.ImageCache.LoadBubbleImageAsync(url);
         if (_speechImageUrl == url) _speechImage = img;
     }
 

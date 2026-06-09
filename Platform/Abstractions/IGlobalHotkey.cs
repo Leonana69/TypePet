@@ -1,6 +1,6 @@
 using System;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// A system-wide hotkey that pops up the say-input bar from anywhere. Windows uses a low-level keyboard

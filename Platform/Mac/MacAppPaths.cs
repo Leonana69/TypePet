@@ -1,13 +1,13 @@
 using System;
 using System.IO;
-using MaplePet.Engine;
-using MaplePet.Platform.Abstractions;
+using TypePet.Engine;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS on-disk locations. Inside a signed .app bundle, Contents/MacOS is effectively read-only, so
-/// app data must live under <c>~/Library/Application Support/MaplePet</c>. When run from source
+/// app data must live under <c>~/Library/Application Support/TypePet</c>. When run from source
 /// (<c>dotnet run</c>) it keeps the dev-friendly locations: settings next to the binary and characters
 /// in the repo tree (same as Windows in dev).
 /// </summary>
@@ -22,7 +22,7 @@ public sealed class MacAppPaths : IAppPaths
     {
         if (IsInsideAppBundle())
         {
-            DataRoot = Path.Combine(AppSupportRoot(), "MaplePet");
+            DataRoot = Path.Combine(AppSupportRoot(), "TypePet");
             CharactersRoot = Path.Combine(DataRoot, "Characters");
             CommandsRoot = Path.Combine(DataRoot, "Commands");
         }

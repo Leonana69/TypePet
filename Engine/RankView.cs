@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>
 /// The data a <c>/rank</c>-style lookup hands to the core renderer — the seam between <b>extraction</b>

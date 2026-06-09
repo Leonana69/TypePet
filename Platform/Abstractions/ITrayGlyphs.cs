@@ -1,7 +1,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>The icon shown beside a tray/menu-bar item.</summary>
 public enum TrayGlyph { Contact, Settings, Power, Chat }

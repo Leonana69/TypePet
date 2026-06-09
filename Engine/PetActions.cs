@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>How a commanded action animation plays.</summary>
 public enum ActionMode
@@ -17,6 +17,14 @@ public enum ActionMode
 /// an ordinary (non-attack) action with a fixed <see cref="ActionDef.Pose"/>.
 /// </summary>
 public enum AttackKind { None, Any, Stab, Swing, Shoot }
+
+/// <summary>
+/// Whether an action also drives a real vertical MOVE (not just a pose). <see cref="None"/> is an
+/// ordinary in-place pose. <see cref="Jump"/> arcs onto a platform directly overhead within jump height
+/// (else hops in place and drops back). <see cref="Fly"/> glides up onto the platform overhead with no
+/// height limit (else floats up a little and drifts back). Both show their pose via the pet's state.
+/// </summary>
+public enum ActionMove { None, Jump, Fly }
 
 /// <summary>
 /// The footage poses that make up each attack kind. A character supports whichever subset its footage
@@ -76,12 +84,17 @@ public static class Attacks
 /// </summary>
 public sealed record ActionDef(
     string Name, string Pose, ActionMode Mode, bool RequiresGrounded, string Description,
-    AttackKind Attack = AttackKind.None)
+    AttackKind Attack = AttackKind.None, ActionMove Move = ActionMove.None)
 {
     /// <summary>True for the stab/swing/shoot/attack actions: the pose isn't fixed — it's chosen at
     /// random from the worn character's matching <see cref="Attacks"/> stances, and the strike is
     /// followed by a brief "alert" hold (see <c>CharacterAnimator.BeginAttack</c>).</summary>
     public bool IsAttack => Attack != AttackKind.None;
+
+    /// <summary>True for <c>jump</c>/<c>fly</c>: the control layer drives a real vertical move on the
+    /// <see cref="PetController"/> (the pose comes from the resulting state), rather than holding a
+    /// fixed in-place pose. See <see cref="ActionMove"/>.</summary>
+    public bool IsMove => Move != ActionMove.None;
 }
 
 /// <summary>
@@ -99,7 +112,8 @@ public static class ActionRegistry
         new("sit",        "sit",       ActionMode.Hold, true,  "Sit down (not all characters have this)."),
         new("alert",      "alert",     ActionMode.Once, true,  "Startle / look alert."),
         new("heal",       "heal",      ActionMode.Once, true,  "Play a healing animation."),
-        new("fly",        "fly",       ActionMode.Hold, false, "Float / fly in place."),
+        new("jump",       "jump",      ActionMode.Once, true,  "Jump: hop up onto the platform directly above if it's within jumping height, otherwise hop straight up and drop back to the same spot.", Move: ActionMove.Jump),
+        new("fly",        "fly",       ActionMode.Once, true,  "Fly up onto the platform directly above (any height); if there's none, float up a little and drift back down.", Move: ActionMove.Fly),
         new("attack",     "",          ActionMode.Once, true,  "Attack: randomly stab, swing, or shoot (whatever the character can do), then stay alert for a few seconds.", AttackKind.Any),
         new("stab",       "",          ActionMode.Once, true,  "Stab attack (uses one of the character's stab moves).", AttackKind.Stab),
         new("swing",      "",          ActionMode.Once, true,  "Swing attack (uses one of the character's swing moves).", AttackKind.Swing),
@@ -113,6 +127,7 @@ public static class ActionRegistry
     {
         ["lie"] = "prone", ["lie_down"] = "prone", ["liedown"] = "prone", ["crouch"] = "prone",
         ["rest"] = "sit", ["startle"] = "alert",
+        ["hop"] = "jump", ["float"] = "fly",
         ["hit"] = "attack", ["fight"] = "attack",
         ["slash"] = "swing", ["fire"] = "shoot", ["shoot_arrow"] = "shoot",
     };

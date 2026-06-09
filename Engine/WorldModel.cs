@@ -1,4 +1,4 @@
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>A walkable, horizontal surface (a window top or bottom edge, or the taskbar face).</summary>
 public readonly record struct Platform(double Y, double XStart, double XEnd)

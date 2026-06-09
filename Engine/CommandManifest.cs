@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>What a user command does. The kind selects which payload of <see cref="CommandManifest"/> is
 /// read and how the interpreter turns it into a result. <see cref="Unknown"/> is an unrecognized kind
@@ -71,6 +71,23 @@ public sealed class CommandManifest
     /// <summary>The markdown body after the frontmatter (prompt text / script source / pet steps).</summary>
     public string Body { get; set; } = "";
 
+    // ---- hub metadata (optional; used by the command hub, ignored by the runtime) -------------------
+    /// <summary>Semantic version of this command, e.g. <c>1.2.0</c>. Defaults to <c>1.0.0</c> when absent so
+    /// every command has a comparable version for hub update-detection. Metadata only — never gates running.</summary>
+    public string? Version { get; set; }
+
+    /// <summary>Display author of the command (free text). On the hub this is overwritten with the verified
+    /// GitHub login of the PR author; locally it's whatever the manifest declares. Null when absent.</summary>
+    public string? Author { get; set; }
+
+    /// <summary>The lowest app version (semver) that can run this command, e.g. <c>1.1.0</c>. The hub browser
+    /// greys/blocks entries needing a newer app; null means no minimum. Metadata only — never gates running an
+    /// already-installed command (an unparseable value is simply ignored).</summary>
+    public string? MinAppVersion { get; set; }
+
+    /// <summary>Free-form discovery tags (lowercased), for hub search/filter. Empty when absent.</summary>
+    public List<string> Tags { get; set; } = new();
+
     /// <summary>The command word plus any aliases (non-empty).</summary>
     public IEnumerable<string> AllNames() =>
         new[] { Name }.Concat(Aliases).Where(n => !string.IsNullOrEmpty(n));
@@ -98,6 +115,14 @@ public sealed class CommandManifest
         // is a clean host comparison.
         Hosts = (Hosts ?? new()).Select(x => (x ?? "").Trim().ToLowerInvariant())
             .Where(IsValidHost).Distinct().ToList();
+
+        // Hub metadata: default the version so every command is comparable; null out blank author/min-version
+        // (null = "no minimum"); normalize tags. None of these affect Validate() — they're metadata only.
+        Version = string.IsNullOrWhiteSpace(Version) ? "1.0.0" : Version!.Trim();
+        Author = string.IsNullOrWhiteSpace(Author) ? null : Author!.Trim();
+        MinAppVersion = string.IsNullOrWhiteSpace(MinAppVersion) ? null : MinAppVersion!.Trim();
+        Tags = (Tags ?? new()).Select(t => (t ?? "").Trim().ToLowerInvariant())
+            .Where(t => t.Length > 0).Distinct().ToList();
     }
 
     /// <summary>A bare hostname for the <c>hosts:</c> allowlist: ASCII letters/digits/'.'/'-' only (an IDN must
@@ -189,6 +214,13 @@ public sealed class CommandManifest
             case "hosts": case "host":
                 m.Hosts = val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Select(h => h.ToLowerInvariant()).ToList();
+                break;
+            case "version": m.Version = val; break;
+            case "author": m.Author = val; break;
+            case "minappversion": case "minapp": m.MinAppVersion = val; break;
+            case "tags":
+                m.Tags = val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(t => t.ToLowerInvariant()).ToList();
                 break;
         }
     }

@@ -4,9 +4,9 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform;
+namespace TypePet.Platform;
 
 /// <summary>
 /// Cross-platform tray/menu-bar glyphs, drawn as simple vector shapes so they look identical and crisp

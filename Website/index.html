@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TypePet — a desktop pet that walks your windows</title>
+<meta name="description" content="TypePet is a free, open-source desktop pet for Windows & macOS. A pixel character lives on a click-through overlay, walks and climbs the windows you have open, chats with you using AI, runs slash commands, and can be controlled by any AI agent over MCP." />
+<meta name="theme-color" content="#ff7a1a" />
+<link rel="canonical" href="https://leonana69.github.io/TypePet/" />
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="TypePet — a desktop pet that walks your windows" />
+<meta property="og:description" content="A free, open-source desktop pet for Windows & macOS. It climbs your open windows, chats with AI, runs slash commands, and plugs into any agent over MCP." />
+<meta property="og:image" content="https://leonana69.github.io/TypePet/assets/og-image.png" />
+<meta property="og:url" content="https://leonana69.github.io/TypePet/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="TypePet — a desktop pet that walks your windows" />
+<meta name="twitter:description" content="A free, open-source desktop pet for Windows & macOS that climbs your windows, chats with AI, and runs slash commands." />
+<meta name="twitter:image" content="https://leonana69.github.io/TypePet/assets/og-image.png" />
+
+<!-- Icons -->
+<link rel="icon" type="image/png" href="assets/icon.png" />
+<link rel="apple-touch-icon" href="assets/icon.png" />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============================= HEADER ============================= -->
+<header class="site-header" id="top">
+  <div class="container">
+    <nav class="nav" id="nav" aria-label="Primary">
+      <a class="nav__logo" href="#top">
+        <img class="pixel" src="assets/icon.png" alt="" width="38" height="38" />
+        <span>Type<b>Pet</b></span>
+      </a>
+      <div class="nav__links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#chat">AI Chat</a>
+        <a href="#commands">Commands</a>
+        <a href="#hub">Hub</a>
+      </div>
+      <div class="nav__actions">
+        <a class="btn btn--ghost" href="https://github.com/Leonana69/TypePet" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.6-3.9-1.6-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
+          GitHub
+        </a>
+      </div>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ============================== HERO ============================== -->
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <h1 class="hero__title">A tiny pet that <span class="accent">lives on your windows.</span></h1>
+      <p class="hero__subtitle">TypePet walks along your taskbar and climbs the windows you actually have open. Talk to it, give it commands, dress it up — or let your favorite AI agent take the controls.</p>
+      <div class="hero__actions" id="get">
+        <a class="btn btn--primary btn--lg" data-os="mac" href="https://nightly.link/Leonana69/TypePet/workflows/build/main/TypePet-osx-arm64.zip">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3c.1 1.4-.4 2.7-1.3 3.7-.9 1-2.2 1.6-3.5 1.5-.1-1.3.5-2.6 1.3-3.5C13.4 3.7 14.8 3.1 16 3Zm3.5 14.6c-.6 1.4-1.4 2.8-2.5 4-.9 1-1.9 1.6-3 1.6-1 0-1.6-.6-2.9-.6-1.3 0-2 .6-3 .6-1.1 0-2.1-.7-3-1.7-2-2.3-2.9-6.4-1.2-9.2.8-1.4 2.3-2.3 3.9-2.3 1.1 0 2.2.7 2.9.7.7 0 2-.9 3.3-.7.6 0 2.2.2 3.3 1.8-.1.1-1.9 1.1-1.8 3.3 0 2.6 2.3 3.5 2.3 3.5Z"/></svg>
+          Download for macOS
+        </a>
+        <a class="btn btn--ghost btn--lg" data-os="win" href="https://nightly.link/Leonana69/TypePet/workflows/build/main/TypePet-win-x64.zip">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10 4.6v7.4H3V5.5Zm8-1L21 3v9h-10V4.5ZM3 12h7v7.4L3 18.5V12Zm8 0h10v9l-10-1.5V12Z"/></svg>
+          Download for Windows
+        </a>
+      </div>
+      <p class="hero__dlnote">Apple&nbsp;Silicon Mac or Windows&nbsp;x64 — or <a href="https://github.com/Leonana69/TypePet#run" target="_blank" rel="noopener">build from source</a>.</p>
+      <div class="hero__badges">
+        <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v7.4H3V5.5Zm8-1L21 3v9h-10V4.5ZM3 12h7v7.4L3 18.5V12Zm8 0h10v9l-10-1.5V12Z"/></svg> Windows 10/11</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.1 1.4-.4 2.7-1.3 3.7-.9 1-2.2 1.6-3.5 1.5-.1-1.3.5-2.6 1.3-3.5C13.4 3.7 14.8 3.1 16 3Zm3.5 14.6c-.6 1.4-1.4 2.8-2.5 4-.9 1-1.9 1.6-3 1.6-1 0-1.6-.6-2.9-.6-1.3 0-2 .6-3 .6-1.1 0-2.1-.7-3-1.7-2-2.3-2.9-6.4-1.2-9.2.8-1.4 2.3-2.3 3.9-2.3 1.1 0 2.2.7 2.9.7.7 0 2-.9 3.3-.7.6 0 2.2.2 3.3 1.8-.1.1-1.9 1.1-1.8 3.3 0 2.6 2.3 3.5 2.3 3.5Z"/></svg> macOS 13+</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6l-8-4Zm-1 13-3-3 1.4-1.4L11 12.2l4.6-4.6L17 9l-6 6Z"/></svg> No special permissions</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 17.3-6.2 3.7 1.6-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.4 4.8 1.6 7z"/></svg> GPL-3.0</span>
+      </div>
+    </div>
+
+    <!-- live desktop scene with a walking pet (built by main.js) -->
+    <div class="hero__scene">
+      <div class="scene" id="heroScene" aria-hidden="true">
+        <div class="scene__stage" id="sceneStage">
+          <div class="win win--b"><div class="win__bar"><span class="win__dot"></span><span class="win__dot"></span><span class="win__dot"></span></div><div class="win__body"><div class="win__line"></div><div class="win__line short"></div></div></div>
+          <div class="win win--a"><div class="win__bar"><span class="win__dot"></span><span class="win__dot"></span><span class="win__dot"></span></div><div class="win__body"><div class="win__line"></div><div class="win__line short"></div></div></div>
+          <div class="win win--c"><div class="win__bar"><span class="win__dot"></span><span class="win__dot"></span><span class="win__dot"></span></div></div>
+          <div class="dock"><span class="dock__app"></span><span class="dock__app"></span><span class="dock__app"></span><span class="dock__app"></span><span class="dock__app"></span></div>
+          <div class="pet" id="heroPet">
+            <div class="pet__bubble" id="heroBubble">hi! ✨</div>
+            <img class="pet__img pixel" id="heroPetImg" src="assets/sprites/stand1_f00.png" alt="" />
+          </div>
+        </div>
+        <div class="scene__hint">platforms &amp; ladders from your real windows</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FEATURES ============================ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section__head center reveal">
+      <span class="eyebrow">What it does</span>
+      <h2 class="section__title">A companion that actually does things</h2>
+      <p class="section__lead">TypePet is more than an animation — it reads your desktop, holds a conversation, runs commands you write, and plugs into your AI tools. The short version:</p>
+    </div>
+
+    <div class="func-list reveal">
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8"/></svg></div>
+        <div class="func__tx"><strong>Walks your windows</strong><span>Turns the windows you have open into a little platformer it roams while you work.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 9 9 0 0 1-3.8-.8L3 21l1.8-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg></div>
+        <div class="func__tx"><strong>Talks back with AI</strong><span>Ask it anything from a hotkey say bar — it answers out loud, searches the web, and sets reminders.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6M12 19h8"/></svg></div>
+        <div class="func__tx"><strong>Runs slash commands</strong><span>Type <code>/</code> to fire off commands — and write your own in a plain text file that hot-reloads.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3V4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v3H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M9 7V4h6v3"/></svg></div>
+        <div class="func__tx"><strong>Grows with a hub</strong><span>Browse and install commands the community shares, right from inside the app.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2m0 20v-2M4.9 4.9 3.5 3.5m17 17-1.4-1.4M4 15H2m20 0h-2"/><circle cx="12" cy="12" r="5"/></svg></div>
+        <div class="func__tx"><strong>Dresses up</strong><span>Pick, import, and live-swap characters — each a sprite with its own walk, climb and idle poses.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9zM9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3m17-6h3m-3 6h3"/></svg></div>
+        <div class="func__tx"><strong>Plugs into your AI</strong><span>Any MCP-capable agent can move and emote the pet through a local server — your screen becomes a tool.</span></div>
+      </div>
+      <div class="func">
+        <div class="func__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 0c2.5 2.7 4 6.3 4 10s-1.5 7.3-4 10m0-20c-2.5 2.7-4 6.3-4 10s1.5 7.3 4 10M2 12h20"/></svg></div>
+        <div class="func__tx"><strong>Native &amp; permission-free</strong><span>Runs on Windows and macOS — and the macOS build needs no special permissions.</span></div>
+      </div>
+    </div>
+
+    <div class="poses-row reveal" style="margin-top: clamp(2.5rem, 5vw, 3.5rem)">
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="stand" src="assets/sprites/stand1_f00.png" alt="standing pose" /></div><div class="pose-name">stand</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="walk" src="assets/sprites/walk1_f00.png" alt="walking pose" /></div><div class="pose-name">walk</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="ladder" src="assets/sprites/ladder_f00.png" alt="climbing pose" /></div><div class="pose-name">climb</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="jump" src="assets/sprites/jump_f00.png" alt="jumping pose" /></div><div class="pose-name">jump</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="alert" src="assets/sprites/alert_f00.png" alt="alert pose" /></div><div class="pose-name">alert</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="heal" src="assets/sprites/heal_f00.png" alt="heal pose" /></div><div class="pose-name">heal</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="swingO1" src="assets/sprites/swingO1_f00.png" alt="swing attack pose" /></div><div class="pose-name">swing</div></div>
+      <div class="pose-card"><div class="pose-stage"><img class="pixel pose-sprite" data-pose="fly" src="assets/sprites/fly_f00.png" alt="flying pose" /></div><div class="pose-name">fly</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ AI CHAT ============================= -->
+<section class="section" id="chat">
+  <div class="container chat">
+    <div class="chat__copy reveal">
+      <span class="eyebrow">Say bar &amp; AI chat</span>
+      <h2 class="section__title">Press a key. Ask it anything.</h2>
+      <p class="section__lead">A global hotkey opens a little input bar. Type a message and the pet answers — out loud in a speech bubble and in the chat log. It's a helpful assistant <em>and</em> a playful creature with a body it can move.</p>
+      <div class="steps">
+        <div class="step"><div class="step__num">✦</div><div class="step__txt"><strong>It can use tools</strong><span>Web search &amp; fetch for live facts, reminders you set in plain language, and a curated game knowledge base for class &amp; skill questions.</span></div></div>
+        <div class="step"><div class="step__num">✦</div><div class="step__txt"><strong>It reacts with its body</strong><span>The model can make the pet emote and act mid-answer — a little alert, a heal, a happy hop — so replies feel alive.</span></div></div>
+        <div class="step"><div class="step__num">✦</div><div class="step__txt"><strong>Your keys, your machine</strong><span>Plug in an Anthropic key or any OpenAI-compatible endpoint. Nothing is sent anywhere but the model you chose.</span></div></div>
+      </div>
+    </div>
+
+    <div class="chat__demo reveal" data-delay="2">
+      <div class="chat__phone" aria-hidden="true">
+        <div class="chat__top">
+          <img class="pixel" src="assets/icon.png" alt="" width="34" height="34" />
+          <div><b>TypePet</b><br><span><span class="dot"></span> online</span></div>
+        </div>
+        <div class="chat__log" id="chatLog"></div>
+        <div class="chat__saybar">
+          <div class="field" id="chatField"><span id="chatTyped"></span><span class="caret"></span></div>
+          <button class="chat__send" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11 21 3l-8 18-2-7-8-3Z"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ COMMANDS ============================ -->
+<section class="section section--alt" id="commands">
+  <div class="container">
+    <div class="section__head reveal">
+      <span class="eyebrow">Slash commands</span>
+      <h2 class="section__title">Teach it new tricks in a text file</h2>
+      <p class="section__lead">A command is just a folder with a <code>command.md</code> inside. Frontmatter on top, the body below. No build step, no restart — save the file and the command appears. Click one to try it:</p>
+    </div>
+
+    <div class="cmd-demo">
+      <div class="cmd-card reveal">
+        <div class="cmd-chips" id="cmdChips">
+          <button class="chip is-active" data-cmd="wave">/wave</button>
+          <button class="chip" data-cmd="roll">/roll 20</button>
+          <button class="chip" data-cmd="sf">/sf gms 16 17 160</button>
+          <button class="chip" data-cmd="dailyboss">/dailyboss</button>
+          <button class="chip" data-cmd="fortune">/fortune</button>
+          <button class="chip" data-cmd="remind">/remind 5m tea</button>
+        </div>
+        <div class="cmd-stage">
+          <div class="cmd-stage__bar"><span class="slash">/</span><span id="cmdTyped">wave</span><span class="caret"></span></div>
+          <div class="cmd-out" id="cmdOut">
+            <div class="cmd-out__pet"><img class="pet__img pixel" id="cmdPetImg" src="assets/sprites/alert_f00.png" alt="" style="height:54px" /></div>
+            <div class="cmd-out__bubble" id="cmdBubble">👋 *waves at you*</div>
+          </div>
+        </div>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin:1.1rem 0 0">
+          Kinds: <b>text</b>, <b>clipboard</b>, <b>image</b>, <b>link</b>, <b>prompt</b> (runs through the LLM), <b>pet</b> (plays an action), and sandboxed <b>script</b>.
+        </p>
+      </div>
+
+      <div class="cmd-card reveal" data-delay="1" style="padding:0;background:transparent;border:none;box-shadow:none">
+        <div class="codeblock">
+          <div class="codeblock__bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="name">cmd_hello/command.md</span></div>
+          <button class="copy-btn" data-copy="hello-cmd">Copy</button>
+          <pre id="hello-cmd"><code><span class="tok-c">---</span>
+<span class="tok-k">name</span>: hello
+<span class="tok-k">kind</span>: text
+<span class="tok-k">usage</span>: /hello [name]
+<span class="tok-k">help</span>: Greet a friend.
+<span class="tok-c">---</span>
+Hi there, <span class="tok-d">{{args}}</span>! Welcome ✨</code></pre>
+        </div>
+        <p style="color:var(--ink-soft);font-size:.95rem;margin:1.1rem .2rem 0">
+          Open the say bar, type <code>/hello Steve</code>, and your pet says
+          <em>“Hi there, Steve! Welcome ✨”</em> — the moment you save the file.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== HUB ============================== -->
+<section class="section" id="hub">
+  <div class="container">
+    <div class="section__head center reveal">
+      <span class="eyebrow">The command hub</span>
+      <h2 class="section__title">Install commands the community shares</h2>
+      <p class="section__lead">Open the Hub from the tray and browse a registry of published commands. Pick one, see exactly what it needs before it installs, and it lands in your commands folder — verified by checksum.</p>
+    </div>
+
+    <div class="hub-grid">
+      <article class="hub-card reveal" data-delay="1">
+        <div class="hub-card__head"><span class="hub-card__name">/rank</span><span class="hub-badge hub-badge--official">OFFICIAL</span><span class="hub-badge hub-badge--script">SCRIPT</span></div>
+        <p class="hub-card__desc">Look up a MapleStory character's ranking by server — <code>-na</code>/<code>-eu</code> (GMS), <code>-kr</code>, <code>-sea</code>, <code>-tw</code>.</p>
+        <div class="hub-card__meta"><span>needs network</span></div>
+      </article>
+      <article class="hub-card reveal" data-delay="2">
+        <div class="hub-card__head"><span class="hub-card__name">/fortune</span><span class="hub-badge hub-badge--official">OFFICIAL</span></div>
+        <p class="hub-card__desc">Have the Maple World oracle read your daily luck — written on the spot by your chat model.</p>
+        <div class="hub-card__meta"><span>prompt</span></div>
+      </article>
+      <article class="hub-card reveal" data-delay="3">
+        <div class="hub-card__head"><span class="hub-card__name">/maintain</span><span class="hub-badge hub-badge--official">OFFICIAL</span></div>
+        <p class="hub-card__desc">Check the next upcoming MapleStory maintenance window — looked up live with web search.</p>
+        <div class="hub-card__meta"><span>prompt</span></div>
+      </article>
+      <article class="hub-card reveal" data-delay="1">
+        <div class="hub-card__head"><span class="hub-card__name">/esfera</span><span class="hub-badge hub-badge--official">OFFICIAL</span></div>
+        <p class="hub-card__desc">Pull up the Esfera region guide image whenever you need a quick reference.</p>
+        <div class="hub-card__meta"><span>image</span></div>
+      </article>
+      <article class="hub-card reveal" data-delay="2">
+        <div class="hub-card__head"><span class="hub-card__name">/asc</span><span class="hub-badge hub-badge--official">OFFICIAL</span></div>
+        <p class="hub-card__desc">Copy &ldquo;Arcane Symbol/claim&rdquo; to your clipboard in a single keystroke.</p>
+        <div class="hub-card__meta"><span>clipboard</span></div>
+      </article>
+      <article class="hub-card reveal" data-delay="3">
+        <div class="hub-card__head"><span class="hub-card__name">/ssc</span><span class="hub-badge hub-badge--official">OFFICIAL</span></div>
+        <p class="hub-card__desc">Copy &ldquo;Sacred Symbol/claim&rdquo; to your clipboard in a single keystroke.</p>
+        <div class="hub-card__meta"><span>clipboard</span></div>
+      </article>
+    </div>
+    <p style="text-align:center;color:var(--ink-soft);font-size:.86rem;margin-top:1.4rem">The official starter set in the <a href="https://github.com/Leonana69/TypePet-Commands" target="_blank" rel="noopener">live registry</a>. Anyone can publish — a command is just a folder you can zip and share.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================== FOOTER ============================ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a class="nav__logo" href="#top"><img class="pixel" src="assets/icon.png" alt="" width="38" height="38" /> Type<b style="color:var(--cap-soft)">Pet</b></a>
+        <p>A free, open-source desktop pet that walks your windows, chats with AI, and runs commands you can write yourself.</p>
+        <div class="footer__social">
+          <a href="https://github.com/Leonana69/TypePet" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.6-3.9-1.6-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer__col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#chat">AI chat</a>
+      </div>
+      <div class="footer__col">
+        <h4>Build</h4>
+        <a href="#commands">Slash commands</a>
+        <a href="#hub">Command hub</a>
+        <a href="#get">Download</a>
+        <a href="https://github.com/Leonana69/TypePet/blob/main/Assets/Commands/command_helper.md" target="_blank" rel="noopener">Write a command</a>
+      </div>
+      <div class="footer__col">
+        <h4>Project</h4>
+        <a href="https://github.com/Leonana69/TypePet" target="_blank" rel="noopener">Source code</a>
+        <a href="https://github.com/Leonana69/TypePet/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+        <a href="https://github.com/Leonana69/TypePet/blob/main/LICENSE" target="_blank" rel="noopener">License (GPL-3.0)</a>
+        <a href="https://github.com/Leonana69/TypePet/issues" target="_blank" rel="noopener">Report an issue</a>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 leonana69 &amp; contributors · GPL-3.0</span>
+      <span>Made with 🍄 for cozy desktops</span>
+    </div>
+    <p class="disclaimer">TypePet is an independent, fan-made project. MapleStory is a trademark of its respective owners; TypePet is not affiliated with, endorsed by, or sponsored by Nexon. Sprite footage and game references are used for a fan project and remain the property of their owners.</p>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>
+</button>
+
+<script src="main.js"></script>
+</body>
+</html>

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using MaplePet.Engine;
+using TypePet.Engine;
 
-namespace MaplePet.Api.Chat;
+namespace TypePet.Api.Chat;
 
 /// <summary>The parsed result of a <c>/remind</c> time spec: <see cref="DueAt"/> is the absolute wall-clock
 /// moment the reminder should fire, <see cref="Delay"/> is the wait from "now" (what the scheduler arms its

@@ -3,28 +3,31 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 
-namespace MaplePet.Views;
+namespace TypePet.Views;
 
-public enum ConfigTab { Characters, Commands, Settings }
+public enum ConfigTab { Characters, Commands, Browse, Settings }
 
 /// <summary>
-/// The single frosted-glass config window opened from the tray. It hosts the Characters, Commands, and
-/// Settings tabs (<see cref="CharacterView"/> / <see cref="CommandsView"/> / <see cref="SettingsView"/>)
-/// under a segmented tab bar; all views are kept alive so switching tabs preserves their state. The
-/// tray's "Characters…", "Commands…", and "Settings…" items open this one window on the matching tab.
+/// The single frosted-glass config window opened from the tray. It hosts the Characters, Commands, Browse,
+/// and Settings tabs (<see cref="CharacterView"/> / <see cref="CommandsView"/> / <see cref="HubView"/> /
+/// <see cref="SettingsView"/>) under a segmented tab bar; all views are kept alive so switching tabs
+/// preserves their state. The tray's "Characters…", "Commands…", "Browse hub…", and "Settings…" items open
+/// this one window on the matching tab.
 /// </summary>
 public sealed class ConfigWindow : FrostedWindow
 {
     private readonly CharacterView _charactersView;
     private readonly CommandsView _commandsView;
+    private readonly HubView _hubView;
     private readonly SettingsView _settingsView;
     private readonly ContentControl _host;
-    private readonly Button _tabCharacters, _tabCommands, _tabSettings;
+    private readonly Button _tabCharacters, _tabCommands, _tabBrowse, _tabSettings;
 
-    public ConfigWindow(CharacterView charactersView, CommandsView commandsView, SettingsView settingsView) : base("MaplePet")
+    public ConfigWindow(CharacterView charactersView, CommandsView commandsView, HubView hubView, SettingsView settingsView) : base("TypePet")
     {
         _charactersView = charactersView;
         _commandsView = commandsView;
+        _hubView = hubView;
         _settingsView = settingsView;
 
         // Sized to fit the 6-wide character grid; the Settings tab's narrower content sits left-aligned.
@@ -35,13 +38,14 @@ public sealed class ConfigWindow : FrostedWindow
 
         _tabCharacters = TabButton("Characters", ConfigTab.Characters);
         _tabCommands = TabButton("Commands", ConfigTab.Commands);
+        _tabBrowse = TabButton("Browse", ConfigTab.Browse);
         _tabSettings = TabButton("Settings", ConfigTab.Settings);
         var tabs = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 2,
             Margin = new Thickness(10, 0, 0, 0),
-            Children = { _tabCharacters, _tabCommands, _tabSettings },
+            Children = { _tabCharacters, _tabCommands, _tabBrowse, _tabSettings },
         };
         var tabBar = new Border
         {
@@ -65,11 +69,13 @@ public sealed class ConfigWindow : FrostedWindow
         _host.Content = tab switch
         {
             ConfigTab.Commands => _commandsView,
+            ConfigTab.Browse => _hubView,
             ConfigTab.Settings => _settingsView,
             _ => (Control)_charactersView,
         };
         SetActive(_tabCharacters, tab == ConfigTab.Characters);
         SetActive(_tabCommands, tab == ConfigTab.Commands);
+        SetActive(_tabBrowse, tab == ConfigTab.Browse);
         SetActive(_tabSettings, tab == ConfigTab.Settings);
     }
 

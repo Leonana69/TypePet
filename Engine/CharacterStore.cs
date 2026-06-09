@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 
-namespace MaplePet.Engine;
+namespace TypePet.Engine;
 
 /// <summary>One selectable character: a stable <see cref="Id"/> (the on-disk folder name, e.g.
 /// <c>char_1a2b3c4d</c>), the user-facing <see cref="DisplayName"/>, the <see cref="Directory"/> its
@@ -59,7 +59,7 @@ public sealed class CharacterStore
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
             while (dir is not null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "MaplePet.csproj")))
+                if (File.Exists(Path.Combine(dir.FullName, "TypePet.csproj")))
                     return Path.Combine(dir.FullName, "Assets", "Characters");
                 dir = dir.Parent;
             }
@@ -68,7 +68,7 @@ public sealed class CharacterStore
 
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MaplePet", "Characters");
+            "TypePet", "Characters");
     }
 
     /// <summary>The built-in head+body default (no folder; rendered from the embedded DefaultCharacter).</summary>
@@ -183,7 +183,7 @@ public sealed class CharacterStore
         Directory.CreateDirectory(Root);
         string id = NewId();
         string dest = Path.Combine(Root, id);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_import_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_import_" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(temp);
@@ -239,7 +239,7 @@ public sealed class CharacterStore
         if (entry?.Directory is null) return; // built-in default has nothing on disk to export
 
         string folderName = SanitizeFileName(entry.DisplayName);
-        string temp = Path.Combine(Path.GetTempPath(), "MaplePet_export_" + Guid.NewGuid().ToString("N"));
+        string temp = Path.Combine(Path.GetTempPath(), "TypePet_export_" + Guid.NewGuid().ToString("N"));
         string staging = Path.Combine(temp, folderName);
         try
         {

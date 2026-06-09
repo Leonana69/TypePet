@@ -1,4 +1,4 @@
-namespace MaplePet.Platform.Abstractions;
+namespace TypePet.Platform.Abstractions;
 
 /// <summary>
 /// The bundle of window-bound platform services for the running OS, resolved by the

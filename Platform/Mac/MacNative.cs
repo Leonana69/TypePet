@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// Raw P/Invoke bindings to the macOS system frameworks (Objective-C runtime, CoreGraphics,

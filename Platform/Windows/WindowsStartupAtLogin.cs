@@ -1,8 +1,8 @@
 using System;
 using Microsoft.Win32;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Windows;
+namespace TypePet.Platform.Windows;
 
 /// <summary>
 /// "Start with Windows" support, backed by the per-user Run key
@@ -13,7 +13,7 @@ namespace MaplePet.Platform.Windows;
 public sealed class WindowsStartupAtLogin : IStartupAtLogin
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "MaplePet";
+    private const string ValueName = "TypePet";
 
     /// <summary>The Run key is always writable on Windows (best-effort), so this is always supported.</summary>
     public bool IsSupported => true;
@@ -21,7 +21,7 @@ public sealed class WindowsStartupAtLogin : IStartupAtLogin
     /// <summary>The executable to launch at login (the running host exe, quoted by the caller).</summary>
     private static string? ExePath => Environment.ProcessPath;
 
-    /// <summary>True if MaplePet is currently registered to start at login.</summary>
+    /// <summary>True if TypePet is currently registered to start at login.</summary>
     public bool IsEnabled()
     {
         try

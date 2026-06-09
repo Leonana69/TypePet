@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Threading;
-using MaplePet.Platform.Abstractions;
+using TypePet.Platform.Abstractions;
 
-namespace MaplePet.Platform.Mac;
+namespace TypePet.Platform.Mac;
 
 /// <summary>
 /// macOS overlay effects via objc_msgSend against the NSWindow Avalonia owns. Makes the overlay:

@@ -15,7 +15,7 @@
     <!-- Compiles the sandboxed scripting engine (Jint) for kind:script user commands. Drop this constant
          (and the Jint package below) to ship a declarative-only build; CommandScriptHost then reports a
          friendly "scripting unavailable" error instead. -->
-    <DefineConstants>$(DefineConstants);MAPLEPET_SCRIPTING</DefineConstants>
+    <DefineConstants>$(DefineConstants);TYPEPET_SCRIPTING</DefineConstants>
   </PropertyGroup>
 
   <!-- ============================ WINDOWS HEAD ============================ -->
@@ -45,7 +45,7 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <Product>MaplePet</Product>
+    <Product>TypePet</Product>
     <Description>A desktop pet that walks along your taskbar.</Description>
     <Authors>leonana69</Authors>
     <Copyright>Copyright © 2026 leonana69</Copyright>
