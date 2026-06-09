@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://leonana69.github.io/MaplePet/sitemap.xml
+Sitemap: https://leonana69.github.io/TypePet/sitemap.xml

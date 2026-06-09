@@ -36,12 +36,12 @@ The site goes live at:
 https://<your-user>.github.io/<your-repo>/
 ```
 
-For this repo that's **https://leonana69.github.io/MaplePet/** (the URL baked into the page's
+For this repo that's **https://leonana69.github.io/TypePet/** (the URL baked into the page's
 `canonical`, `og:url`, `og:image`, and `sitemap.xml`).
 
 > **Renaming the repo or using a custom domain?** All asset links are relative, so the page itself
 > keeps working anywhere. Just update the four absolute URLs above (search the repo for
-> `leonana69.github.io/MaplePet`) so social previews and the sitemap point at the new address. For a
+> `leonana69.github.io/TypePet`) so social previews and the sitemap point at the new address. For a
 > custom domain, add a `CNAME` file here containing the domain.
 
 ## Preview locally
