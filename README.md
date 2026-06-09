@@ -15,6 +15,16 @@ external agents drive the pet; persisted **reminders**; and an importable **char
 
 Built on **.NET 10** and **Avalonia 11.3**.
 
+<p align="center">
+  <img src="docs/walk.gif" width="200" alt="The TypePet default character walking">
+  <br>
+  <em>The built-in <b>Default</b> character — a layered sprite that walks, climbs, jumps, and emotes.</em>
+</p>
+
+<p align="center">
+  <img src="docs/poses.png" width="880" alt="Default character poses: stand, walk, climb, jump, fly, alert, heal, swing">
+</p>
+
 ---
 
 ## Features
@@ -210,37 +220,6 @@ per-script network grants). Everything in the table above is also editable live 
 **Settings…** dialog.
 
 > API and GitHub keys are **not** in `settings.json` — they live in the OS secret store (DPAPI / Keychain).
-
-## Architecture
-
-Every OS-specific concern sits behind a small set of interfaces in `Platform/Abstractions/`
-(`IWindowTracker`, `IOverlayEffects`, `IPetInput`, `IGlobalHotkey`, `ISingleInstance`, `IStartupAtLogin`,
-`IAppPaths`, `ITrayGlyphs`, `ISecretStore`, `IPlatformServices`), resolved by the
-`Platform/PlatformServices` factory — the one place that names per-OS types. `Engine/` (types, world
-model, nav graph, physics, the state machine, command store, settings), `Rendering/`, `Api/`, and
-`Views/` are shared and contain no `OperatingSystem.IsWindows()` branches. The chatbot, the MCP server,
-and the say bar's pet-body tools all drive the pet through the same in-process `IPetControl` facade.
-
-- **Windows** (`Platform/Windows/`, compiled only under `net10.0-windows`): Win32 via CsWin32 — window
-  enumeration (DWM bounds), a `WS_EX_TRANSPARENT | WS_EX_LAYERED` click-through overlay, a polled cursor
-  + low-level mouse/keyboard hooks, a named-mutex single-instance guard, the HKCU Run key, and a DPAPI
-  secret store.
-- **macOS** (`Platform/Mac/`, compiled only under `net10.0`): plain P/Invoke to CoreGraphics /
-  CoreFoundation / AppKit (`objc_msgSend`) and Carbon — window enumeration via
-  `CGWindowListCopyWindowInfo` (no titles read, so no Screen Recording prompt), an `NSWindow` overlay
-  floated across every Space at screen-saver level, a click-through grab that toggles `ignoresMouseEvents`
-  while the cursor is over the pet, a Carbon `RegisterEventHotKey` hotkey, a file-backed single-instance
-  guard, `SMAppService` start-at-login, and a Keychain-backed secret store. The whole macOS feature set
-  needs **no TCC permissions**.
-
-CI (`.github/workflows/build.yml`) builds each head on its native runner and uploads the Windows exe and
-the macOS `.app` bundle. The macOS bundle is published self-contained (not single-file — that breaks
-CoreCLR startup inside a `.app`) and ad-hoc-signed; notarization is intentionally out of this
-credential-free flow.
-
-**Data & secrets.** Run from source, characters and commands live in the repo's `Assets/` tree; in a
-packaged build they live under `%LOCALAPPDATA%\TypePet\` (Windows) or `~/Library/Application
-Support/TypePet/` (macOS). API/GitHub keys live in the platform secret store, never on disk in plaintext.
 
 ## License
 
