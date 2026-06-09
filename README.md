@@ -16,13 +16,9 @@ external agents drive the pet; persisted **reminders**; and an importable **char
 Built on **.NET 10** and **Avalonia 11.3**.
 
 <p align="center">
-  <img src="docs/walk.gif" width="200" alt="The TypePet default character walking">
+  <img src="docs/move.gif" width="200" alt="The TypePet default character walking">
   <br>
   <em>The built-in <b>Default</b> character — a layered sprite that walks, climbs, jumps, and emotes.</em>
-</p>
-
-<p align="center">
-  <img src="docs/poses.png" width="880" alt="Default character poses: stand, walk, climb, jump, fly, alert, heal, swing">
 </p>
 
 ---
