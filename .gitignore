@@ -18,3 +18,4 @@ Assets/Commands/cmd_*/
 .claude
 api.txt
 Scripts/
+.DS_Store

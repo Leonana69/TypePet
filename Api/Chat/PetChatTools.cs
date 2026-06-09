@@ -22,6 +22,13 @@ public sealed class PetChatTools
 
     private static readonly JsonSerializerOptions ResultJson = new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
 
+    /// <summary>How long a chatbot-set expression is worn when the model omits its own <c>seconds</c>.
+    /// The model emotes in reaction to a message (e.g. an angry face for "attack") and moves on without
+    /// clearing the face, so — mirroring CommandInterpreter's default for slash-command reactions — an
+    /// expression with no explicit lifetime auto-clears instead of sticking on the pet forever. The model
+    /// can still pass a larger <c>seconds</c> for a lasting mood, or call clear_expression to drop it sooner.</summary>
+    private const double DefaultExpressionSeconds = 10;
+
     public bool Handles(string name) => name is
         "say" or "set_expression" or "clear_expression" or "do_action" or
         "walk_to" or "move_to" or "face" or "stop_action";
@@ -74,7 +81,7 @@ public sealed class PetChatTools
                 new Dictionary<string, JsonElement>
                 {
                     ["name"] = ToolSchema.StringEnum("Expression name.", names),
-                    ["seconds"] = ToolSchema.Number("Optional: auto-clear after this many seconds."),
+                    ["seconds"] = ToolSchema.Number("Optional: hold the expression this many seconds, then auto-clear back to the neutral face (defaults to a short hold if omitted). Pass a larger value for a lasting mood."),
                 },
                 new[] { "name" }));
             tools.Add(new("clear_expression", "Restore the pet's neutral face.",
@@ -95,7 +102,7 @@ public sealed class PetChatTools
             ControlResult r = call.Name switch
             {
                 "say" => await _pet.Say(GetString(a, "text") ?? "", GetNumber(a, "seconds")),
-                "set_expression" => await _pet.Expression(GetString(a, "name") ?? "", GetNumber(a, "seconds")),
+                "set_expression" => await _pet.Expression(GetString(a, "name") ?? "", GetNumber(a, "seconds") ?? DefaultExpressionSeconds),
                 "clear_expression" => await _pet.ClearExpression(),
                 "do_action" => await _pet.DoAction(GetString(a, "action") ?? "", GetString(a, "mode")),
                 "walk_to" => await _pet.WalkTo(GetNumber(a, "x") ?? 0),

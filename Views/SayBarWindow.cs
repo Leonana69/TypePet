@@ -134,7 +134,7 @@ public sealed class SayBarWindow : Window
                 });
                 sp.Children.Add(new TextBlock
                 {
-                    Text = ci.Help,
+                    Text = ci.Aliases.Count > 0 ? $"aka {string.Join(", ", ci.Aliases)} — {ci.Help}" : ci.Help,
                     FontSize = 11,
                     Foreground = FrostTheme.TextSecondary,
                     TextWrapping = TextWrapping.Wrap,
@@ -296,7 +296,8 @@ public sealed class SayBarWindow : Window
 
         string token = text[1..];
         var matches = _commands.Commands
-            .Where(c => c.Name.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+            .Where(c => c.Name.StartsWith(token, StringComparison.OrdinalIgnoreCase)
+                     || c.Aliases.Any(a => a.StartsWith(token, StringComparison.OrdinalIgnoreCase)))
             .ToList();
         if (matches.Count == 0)
         {
