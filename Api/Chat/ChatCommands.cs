@@ -115,8 +115,9 @@ public sealed class ChatCommands
     public void Rebuild()
     {
         var list = new List<Command>(_builtIns);
+        var info = new List<CommandInfo>();
         var taken = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var b in _builtIns) taken.Add(b.Name);
+        foreach (var b in _builtIns) { taken.Add(b.Name); info.Add(new CommandInfo(b.Name, b.Usage, b.Help, Array.Empty<string>())); }
 
         if (_store is not null)
         {
@@ -127,13 +128,24 @@ public sealed class ChatCommands
                 var m = _store.ReadManifest(e.Id);
                 if (m is null || m.Validate() is not null) continue;
                 var run = _interp.Build(m, e.Directory);
+
+                // Register EVERY name (primary + aliases) so each one is runnable, but surface the command
+                // ONCE in the '/' menu and /help — under the first name that isn't already claimed, with the
+                // rest carried as aliases. Listing each alias as its own entry made one command look like
+                // several identical rows (e.g. three "/dailyboss" rows from its reset/dailies aliases).
+                string? primary = null;
+                var aliases = new List<string>();
                 foreach (var nm in m.AllNames())
-                    if (taken.Add(nm))
-                        list.Add(new Command(nm, m.Usage ?? ("/" + nm), m.Help ?? "", run));
+                {
+                    if (!taken.Add(nm)) continue;
+                    list.Add(new Command(nm, m.Usage ?? ("/" + nm), m.Help ?? "", run));
+                    if (primary is null) primary = nm; else aliases.Add(nm);
+                }
+                if (primary is not null)
+                    info.Add(new CommandInfo(primary, m.Usage ?? ("/" + primary), m.Help ?? "", aliases));
             }
         }
 
-        var info = list.Select(c => new CommandInfo(c.Name, c.Usage, c.Help)).ToArray();
         _resolved = new Resolved(list, info);
         CommandsChanged?.Invoke();
     }
@@ -336,7 +348,8 @@ public sealed class ChatCommands
 
     private Task<CommandResult> HelpAsync(string args, CancellationToken ct)
     {
-        string list = string.Join("\n", _resolved.Commands.Select(c => $"{c.Usage} — {c.Help}"));
+        string list = string.Join("\n", _resolved.Info.Select(c =>
+            c.Aliases.Count > 0 ? $"{c.Usage} (aka {string.Join(", ", c.Aliases)}) — {c.Help}" : $"{c.Usage} — {c.Help}"));
         return Task.FromResult(CommandResult.Ok("Commands:\n" + list));
     }
 
@@ -355,9 +368,11 @@ public sealed class ChatCommands
         return CommandResult.Error($"{head} Try: {known}");
     }
 
-    /// <summary>Public, read-only view of a command for the say bar's dropdown — the same name, usage, and
-    /// help as <see cref="Command"/>, but without the handler delegate.</summary>
-    public sealed record CommandInfo(string Name, string Usage, string Help);
+    /// <summary>Public, read-only view of a command for the say bar's dropdown — the primary name, usage, and
+    /// help as <see cref="Command"/> (without the handler delegate), plus any <paramref name="Aliases"/> (other
+    /// names that run the same command). A command appears once under its primary name; aliases ride along here
+    /// so the dropdown can match them while typing and hint them, rather than showing duplicate-looking rows.</summary>
+    public sealed record CommandInfo(string Name, string Usage, string Help, IReadOnlyList<string> Aliases);
 
     private sealed record Command(
         string Name, string Usage, string Help, Func<string, CancellationToken, Task<CommandResult>> Run);
