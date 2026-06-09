@@ -45,14 +45,13 @@
         <a href="#chat">AI Chat</a>
         <a href="#commands">Commands</a>
         <a href="#hub">Hub</a>
-        <a href="#install">Install</a>
       </div>
       <div class="nav__actions">
         <a class="btn btn--ghost" href="https://github.com/Leonana69/MaplePet" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.6-3.9-1.6-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"/></svg>
           GitHub
         </a>
-        <a class="btn btn--primary" href="#install">Get TypePet</a>
+        <a class="btn btn--primary" href="#get">Get TypePet</a>
       </div>
       <button class="nav__toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
     </nav>
@@ -67,13 +66,17 @@
       <span class="eyebrow">Windows · macOS · Free &amp; open source</span>
       <h1 class="hero__title">A tiny pet that <span class="accent">lives on your windows.</span></h1>
       <p class="hero__subtitle">TypePet walks along your taskbar and climbs the windows you actually have open. Talk to it, give it commands, dress it up — or let your favorite AI agent take the controls.</p>
-      <div class="hero__actions">
-        <a class="btn btn--primary btn--lg" href="#install">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4l-4.7-5.7 1.4-1.4 3.3 3.3V3h2ZM5 19h14v2H5v-2Z"/></svg>
-          Download
+      <div class="hero__actions" id="get">
+        <a class="btn btn--primary btn--lg" data-os="mac" href="https://nightly.link/Leonana69/MaplePet/workflows/build/main/TypePet-osx-arm64.zip">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3c.1 1.4-.4 2.7-1.3 3.7-.9 1-2.2 1.6-3.5 1.5-.1-1.3.5-2.6 1.3-3.5C13.4 3.7 14.8 3.1 16 3Zm3.5 14.6c-.6 1.4-1.4 2.8-2.5 4-.9 1-1.9 1.6-3 1.6-1 0-1.6-.6-2.9-.6-1.3 0-2 .6-3 .6-1.1 0-2.1-.7-3-1.7-2-2.3-2.9-6.4-1.2-9.2.8-1.4 2.3-2.3 3.9-2.3 1.1 0 2.2.7 2.9.7.7 0 2-.9 3.3-.7.6 0 2.2.2 3.3 1.8-.1.1-1.9 1.1-1.8 3.3 0 2.6 2.3 3.5 2.3 3.5Z"/></svg>
+          Download for macOS
         </a>
-        <a class="btn btn--ghost btn--lg" href="#features">See what it does</a>
+        <a class="btn btn--ghost btn--lg" data-os="win" href="https://nightly.link/Leonana69/MaplePet/workflows/build/main/TypePet-win-x64.zip">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10 4.6v7.4H3V5.5Zm8-1L21 3v9h-10V4.5ZM3 12h7v7.4L3 18.5V12Zm8 0h10v9l-10-1.5V12Z"/></svg>
+          Download for Windows
+        </a>
       </div>
+      <p class="hero__dlnote">Apple&nbsp;Silicon Mac or Windows&nbsp;x64 — or <a href="https://github.com/Leonana69/MaplePet#run" target="_blank" rel="noopener">build from source</a>.</p>
       <div class="hero__badges">
         <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v7.4H3V5.5Zm8-1L21 3v9h-10V4.5ZM3 12h7v7.4L3 18.5V12Zm8 0h10v9l-10-1.5V12Z"/></svg> Windows 10/11</span>
         <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.1 1.4-.4 2.7-1.3 3.7-.9 1-2.2 1.6-3.5 1.5-.1-1.3.5-2.6 1.3-3.5C13.4 3.7 14.8 3.1 16 3Zm3.5 14.6c-.6 1.4-1.4 2.8-2.5 4-.9 1-1.9 1.6-3 1.6-1 0-1.6-.6-2.9-.6-1.3 0-2 .6-3 .6-1.1 0-2.1-.7-3-1.7-2-2.3-2.9-6.4-1.2-9.2.8-1.4 2.3-2.3 3.9-2.3 1.1 0 2.2.7 2.9.7.7 0 2-.9 3.3-.7.6 0 2.2.2 3.3 1.8-.1.1-1.9 1.1-1.8 3.3 0 2.6 2.3 3.5 2.3 3.5Z"/></svg> macOS 13+</span>
@@ -291,47 +294,6 @@ Hi there, <span class="tok-d">{{args}}</span>! Welcome ✨</code></pre>
   </div>
 </section>
 
-<!-- ============================= INSTALL ============================ -->
-<section class="section" id="install">
-  <div class="container">
-    <div class="section__head center reveal">
-      <span class="eyebrow">Get TypePet</span>
-      <h2 class="section__title">Download &amp; run</h2>
-      <p class="section__lead">Every push to <code>main</code> is compiled into ready-to-run builds for macOS and Windows. Grab the latest, unzip, and open — no toolchain to install.</p>
-    </div>
-
-    <!-- Auto-built CI artifacts served by nightly.link; these resolve once the GitHub repo is public. -->
-    <div class="download-row reveal" data-delay="1">
-      <a class="dl-card" href="https://nightly.link/Leonana69/MaplePet/workflows/build/main/TypePet-osx-arm64.zip">
-        <span class="dl-card__ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.1 1.4-.4 2.7-1.3 3.7-.9 1-2.2 1.6-3.5 1.5-.1-1.3.5-2.6 1.3-3.5C13.4 3.7 14.8 3.1 16 3Zm3.5 14.6c-.6 1.4-1.4 2.8-2.5 4-.9 1-1.9 1.6-3 1.6-1 0-1.6-.6-2.9-.6-1.3 0-2 .6-3 .6-1.1 0-2.1-.7-3-1.7-2-2.3-2.9-6.4-1.2-9.2.8-1.4 2.3-2.3 3.9-2.3 1.1 0 2.2.7 2.9.7.7 0 2-.9 3.3-.7.6 0 2.2.2 3.3 1.8-.1.1-1.9 1.1-1.8 3.3 0 2.6 2.3 3.5 2.3 3.5Z"/></svg></span>
-        <span class="dl-card__tx"><strong>Download for macOS</strong><span>Apple Silicon · <code>.app</code> bundle (.zip)</span></span>
-        <span class="dl-card__dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span>
-      </a>
-      <a class="dl-card" href="https://nightly.link/Leonana69/MaplePet/workflows/build/main/TypePet-win-x64.zip">
-        <span class="dl-card__ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.6v7.4H3V5.5Zm8-1L21 3v9h-10V4.5ZM3 12h7v7.4L3 18.5V12Zm8 0h10v9l-10-1.5V12Z"/></svg></span>
-        <span class="dl-card__tx"><strong>Download for Windows</strong><span>Windows 10/11 · x64 (.zip)</span></span>
-        <span class="dl-card__dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span>
-      </a>
-    </div>
-
-    <p class="dl-note reveal">Builds come straight from the latest <a href="https://github.com/Leonana69/MaplePet/actions/workflows/build.yml" target="_blank" rel="noopener">GitHub Actions run</a> on <code>main</code>. Prefer to compile it yourself? <a href="https://github.com/Leonana69/MaplePet#run" target="_blank" rel="noopener">Build from source</a> with the .NET 10 SDK. Requires macOS 13+ (Apple Silicon) or Windows 10/11 (x64).</p>
-  </div>
-</section>
-
-<!-- ============================ CTA BANNER ========================== -->
-<section class="section">
-  <div class="container">
-    <div class="cta-banner reveal">
-      <div class="cta-banner__pet"><img class="pixel" src="assets/sprites/stand1_f00.png" alt="" width="72" /></div>
-      <h2>Give your desktop a friend</h2>
-      <p>Free, open source, and surprisingly capable. Download a ready-to-run build and meet your new window-climbing companion.</p>
-      <div class="hero__actions" style="justify-content:center">
-        <a class="btn btn--primary btn--lg" href="#install">Get started</a>
-        <a class="btn btn--ghost btn--lg" href="https://github.com/Leonana69/MaplePet" target="_blank" rel="noopener">Star on GitHub</a>
-      </div>
-    </div>
-  </div>
-</section>
 </main>
 
 <!-- ============================== FOOTER ============================ -->
@@ -357,7 +319,7 @@ Hi there, <span class="tok-d">{{args}}</span>! Welcome ✨</code></pre>
         <h4>Build</h4>
         <a href="#commands">Slash commands</a>
         <a href="#hub">Command hub</a>
-        <a href="#install">Install</a>
+        <a href="#get">Download</a>
         <a href="https://github.com/Leonana69/MaplePet/blob/main/Assets/Commands/command_helper.md" target="_blank" rel="noopener">Write a command</a>
       </div>
       <div class="footer__col">

@@ -417,6 +417,44 @@
     btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }));
   }
 
+  // ----- OS detection: highlight the matching download button --------------
+  function detectOS() {
+    const uaData = navigator.userAgentData;
+    const plat = ((uaData && uaData.platform) || navigator.platform || "").toLowerCase();
+    const ua = (navigator.userAgent || "").toLowerCase();
+    if (plat.includes("win") || ua.includes("windows")) return "win";
+    if (plat.includes("mac") || ua.includes("mac os") || ua.includes("macintosh")) return "mac";
+    return null; // Linux / mobile / unknown — leave the default highlight (macOS)
+  }
+
+  function initOSDetect() {
+    const wrap = document.getElementById("get");
+    if (!wrap) return;
+    const btns = Array.from(wrap.querySelectorAll("[data-os]"));
+    if (!btns.length) return;
+    const os = detectOS();
+    if (!os || !btns.some((b) => b.dataset.os === os)) return; // keep HTML default
+
+    btns.forEach((btn) => {
+      const match = btn.dataset.os === os;
+      btn.classList.toggle("btn--primary", match);
+      btn.classList.toggle("btn--ghost", !match);
+      const had = btn.querySelector(".btn__rec");
+      if (match && !had) {
+        const chip = document.createElement("span");
+        chip.className = "btn__rec";
+        chip.textContent = "Recommended";
+        btn.appendChild(chip);
+      } else if (!match && had) {
+        had.remove();
+      }
+    });
+
+    // bring the detected platform's button to the front for prominence
+    const top = wrap.querySelector('[data-os="' + os + '"]');
+    if (top) wrap.prepend(top);
+  }
+
   // ----- boot --------------------------------------------------------------
   function boot() {
     initNav();
@@ -426,6 +464,7 @@
     initPoses();
     initChat();
     initCommands();
+    initOSDetect();
     initScene("sceneStage", "heroPet", "heroPetImg", "heroBubble");
     if (!reduceMotion) requestAnimationFrame(tick);
   }
