@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pig Pose Editor</title>
+<style>
+  :root {
+    --bg: #16171b; --panel: #1e2026; --line: #2d3038; --field: #14151a;
+    --text: #e9eaee; --dim: #9aa0ab; --accent: #e6508f; --ok: #5fc9b8; --err: #ff7d86;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; display: flex; background: var(--bg); color: var(--text);
+    font: 14px/1.45 system-ui, "Segoe UI", sans-serif;
+  }
+  .stage {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; min-width: 0; padding: 18px;
+  }
+  .stage svg {
+    width: min(74vh, 58vw); height: auto; background: #fff; border-radius: 14px;
+    box-shadow: 0 10px 34px rgba(0,0,0,.45); touch-action: none; cursor: grab;
+  }
+  .hint { color: var(--dim); font-size: 12px; max-width: 56ch; text-align: center; }
+  .hint b { color: var(--text); font-weight: 600; }
+
+  .panel {
+    width: 392px; flex: none; background: var(--panel); border-left: 1px solid var(--line);
+    padding: 14px 16px 22px; overflow-y: auto;
+  }
+  h1 { font-size: 15px; margin: 2px 0 12px; letter-spacing: .2px; }
+  h1 .pig { font-size: 18px; }
+  .sec { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .8px; margin: 16px 0 6px; }
+  .note { color: var(--dim); font-size: 12px; margin: 0 0 8px; }
+
+  .row { display: grid; grid-template-columns: 14px 1fr 56px 56px 50px 22px; gap: 6px; align-items: center; padding: 2px 0; }
+  .row.head { color: var(--dim); font-size: 11px; text-align: center; padding: 0 0 2px; }
+  .row .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.35); }
+  .row label { color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .row.active label { color: var(--accent); font-weight: 600; }
+  .row .reset { color: var(--dim); background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; }
+  .row .reset:hover { color: var(--text); }
+
+  input[type=number], input[type=text], select {
+    width: 100%; background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 3px 6px; font: inherit; font-size: 13px;
+  }
+  input[type=number]:focus, input[type=text]:focus, select:focus { outline: 1px solid var(--accent); }
+
+  .ctl { display: grid; grid-template-columns: 92px 1fr 52px; gap: 8px; align-items: center; padding: 3px 0; }
+  .ctl label { color: var(--dim); }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctl .val { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+  .check { display: flex; gap: 8px; align-items: center; padding: 4px 0; color: var(--dim); }
+  input[type=checkbox] { accent-color: var(--accent); }
+
+  .toolbar { display: flex; gap: 8px; margin-top: 6px; }
+  button.btn {
+    background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer;
+  }
+  button.btn:hover { border-color: var(--dim); }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.btn.primary:hover { filter: brightness(1.08); }
+  button.btn:disabled { opacity: .5; cursor: default; }
+
+  .saverow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .result { margin-top: 10px; }
+  .result img {
+    image-rendering: pixelated; width: 192px; background:
+      repeating-conic-gradient(#23252b 0% 25%, #1b1d22 0% 50%) 0 0 / 16px 16px;
+    border: 1px solid var(--line); border-radius: 8px; display: block;
+  }
+  .log { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--dim); white-space: pre-wrap; margin-top: 6px; word-break: break-all; }
+  .log.ok { color: var(--ok); }
+  .log.err { color: var(--err); }
+
+  .errbar {
+    position: fixed; left: 12px; bottom: 12px; z-index: 9; max-width: 60ch;
+    background: #4a1620; color: #ffb3bc; border: 1px solid #7c2434; border-radius: 8px;
+    padding: 8px 12px; font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap;
+  }
+  .guide { stroke: #b9bfca; stroke-width: .35; stroke-dasharray: 1.6 1.6; }
+  .part { cursor: grab; }
+  .part.sel { stroke: #3aa0ff; stroke-width: .55; }
+  .part .pivot { display: none; }
+  .part.sel .pivot { display: block; fill: none; stroke: #3aa0ff; stroke-width: .45; stroke-dasharray: .9 .7; }
+  .anchor { fill: #fff; stroke: #3aa0ff; stroke-width: .35; cursor: move; }
+  .anchor:hover { fill: #d9ecff; }
+  .anchor.edited { stroke: var(--accent); stroke-width: .5; }
+  .anchor.active { fill: #3aa0ff; }
+  .handle { fill: #ffb054; stroke: #a8651a; stroke-width: .3; cursor: move; }
+  .handle:hover { fill: #ffd09a; }
+  .handle.edited { stroke: var(--accent); stroke-width: .45; }
+  .handlebar { stroke: #e8a04c; stroke-width: .22; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <svg id="svg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="hint">
+    Drag any part directly; hold <b>Shift</b> and drag horizontally to <b>rotate</b> it about its
+    pivot (the dashed circle on the selected part — hip for legs, base for tail/ears). Selecting a
+    part also shows its <b>outline points</b>: drag one to reshape the edge in detail, and
+    <b>click one</b> to reveal its two orange <b>curve handles</b> — drag a handle to tune the
+    curve's direction and tension on that side (pink ring = edited; the part's &#x21BA; clears its
+    transform, point and handle edits). The dashed <b>ground line</b> is where the planted foot must stay: every animation
+    frame's lowest point should touch it, or the pet will hop between frames. The dashed
+    <b>center line</b> maps to the sprite's navel/mirror axis.
+  </div>
+</div>
+
+<div class="panel">
+  <h1><span class="pig">&#x1F416;</span> Pig Pose Editor</h1>
+
+  <div class="sec">Pose preset</div>
+  <select id="preset"></select>
+
+  <div class="sec">Body</div>
+  <div class="ctl">
+    <label for="stretch">stretch</label>
+    <input type="range" id="stretch" min="0.90" max="1.15" step="0.005" value="1">
+    <span class="val" id="stretchVal">1.000</span>
+  </div>
+  <div class="check"><input type="checkbox" id="blink"><label for="blink">blink (closed-eye lines replace the eye dots)</label></div>
+
+  <div class="sec">Components &nbsp;<span style="text-transform:none">(x, y in SVG units; deg about the part's pivot; forward = &minus;x)</span></div>
+  <div class="row head"><span></span><span></span><span>x</span><span>y</span><span>deg</span><span></span></div>
+  <div id="rows"></div>
+  <div class="toolbar"><button class="btn" id="resetAll">Reset all</button></div>
+
+  <div class="sec">Reference overlay</div>
+  <div class="note">A see-through tracing aid drawn over the pig — it is not clickable (clicks and
+    drags pass through to the parts) and never appears in the saved PNG or pose.</div>
+  <div class="toolbar">
+    <input type="file" id="refFile" accept="image/*" hidden>
+    <button class="btn" id="refLoad">Load image&#8230;</button>
+    <button class="btn" id="refClear" disabled>Remove</button>
+  </div>
+  <div id="refCtls" hidden>
+    <div class="ctl">
+      <label for="refOpacity">opacity</label>
+      <input type="range" id="refOpacity" min="0" max="1" step="0.02" value="0.4">
+      <span class="val" id="refOpacityVal">0.40</span>
+    </div>
+    <div class="ctl">
+      <label for="refScale">scale</label>
+      <input type="range" id="refScale" min="0.1" max="3" step="0.01" value="1">
+      <span class="val" id="refScaleVal">1.00</span>
+    </div>
+    <div class="ctl">
+      <label for="refX">x</label>
+      <input type="range" id="refX" min="-128" max="128" step="0.5" value="0">
+      <span class="val" id="refXVal">0.0</span>
+    </div>
+    <div class="ctl">
+      <label for="refY">y</label>
+      <input type="range" id="refY" min="-128" max="128" step="0.5" value="0">
+      <span class="val" id="refYVal">0.0</span>
+    </div>
+    <div class="check"><input type="checkbox" id="refShow" checked><label for="refShow">show overlay</label></div>
+  </div>
+
+  <div class="sec">Saved poses</div>
+  <div class="saverow">
+    <select id="savedSel"></select>
+    <button class="btn" id="loadSaved" disabled>Load</button>
+  </div>
+
+  <div class="sec">Save</div>
+  <div class="saverow">
+    <input type="text" id="name" value="pose" spellcheck="false">
+    <button class="btn primary" id="save">Save PNG</button>
+  </div>
+  <div class="result" id="result" hidden>
+    <img id="resultImg" alt="rendered pose">
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// surface script errors on the page (a broken editor should say so, not half-render)
+window.addEventListener("error", e => {
+  let b = document.getElementById("errbar");
+  if (!b) {
+    b = document.createElement("div");
+    b.id = "errbar";
+    b.className = "errbar";
+    document.body.appendChild(b);
+  }
+  b.textContent = `JS error: ${e.message} (line ${e.lineno})`;
+});
+// Shape data transcribed verbatim from Scripts/pig-google.svg — names, colors, paint order
+// AND pivots MUST match PigShapes() in tools/chargen/Pig.cs so saved offsets translate 1:1.
+// Pivots: legs hinge at the hip (top center), tail at its rump attachment, ears at their
+// head-side base, everything else at its own center.
+const PARTS = [
+  { name: "farLeg", label: "Far hind leg", fill: "#FFA8A7", pivot: [78, 91],
+    d: "M70.52,93.98c0,1.5,0.44,5.26,0.44,6.76c0,1.5,0.94,4.5,5.02,4.93c6.31,0.65,7.86-2.64,8.59-6.48 c0.99-5.21,0.41-11.4,0.41-11.4L70.52,93.98z" },
+  { name: "tail", label: "Tail", fill: "#FFD2B1", pivot: [105.5, 36],
+    d: "M119.79,19.65c1.78-0.38,4.13,0.19,4.22-1.6c0.11-2.16-2.63-3.57-5.91-2.63 c-3.27,0.93-4.32,3.75-4.32,3.75s-3.71-1.73-6.95,0.84c-3.66,2.91-3.94,9.01-3.94,9.01l5.16,4.97c0,0,0.13-5.76,0.94-7.88 c1.03-2.72,2.82-2.25,2.82-2.25s-1.97,5.44,0.75,8.73c3.26,3.94,10.51,2.25,9.48-4.41c-0.61-3.96-4.41-6.38-4.41-6.38 S118.45,19.93,119.79,19.65z M117.07,30.82c-2.99,0.34-2.06-4.88-1.5-6.38C118.01,25.47,119.51,30.53,117.07,30.82z" },
+  { name: "body", label: "Body + head", fill: "#FFD2B1", pivot: [60, 62],
+    d: "M45.97,24.86c18.19-7.4,54.05-9.08,66.17,10.28c12.25,19.57,3.8,32.1,2.39,35.62 c-2.02,5.05-3.8,11.54-4.22,14.92c-0.5,3.97-1.13,14.22-1.55,16.33c-0.42,2.11-4.08,5.21-7.88,4.93c-3.8-0.28-6.9-2.67-7.18-4.93 c-0.28-2.25,0.84-7.88-1.83-9.85c-2.67-1.97-10.7-0.7-15.49,1.83s-27.4,14.32-52.65,3.24C-1.61,86.1,4.3,62.02,10.5,54.98 s5.49-8.45,5.49-8.45s-6.19,1.55-3.8-3.38s8.59-13.09,9.71-13.8c1.13-0.7,4.79-1.83,6.76-0.56c1.97,1.27,1.97,3.1,1.97,3.1 S33.87,29.78,45.97,24.86z" },
+  { name: "frontLeg", label: "Front leg", fill: "#FFD2B1", pivot: [28.2, 95],
+    d: "M20.77,93.84c0,0,0.28,9.85,0.42,12.25s0.47,6.29,0.84,8.17c0.42,2.11,2.12,3.32,5.49,3.52 c4.65,0.28,6.9-1.69,7.32-3.38c0.42-1.69,0.84-16.89,0.84-16.89L20.77,93.84z" },
+  { name: "midLeg", label: "Mid leg", fill: "#FFD2B1", pivot: [54.9, 99.5],
+    d: "M47.1,98.2c0,0-0.04,4.93,0.14,9.85c0.14,3.8,0.14,8.17,0.56,9.29c0.7,1.87,4.08,2.96,7.04,3.1 c3.24,0.15,5.42-1.48,6.76-2.82c0.7-0.7,0.7-4.22,0.84-9.29c0.08-2.96,0.28-11.68,0.28-11.68L47.1,98.2z" },
+  { name: "earBack", label: "Back ear", fill: "#E6508F", pivot: [62, 48],
+    d: "M62.82,43.58c-0.75-1.63-4.58,0-5.54,2.44c-1.22,3.1,0,6.1,1.78,9.48c1.22,2.31,6.76,9.48,13.14,7.98 c7.42-1.75,5.35-13.33,5.07-14.64c-0.28-1.31-1.17-3.06-2.72-2.82c-1.78,0.28-0.93,3.24-0.84,5.44c0.09,2.44,0.19,6.57-2.72,7.23 c-3.11,0.7-5.31-1.34-7.04-4.13c-1.69-2.72-3.66-4.79-3.1-7.32C61.2,45.68,63.38,44.8,62.82,43.58z" },
+  { name: "earFront", label: "Front ear", fill: "#E6508F", pivot: [21, 43],
+    d: "M24.81,40.48c-1.42-0.55-3.1,1.6-4.69,2.91s-4.5,3-5.63,1.6c-1.17-1.47,2.52-5.32,4.69-9.01 c1.88-3.19,3.64-6.85,6.1-7.04c3.66-0.28,0.81-1.92-1.88-1.41c-1.97,0.38-4.69,2.16-6.19,5.16S8.57,43.3,10.92,46.77 c2.7,4,8.63,2.16,11.26,0C24.81,44.61,26.5,41.14,24.81,40.48z" },
+  { name: "snout", label: "Snout", fill: "#FF7D86", pivot: [29, 78.5],
+    d: "M29.5,69.2c-5.16-0.94-13.38,0.5-13.98,6.29c-0.47,4.5,2.44,9.95,11.92,12.01 c9.48,2.06,14.17-1.5,14.64-6.57C42.55,75.87,37.2,70.61,29.5,69.2z" },
+  { name: "nostril1", label: "Nostril (front)", fill: "#2D2D2B", pivot: [24.5, 77.5],
+    d: "M26.22,77.27c0.2,2.27-0.42,3.91-1.78,4.04c-1.36,0.12-3.27-1.48-3.47-3.75 c-0.2-2.27,0.4-4.13,2.16-4.13C24.49,73.43,26.01,75,26.22,77.27z" },
+  { name: "nostril2", label: "Nostril (back)", fill: "#2D2D2B", pivot: [32.35, 78.96],
+    ellipse: { m: [0.0941, -0.9956, 0.9956, 0.0941, -49.2991, 103.738], cx: 32.35, cy: 78.96, rx: 3.94, ry: 2.62 } },
+  { name: "eye1", label: "Eye (back)", fill: "#2D2D2B", eye: true, pivot: [52.65, 66.23],
+    ellipse: { m: [0.0985, -0.9951, 0.9951, 0.0985, -18.4459, 112.1081], cx: 52.65, cy: 66.23, rx: 4.83, ry: 4.10 } },
+  { name: "eye2", label: "Eye (front)", fill: "#2D2D2B", eye: true, pivot: [22.84, 60.19],
+    ellipse: { m: [0.0985, -0.9951, 0.9951, 0.0985, -39.304, 76.996], cx: 22.84, cy: 60.19, rx: 4.78, ry: 4.23 } },
+];
+const PART_BY_NAME = Object.fromEntries(PARTS.map(p => [p.name, p]));
+
+// ---- path parser: mirrors ParseSvgPath in tools/chargen/Pig.cs ----
+// Absolute line/cubic segments + anchor points (each subpath's start + every segment
+// endpoint; a closing segment that lands back on its subpath's start reuses the start's
+// anchor). Anchor INDICES must match the C# parser exactly — chargen applies the same
+// per-anchor deltas when it renders a saved pose (verify with --pig-anchors vs ?debug=anchors).
+function parsePath(d) {
+  const subs = [], anchors = [];
+  let cur = null, i = 0, cmd = "";
+  let x = 0, y = 0, sx = 0, sy = 0, refX = 0, refY = 0;
+  let prevCubic = false, closed = false;
+  const isWs = c => c === " " || c === "," || c === "\t" || c === "\n" || c === "\r";
+  const skip = () => { while (i < d.length && isWs(d[i])) i++; };
+  function num() {
+    skip();
+    const s0 = i;
+    let dot = false;
+    if (d[i] === "-" || d[i] === "+") i++;
+    while (i < d.length && (d[i] >= "0" && d[i] <= "9" || (d[i] === "." && !dot))) {
+      if (d[i] === ".") dot = true;
+      i++;
+    }
+    return parseFloat(d.slice(s0, i));
+  }
+  function newSub() {
+    cur = { startX: x, startY: y, startAnchor: anchors.length, segs: [] };
+    anchors.push([x, y]);
+    subs.push(cur);
+    closed = false;
+  }
+  const ensureOpen = () => { if (closed) newSub(); };
+  function anchorFor(px, py) {
+    if (Math.abs(px - cur.startX) < 1e-9 && Math.abs(py - cur.startY) < 1e-9) return cur.startAnchor;
+    anchors.push([px, py]);
+    return anchors.length - 1;
+  }
+  function lineTo(nx, ny) {
+    ensureOpen();
+    cur.segs.push({ cubic: false, x: nx, y: ny, endAnchor: anchorFor(nx, ny) });
+    x = nx; y = ny; prevCubic = false;
+  }
+  function cubicTo(c1x, c1y, c2x, c2y, ex, ey) {
+    ensureOpen();
+    cur.segs.push({ cubic: true, c1x, c1y, c2x, c2y, x: ex, y: ey, endAnchor: anchorFor(ex, ey) });
+    refX = c2x; refY = c2y; x = ex; y = ey; prevCubic = true;
+  }
+  while (true) {
+    skip();
+    if (i >= d.length) break;
+    if (/[A-Za-z]/.test(d[i])) cmd = d[i++];
+    else if (cmd === "Z" || cmd === "z") throw new Error("number after closepath");
+    switch (cmd) {
+      case "M": case "m": {
+        let nx = num(), ny = num();
+        if (cmd === "m") { nx += x; ny += y; }
+        x = nx; y = ny; sx = x; sy = y;
+        newSub();
+        cmd = cmd === "M" ? "L" : "l";
+        prevCubic = false;
+        break;
+      }
+      case "L": case "l": { let nx = num(), ny = num(); if (cmd === "l") { nx += x; ny += y; } lineTo(nx, ny); break; }
+      case "H": case "h": { let nx = num(); if (cmd === "h") nx += x; lineTo(nx, y); break; }
+      case "V": case "v": { let ny = num(); if (cmd === "v") ny += y; lineTo(x, ny); break; }
+      case "C": case "c": {
+        let c1x = num(), c1y = num(), c2x = num(), c2y = num(), ex = num(), ey = num();
+        if (cmd === "c") { c1x += x; c1y += y; c2x += x; c2y += y; ex += x; ey += y; }
+        cubicTo(c1x, c1y, c2x, c2y, ex, ey);
+        break;
+      }
+      case "S": case "s": {
+        const c1x = prevCubic ? 2 * x - refX : x, c1y = prevCubic ? 2 * y - refY : y;
+        let c2x = num(), c2y = num(), ex = num(), ey = num();
+        if (cmd === "s") { c2x += x; c2y += y; ex += x; ey += y; }
+        cubicTo(c1x, c1y, c2x, c2y, ex, ey);
+        break;
+      }
+      case "Z": case "z": x = sx; y = sy; prevCubic = false; closed = true; break;
+      default: throw new Error("unsupported path command " + cmd);
+    }
+  }
+  return { subs, anchors };
+}
+// per-anchor segment adjacency: out = the segment leaving the anchor (its c1 is the "out"
+// handle), in = the segment arriving at it (its c2 is the "in" handle)
+function buildAdjacency(parsed) {
+  const inSeg = {}, outSeg = {};
+  for (const sub of parsed.subs) {
+    let prevA = sub.startAnchor;
+    for (const seg of sub.segs) {
+      if (!(prevA in outSeg)) outSeg[prevA] = seg;
+      inSeg[seg.endAnchor] = seg;
+      prevA = seg.endAnchor;
+    }
+  }
+  return { inSeg, outSeg };
+}
+for (const p of PARTS) if (p.d) { p.parsed = parsePath(p.d); p.adj = buildAdjacency(p.parsed); }
+
+// Starting points: snapshots of the originally generated stand/walk frames (the shipped art in
+// Assets/DefaultCharacters/Pig grew out of these; chargen no longer generates pig poses itself).
+const PRESETS = {
+  "stand (neutral)":      { stretch: 1.0,   blink: false, offsets: {} },
+  "stand: breathe":       { stretch: 1.03,  blink: false, offsets: {} },
+  "stand: blink":         { stretch: 1.0,   blink: true,  offsets: {} },
+  "walk f0 (contact A)":  { stretch: 1.0,   blink: false, offsets: { frontLeg: [-3, 0],  midLeg: [3.5, 0],  farLeg: [-4, 0] } },
+  "walk f1 (passing)":    { stretch: 1.025, blink: false, offsets: { frontLeg: [1, 0],   midLeg: [-0.5, 0], farLeg: [0, 0] } },
+  "walk f2 (contact B)":  { stretch: 1.0,   blink: false, offsets: { frontLeg: [5, 0],   midLeg: [-4.5, 0], farLeg: [4, 0] } },
+  "walk f3 (pass + lift)":{ stretch: 1.025, blink: false, offsets: { frontLeg: [1, -3],  midLeg: [-0.5, 0], farLeg: [0, -2.5] } },
+};
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("svg");
+const state = { stretch: 1.0, blink: false, offsets: {}, points: {}, handles: {}, sel: null, activeAnchor: null };
+PARTS.forEach(p => state.offsets[p.name] = { dx: 0, dy: 0, rot: 0 });
+// state.points:  { partName: { anchorIndex: [dx, dy] } } — outline edits in part-local units
+// state.handles: { partName: { anchorIndex: { in: [dx, dy], out: [dx, dy] } } } — curve tuning
+// state.activeAnchor: { part, idx } | null — the anchor whose handles are shown
+
+// ---- build the SVG: root stretch group > one translate group per part ----
+const gRoot = document.createElementNS(SVGNS, "g");
+svg.appendChild(gRoot);
+const groups = {};
+const pathEls = {};
+
+for (const p of PARTS) {
+  const g = document.createElementNS(SVGNS, "g");
+  g.setAttribute("class", "part");
+  g.dataset.name = p.name;
+  if (p.d) {
+    const el = document.createElementNS(SVGNS, "path");
+    el.setAttribute("d", p.d);
+    el.setAttribute("fill", p.fill);
+    g.appendChild(el);
+    pathEls[p.name] = el;
+  } else {
+    const e = document.createElementNS(SVGNS, "ellipse");
+    e.setAttribute("transform", `matrix(${p.ellipse.m.join(" ")})`);
+    e.setAttribute("cx", p.ellipse.cx); e.setAttribute("cy", p.ellipse.cy);
+    e.setAttribute("rx", p.ellipse.rx); e.setAttribute("ry", p.ellipse.ry);
+    e.setAttribute("fill", p.fill);
+    g.appendChild(e);
+    if (p.eye) { // closed-eye line, shown when blink is on (matches DrawPig's capsule)
+      const l = document.createElementNS(SVGNS, "line");
+      l.setAttribute("x1", p.ellipse.cx - 4.9); l.setAttribute("y1", p.ellipse.cy);
+      l.setAttribute("x2", p.ellipse.cx + 4.9); l.setAttribute("y2", p.ellipse.cy + 0.75);
+      l.setAttribute("stroke", p.fill); l.setAttribute("stroke-width", 3.4);
+      l.setAttribute("stroke-linecap", "round"); l.setAttribute("display", "none");
+      l.setAttribute("class", "blinkline");
+      g.appendChild(l);
+    }
+  }
+  { // pivot marker, visible while the part is selected (inherits the part's transform)
+    const c = document.createElementNS(SVGNS, "circle");
+    c.setAttribute("class", "pivot");
+    c.setAttribute("cx", p.pivot[0]); c.setAttribute("cy", p.pivot[1]);
+    c.setAttribute("r", 1.4);
+    c.setAttribute("pointer-events", "none");
+    g.appendChild(c);
+  }
+  gRoot.appendChild(g);
+  groups[p.name] = g;
+}
+
+// guides: ground = bbox bottom (the foot line every frame must touch), center = navel/mirror axis
+const bb = gRoot.getBBox();
+const groundY = bb.y + bb.height, centerX = bb.x + bb.width / 2;
+for (const [x1, y1, x2, y2] of [[0, groundY, 128, groundY], [centerX, 0, centerX, 128]]) {
+  const l = document.createElementNS(SVGNS, "line");
+  l.setAttribute("x1", x1); l.setAttribute("y1", y1);
+  l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+  l.setAttribute("class", "guide"); l.setAttribute("pointer-events", "none");
+  svg.appendChild(l);
+}
+
+// outline-point markers for the selected part live in a top layer (above guides) so other
+// parts can't paint over them; positions are projected through the part's current transform
+const gAnchors = document.createElementNS(SVGNS, "g");
+svg.appendChild(gAnchors);
+
+// ---- panel rows ----
+const rowsDiv = document.getElementById("rows");
+const inputs = {};
+for (const p of PARTS) {
+  const row = document.createElement("div");
+  row.className = "row"; row.dataset.name = p.name;
+  row.innerHTML = `
+    <span class="dot" style="background:${p.fill}"></span>
+    <label title="${p.name}">${p.label}</label>
+    <input type="number" step="0.5" value="0" data-axis="dx" aria-label="${p.label} x">
+    <input type="number" step="0.5" value="0" data-axis="dy" aria-label="${p.label} y">
+    <input type="number" step="1" value="0" data-axis="rot" aria-label="${p.label} degrees">
+    <button class="reset" title="reset">&#x21BA;</button>`;
+  rowsDiv.appendChild(row);
+  const [xi, yi, ri] = row.querySelectorAll("input");
+  inputs[p.name] = { dx: xi, dy: yi, rot: ri };
+  for (const inp of [xi, yi, ri])
+    inp.addEventListener("input", () => {
+      state.offsets[p.name][inp.dataset.axis] = parseFloat(inp.value) || 0;
+      apply(p.name);
+    });
+  row.querySelector(".reset").addEventListener("click", () => resetPart(p.name));
+  row.querySelector("label").addEventListener("click", () => select(p.name));
+}
+
+// ---- outline point editing ----
+// Rebuild a part's d attribute from its parsed segments + the current anchor deltas. An
+// anchor's delta also moves the control points adjacent to it (c1 with the segment's start
+// anchor, c2 with its end anchor) — same rule as chargen's FlattenSubs.
+function buildD(part) {
+  const pe = state.points[part.name] || {};
+  const ph = state.handles[part.name] || {};
+  const D = i => pe[i] || [0, 0];
+  const H = (i, dir) => (ph[i] && ph[i][dir]) || [0, 0];
+  let d = "";
+  for (const sub of part.parsed.subs) {
+    const d0 = D(sub.startAnchor);
+    d += `M${sub.startX + d0[0]},${sub.startY + d0[1]}`;
+    let prevA = sub.startAnchor;
+    for (const seg of sub.segs) {
+      const ds = D(prevA), de = D(seg.endAnchor);
+      if (seg.cubic) {
+        const hs = H(prevA, "out"), he = H(seg.endAnchor, "in"); // same rule as chargen FlattenSubs
+        d += `C${seg.c1x + ds[0] + hs[0]},${seg.c1y + ds[1] + hs[1]},`
+           + `${seg.c2x + de[0] + he[0]},${seg.c2y + de[1] + he[1]},`
+           + `${seg.x + de[0]},${seg.y + de[1]}`;
+      } else
+        d += `L${seg.x + de[0]},${seg.y + de[1]}`;
+      prevA = seg.endAnchor;
+    }
+    d += "Z";
+  }
+  return d;
+}
+const someNonZero = pair => pair && (pair[0] !== 0 || pair[1] !== 0);
+function partIsEdited(name) {
+  const pe = state.points[name];
+  if (pe && Object.values(pe).some(someNonZero)) return true;
+  const ph = state.handles[name];
+  return !!(ph && Object.values(ph).some(h => someNonZero(h.in) || someNonZero(h.out)));
+}
+function rebuildPath(name) {
+  const p = PART_BY_NAME[name];
+  if (!p || !p.parsed) return;
+  pathEls[name].setAttribute("d", partIsEdited(name) ? buildD(p) : p.d); // pristine string when unedited
+}
+
+// markers for the selected part's anchors + the active anchor's curve handles
+// (positions projected to root svg coords)
+function showAnchors(name) {
+  gAnchors.replaceChildren();
+  const p = PART_BY_NAME[name];
+  if (!p || !p.parsed) return;
+  const pe = state.points[name] || {};
+  const act = state.activeAnchor && state.activeAnchor.part === name ? state.activeAnchor.idx : null;
+
+  // the active anchor's handles draw FIRST (bars under the dots)
+  if (act !== null) {
+    const ph = state.handles[name] || {};
+    for (const dir of ["in", "out"]) {
+      const seg = dir === "in" ? p.adj.inSeg[act] : p.adj.outSeg[act];
+      if (!seg || !seg.cubic) continue; // a line segment has no handle on that side
+      const bar = document.createElementNS(SVGNS, "line");
+      bar.setAttribute("class", "handlebar");
+      bar.dataset.part = name;
+      bar.dataset.dir = dir;
+      gAnchors.appendChild(bar);
+      const h = document.createElementNS(SVGNS, "circle");
+      const dlt = (ph[act] && ph[act][dir]) || [0, 0];
+      h.setAttribute("class", "handle" + (someNonZero(dlt) ? " edited" : ""));
+      h.setAttribute("r", 0.85);
+      h.dataset.part = name;
+      h.dataset.index = act;
+      h.dataset.dir = dir;
+      gAnchors.appendChild(h);
+    }
+  }
+
+  p.parsed.anchors.forEach((a, idx) => {
+    const dlt = pe[idx] || [0, 0];
+    const c = document.createElementNS(SVGNS, "circle");
+    c.setAttribute("class",
+      "anchor" + (someNonZero(dlt) ? " edited" : "") + (idx === act ? " active" : ""));
+    c.setAttribute("r", 1.05);
+    c.dataset.part = name;
+    c.dataset.index = idx;
+    gAnchors.appendChild(c);
+  });
+  refreshAnchors();
+}
+
+// local position of an anchor's handle = control point base + anchor delta + handle delta
+function handleLocalPos(p, name, idx, dir) {
+  const seg = dir === "in" ? p.adj.inSeg[idx] : p.adj.outSeg[idx];
+  const pe = state.points[name] || {};
+  const ph = state.handles[name] || {};
+  const ad = pe[idx] || [0, 0];
+  const hd = (ph[idx] && ph[idx][dir]) || [0, 0];
+  const [bx, by] = dir === "in" ? [seg.c2x, seg.c2y] : [seg.c1x, seg.c1y];
+  return [bx + ad[0] + hd[0], by + ad[1] + hd[1]];
+}
+
+function refreshAnchors() {
+  if (!gAnchors.childElementCount) return;
+  const name = gAnchors.firstElementChild.dataset.part;
+  const p = PART_BY_NAME[name];
+  // part-local -> screen -> back to root svg USER units (getCTM alone lands in viewport
+  // pixel space — the viewBox transform is included — which put the dots off-canvas)
+  const m = svg.getScreenCTM().inverse().multiply(groups[name].getScreenCTM());
+  const pe = state.points[name] || {};
+  const proj = (x, y) => new DOMPoint(x, y).matrixTransform(m);
+
+  let anchorPt = null;
+  if (state.activeAnchor && state.activeAnchor.part === name) {
+    const idx = state.activeAnchor.idx;
+    const [ax, ay] = p.parsed.anchors[idx];
+    const dlt = pe[idx] || [0, 0];
+    anchorPt = proj(ax + dlt[0], ay + dlt[1]);
+  }
+  for (const el of gAnchors.children) {
+    if (el.classList.contains("anchor")) {
+      const idx = +el.dataset.index;
+      const [ax, ay] = p.parsed.anchors[idx];
+      const dlt = pe[idx] || [0, 0];
+      const pt = proj(ax + dlt[0], ay + dlt[1]);
+      el.setAttribute("cx", pt.x);
+      el.setAttribute("cy", pt.y);
+    } else if (el.classList.contains("handle")) {
+      const [hx, hy] = handleLocalPos(p, name, state.activeAnchor.idx, el.dataset.dir);
+      const pt = proj(hx, hy);
+      el.setAttribute("cx", pt.x);
+      el.setAttribute("cy", pt.y);
+    } else if (el.classList.contains("handlebar") && anchorPt) {
+      const [hx, hy] = handleLocalPos(p, name, state.activeAnchor.idx, el.dataset.dir);
+      const pt = proj(hx, hy);
+      el.setAttribute("x1", anchorPt.x); el.setAttribute("y1", anchorPt.y);
+      el.setAttribute("x2", pt.x); el.setAttribute("y2", pt.y);
+    }
+  }
+}
+
+// ---- state -> DOM ----
+function apply(name) {
+  const o = state.offsets[name], pv = PART_BY_NAME[name].pivot;
+  // rotate about the part's pivot first, then translate — mirrors chargen's DrawPig
+  groups[name].setAttribute("transform", `translate(${o.dx} ${o.dy}) rotate(${o.rot} ${pv[0]} ${pv[1]})`);
+  if (name === state.sel) refreshAnchors();
+}
+function applyAll() {
+  for (const p of PARTS) {
+    rebuildPath(p.name);
+    apply(p.name);
+  }
+  applyStretch();
+  applyBlink();
+  syncPanel();
+  showAnchors(state.sel);
+}
+function applyStretch() {
+  const k = state.stretch;
+  gRoot.setAttribute("transform", `translate(0 ${groundY * (1 - k)}) scale(1 ${k})`);
+  document.getElementById("stretch").value = k;
+  document.getElementById("stretchVal").textContent = k.toFixed(3);
+  refreshAnchors();
+}
+function applyBlink() {
+  document.getElementById("blink").checked = state.blink;
+  for (const p of PARTS) {
+    if (!p.eye) continue;
+    groups[p.name].querySelector("ellipse").setAttribute("display", state.blink ? "none" : "");
+    groups[p.name].querySelector(".blinkline").setAttribute("display", state.blink ? "" : "none");
+  }
+}
+function syncPanel() {
+  for (const p of PARTS) {
+    const o = state.offsets[p.name];
+    inputs[p.name].dx.value = +o.dx.toFixed(1);
+    inputs[p.name].dy.value = +o.dy.toFixed(1);
+    inputs[p.name].rot.value = +o.rot.toFixed(1);
+  }
+}
+function setOffset(name, dx, dy, rot) {
+  state.offsets[name] = { dx, dy, rot };
+  apply(name);
+  syncPanel();
+}
+function select(name) {
+  state.sel = name;
+  if (state.activeAnchor && state.activeAnchor.part !== name) state.activeAnchor = null;
+  for (const p of PARTS) {
+    groups[p.name].classList.toggle("sel", p.name === name);
+    rowsDiv.querySelector(`.row[data-name="${p.name}"]`).classList.toggle("active", p.name === name);
+  }
+  showAnchors(name);
+}
+function resetPart(name) {
+  delete state.points[name];
+  delete state.handles[name];
+  rebuildPath(name);
+  setOffset(name, 0, 0, 0);
+  if (name === state.sel) showAnchors(name);
+}
+
+// ---- drag on canvas (handle = tune curve; anchor dot = reshape; part = move; Shift = rotate) ----
+let drag = null;     // whole-part drag
+let dragPt = null;   // outline-point drag
+let dragHd = null;   // curve-handle drag
+svg.addEventListener("pointerdown", e => {
+  if (e.target.classList && e.target.classList.contains("handle")) {
+    const name = e.target.dataset.part, idx = +e.target.dataset.index, dir = e.target.dataset.dir;
+    const inv = groups[name].getScreenCTM().inverse();
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(inv);
+    const cur = (state.handles[name] && state.handles[name][idx] && state.handles[name][idx][dir]) || [0, 0];
+    dragHd = { name, idx, dir, el: e.target, startX: pt.x, startY: pt.y, ox: cur[0], oy: cur[1] };
+    svg.setPointerCapture(e.pointerId);
+    return;
+  }
+  if (e.target.classList && e.target.classList.contains("anchor")) {
+    const name = e.target.dataset.part, idx = +e.target.dataset.index;
+    // clicking an anchor makes it active (reveals its curve handles)…
+    if (!state.activeAnchor || state.activeAnchor.part !== name || state.activeAnchor.idx !== idx) {
+      state.activeAnchor = { part: name, idx };
+      showAnchors(name);
+    }
+    // …and starts a point drag. pointer -> the part's LOCAL space (inverts stretch + the
+    // part's translate/rotate): point deltas live before the part transform, same as chargen
+    const inv = groups[name].getScreenCTM().inverse();
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(inv);
+    const cur = (state.points[name] && state.points[name][idx]) || [0, 0];
+    dragPt = { name, idx, startX: pt.x, startY: pt.y, ox: cur[0], oy: cur[1] };
+    svg.setPointerCapture(e.pointerId);
+    return;
+  }
+  const g = e.target.closest(".part");
+  if (!g) return;
+  const name = g.dataset.name;
+  if (state.activeAnchor) { state.activeAnchor = null; } // clicking the body hides handles
+  select(name);
+  const pt = toSvg(e);
+  const o = state.offsets[name];
+  drag = { name, rotate: e.shiftKey, startX: pt.x, startY: pt.y, ox: o.dx, oy: o.dy, orot: o.rot };
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (dragHd) {
+    const inv = groups[dragHd.name].getScreenCTM().inverse();
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(inv);
+    const nx = Math.round((dragHd.ox + pt.x - dragHd.startX) * 10) / 10;
+    const ny = Math.round((dragHd.oy + pt.y - dragHd.startY) * 10) / 10;
+    const ph = (state.handles[dragHd.name] ??= {});
+    (ph[dragHd.idx] ??= {})[dragHd.dir] = [nx, ny];
+    rebuildPath(dragHd.name);
+    dragHd.el.classList.toggle("edited", nx !== 0 || ny !== 0);
+    refreshAnchors();
+    return;
+  }
+  if (dragPt) {
+    const inv = groups[dragPt.name].getScreenCTM().inverse();
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(inv);
+    const nx = Math.round((dragPt.ox + pt.x - dragPt.startX) * 10) / 10;
+    const ny = Math.round((dragPt.oy + pt.y - dragPt.startY) * 10) / 10;
+    (state.points[dragPt.name] ??= {})[dragPt.idx] = [nx, ny];
+    rebuildPath(dragPt.name);
+    refreshAnchors();
+    const dot = gAnchors.querySelector(`.anchor[data-index="${dragPt.idx}"]`);
+    if (dot) dot.classList.toggle("edited", nx !== 0 || ny !== 0);
+    return;
+  }
+  if (!drag) return;
+  const pt = toSvg(e);
+  const o = state.offsets[drag.name];
+  if (drag.rotate) {
+    // horizontal drag = rotation, ~2 deg per SVG unit
+    const rot = Math.round((drag.orot + (pt.x - drag.startX) * 2) * 2) / 2;
+    setOffset(drag.name, o.dx, o.dy, rot);
+  } else {
+    // pointer deltas are in root SVG units; offsets live inside the stretch group, so /k on y
+    const dx = pt.x - drag.startX, dy = (pt.y - drag.startY) / state.stretch;
+    setOffset(drag.name, Math.round((drag.ox + dx) * 10) / 10, Math.round((drag.oy + dy) * 10) / 10, o.rot);
+  }
+});
+const endDrag = () => { drag = null; dragPt = null; dragHd = null; };
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+
+function toSvg(e) {
+  const p = new DOMPoint(e.clientX, e.clientY);
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+// ---- stretch / blink controls ----
+document.getElementById("stretch").addEventListener("input", e => {
+  state.stretch = parseFloat(e.target.value);
+  applyStretch();
+});
+document.getElementById("blink").addEventListener("change", e => {
+  state.blink = e.target.checked;
+  applyBlink();
+});
+document.getElementById("resetAll").addEventListener("click", () => loadPose({ stretch: 1, blink: false, offsets: {} }));
+
+// ---- presets ----
+const presetSel = document.getElementById("preset");
+for (const name of Object.keys(PRESETS)) {
+  const o = document.createElement("option");
+  o.textContent = name;
+  presetSel.appendChild(o);
+}
+presetSel.addEventListener("change", () => loadPose(PRESETS[presetSel.value]));
+
+function loadPose(pose) {
+  state.stretch = pose.stretch ?? 1;
+  state.blink = !!pose.blink;
+  state.points = {}; // presets carry no outline edits
+  state.handles = {};
+  state.activeAnchor = null;
+  for (const p of PARTS) {
+    const o = pose.offsets[p.name]; // [dx, dy] or [dx, dy, rot]
+    state.offsets[p.name] = o ? { dx: o[0], dy: o[1], rot: o[2] || 0 } : { dx: 0, dy: 0, rot: 0 };
+  }
+  applyAll();
+}
+
+// ---- saved poses (the server's out/ directory) ----
+const savedSel = document.getElementById("savedSel");
+const loadBtn = document.getElementById("loadSaved");
+
+async function refreshSaved(selectName) {
+  try {
+    const r = await fetch(`/poses?t=${Date.now()}`);
+    const res = await r.json();
+    savedSel.replaceChildren();
+    for (const n of res.poses) {
+      const o = document.createElement("option");
+      o.textContent = n;
+      savedSel.appendChild(o);
+    }
+    if (selectName && res.poses.includes(selectName)) savedSel.value = selectName;
+    loadBtn.disabled = !res.poses.length;
+  } catch { /* server unreachable; keep whatever the list shows */ }
+}
+
+// Apply a SAVED pose spec (offsets as {dx,dy,rot} objects — unlike the array-based presets),
+// including outline point edits and curve-handle edits.
+function loadSavedPose(name, pose) {
+  state.stretch = pose.stretch ?? 1;
+  state.blink = !!pose.blink;
+  state.points = {};
+  state.handles = {};
+  state.activeAnchor = null;
+  for (const p of PARTS) {
+    const o = (pose.offsets || {})[p.name];
+    state.offsets[p.name] = o
+      ? { dx: o.dx || 0, dy: o.dy || 0, rot: o.rot || 0 }
+      : { dx: 0, dy: 0, rot: 0 };
+  }
+  for (const [pn, pe] of Object.entries(pose.points || {}))
+    if (PART_BY_NAME[pn])
+      state.points[pn] = Object.fromEntries(Object.entries(pe).map(([i, d]) => [i, [d[0], d[1]]]));
+  for (const [pn, ph] of Object.entries(pose.handles || {}))
+    if (PART_BY_NAME[pn])
+      state.handles[pn] = JSON.parse(JSON.stringify(ph));
+  document.getElementById("name").value = name; // re-saving overwrites the same files
+  applyAll();
+}
+
+async function loadSavedByName(n) {
+  const r = await fetch(`/out/${encodeURIComponent(n)}.json?t=${Date.now()}`);
+  if (!r.ok) return false;
+  loadSavedPose(n, await r.json());
+  return true;
+}
+
+loadBtn.addEventListener("click", () => { if (savedSel.value) loadSavedByName(savedSel.value); });
+refreshSaved();
+
+// ---- save ----
+const saveBtn = document.getElementById("save");
+saveBtn.addEventListener("click", async () => {
+  const offsets = {};
+  for (const p of PARTS) {
+    const o = state.offsets[p.name];
+    if (o.dx !== 0 || o.dy !== 0 || o.rot !== 0) offsets[p.name] = { dx: o.dx, dy: o.dy, rot: o.rot };
+  }
+  const points = {};
+  for (const [pname, pe] of Object.entries(state.points)) {
+    const cleaned = {};
+    for (const [idx, dlt] of Object.entries(pe))
+      if (dlt[0] !== 0 || dlt[1] !== 0) cleaned[idx] = dlt;
+    if (Object.keys(cleaned).length) points[pname] = cleaned;
+  }
+  const handles = {};
+  for (const [pname, ph] of Object.entries(state.handles)) {
+    const cleaned = {};
+    for (const [idx, h] of Object.entries(ph)) {
+      const entry = {};
+      if (someNonZero(h.in)) entry.in = h.in;
+      if (someNonZero(h.out)) entry.out = h.out;
+      if (Object.keys(entry).length) cleaned[idx] = entry;
+    }
+    if (Object.keys(cleaned).length) handles[pname] = cleaned;
+  }
+  const body = {
+    name: document.getElementById("name").value.trim() || "pose",
+    stretch: state.stretch, blink: state.blink, offsets,
+  };
+  if (Object.keys(points).length) body.points = points;
+  if (Object.keys(handles).length) body.handles = handles;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Rendering…";
+  try {
+    const r = await fetch("/save", { method: "POST", body: JSON.stringify(body) });
+    const res = await r.json();
+    const result = document.getElementById("result"), log = document.getElementById("log");
+    result.hidden = false;
+    log.className = "log " + (res.ok ? "ok" : "err");
+    log.textContent = res.ok ? `${res.log}\nout/${body.name}.png + .json` : (res.log || "render failed");
+    if (res.ok) {
+      document.getElementById("resultImg").src = res.png;
+      refreshSaved(body.name);
+    }
+  } catch (err) {
+    const result = document.getElementById("result"), log = document.getElementById("log");
+    result.hidden = false;
+    log.className = "log err";
+    log.textContent = "request failed: " + err;
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save PNG";
+  }
+});
+
+// ---- reference overlay (tracing aid only: never clickable, never saved) ----
+// Sits above the pig but below the guide lines. pointer-events:none lets every click and
+// drag fall through to the parts underneath. Defaults to fit-the-canvas (contain).
+const refImg = document.createElementNS(SVGNS, "image");
+refImg.setAttribute("x", 0); refImg.setAttribute("y", 0);
+refImg.setAttribute("width", 128); refImg.setAttribute("height", 128);
+refImg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+refImg.setAttribute("pointer-events", "none");
+refImg.setAttribute("display", "none");
+svg.insertBefore(refImg, svg.querySelector(".guide"));
+
+const ref = { x: 0, y: 0, scale: 1, opacity: 0.4, show: true, loaded: false };
+
+function applyRef() {
+  refImg.setAttribute("display", ref.loaded && ref.show ? "" : "none");
+  refImg.setAttribute("opacity", ref.opacity);
+  // scale about the canvas center (64,64) so zooming doesn't drift the image off-screen
+  refImg.setAttribute("transform",
+    `translate(${ref.x} ${ref.y}) translate(64 64) scale(${ref.scale}) translate(-64 -64)`);
+  document.getElementById("refClear").disabled = !ref.loaded;
+  document.getElementById("refCtls").hidden = !ref.loaded;
+  document.getElementById("refOpacityVal").textContent = ref.opacity.toFixed(2);
+  document.getElementById("refScaleVal").textContent = ref.scale.toFixed(2);
+  document.getElementById("refXVal").textContent = ref.x.toFixed(1);
+  document.getElementById("refYVal").textContent = ref.y.toFixed(1);
+}
+
+document.getElementById("refLoad").addEventListener("click", () => document.getElementById("refFile").click());
+document.getElementById("refFile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    refImg.setAttribute("href", rd.result);
+    ref.loaded = true;
+    // fresh image -> reset to the fit-to-canvas default
+    ref.x = 0; ref.y = 0; ref.scale = 1; ref.show = true;
+    document.getElementById("refScale").value = 1;
+    document.getElementById("refX").value = 0;
+    document.getElementById("refY").value = 0;
+    document.getElementById("refShow").checked = true;
+    applyRef();
+  };
+  rd.readAsDataURL(f);
+  e.target.value = ""; // so picking the same file again re-fires change
+});
+document.getElementById("refClear").addEventListener("click", () => {
+  ref.loaded = false;
+  refImg.removeAttribute("href");
+  applyRef();
+});
+for (const [id, key] of [["refOpacity", "opacity"], ["refScale", "scale"], ["refX", "x"], ["refY", "y"]])
+  document.getElementById(id).addEventListener("input", e => {
+    ref[key] = parseFloat(e.target.value);
+    applyRef();
+  });
+document.getElementById("refShow").addEventListener("change", e => {
+  ref.show = e.target.checked;
+  applyRef();
+});
+
+// dev parity check: ?debug=anchors dumps the parsed anchors so they can be diffed against
+// `chargen --pig-anchors` (the C# parser must assign identical anchor indices)
+if (new URLSearchParams(location.search).get("debug") === "anchors") {
+  const dump = {};
+  for (const p of PARTS) if (p.parsed) dump[p.name] = p.parsed.anchors;
+  const pre = document.createElement("pre");
+  pre.id = "anchorDump";
+  pre.textContent = JSON.stringify(dump);
+  document.body.appendChild(pre);
+}
+
+applyAll();
+
+// ?load=<name> opens a saved pose from out/ on startup (also handy as a shareable URL)
+const loadq = new URLSearchParams(location.search).get("load");
+if (loadq) loadSavedByName(loadq);
+
+// dev: ?select=<part> pre-selects a part; ?select=<part>.<idx> also activates an anchor's
+// handles (used by the headless UI checks)
+const selq = new URLSearchParams(location.search).get("select");
+if (selq) {
+  const [pn, ai] = selq.split(".");
+  if (PART_BY_NAME[pn]) {
+    select(pn);
+    if (ai !== undefined && PART_BY_NAME[pn].parsed) {
+      state.activeAnchor = { part: pn, idx: +ai };
+      showAnchors(pn);
+    }
+  }
+}
+</script>
+</body>
+</html>

@@ -6,6 +6,9 @@ obj/
 # Build output (publish payloads + the assembled macOS .app bundle)
 artifacts/
 
+# Pig pose editor output (rendered poses; copy keepers into Assets/DefaultCharacters/Pig)
+tools/pig-editor/out/
+
 # User-imported pet characters (runtime store; read from disk, not committed)
 Assets/Characters/
 

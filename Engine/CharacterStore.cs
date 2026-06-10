@@ -9,15 +9,16 @@ namespace TypePet.Engine;
 
 /// <summary>One selectable character: a stable <see cref="Id"/> (the on-disk folder name, e.g.
 /// <c>char_1a2b3c4d</c>), the user-facing <see cref="DisplayName"/>, the <see cref="Directory"/> its
-/// footage lives in (null for the built-in default), and whether it is the built-in default.</summary>
+/// footage lives in (null for every built-in), and whether it is one of the built-ins.</summary>
 public sealed record CharacterEntry(string Id, string DisplayName, string? Directory, bool IsBuiltIn);
 
 /// <summary>
 /// Manages the on-disk library of pet characters. Each character is a folder under <see cref="Root"/>
 /// (<c>Assets/Characters/char_xxxxxxxx</c>) holding a <c>manifest.json</c> and its item folders — the
 /// same layout as the bundled footage — plus an optional <c>character.json</c> storing the user's
-/// custom display name (the folder name never changes). The built-in "default" (head + body only) is
-/// always present and is the fallback when no character is selected or one is deleted.
+/// custom display name (the folder name never changes). The built-ins (the blob "default" + the
+/// "pig", both embedded) are always present; the blob default is the fallback when no character is
+/// selected or one is deleted.
 ///
 /// Pure file IO with no Avalonia dependency: enumerating, importing a zip, exporting a zip, deleting,
 /// and renaming. Decoding the footage into drawable sprites is the renderer's job
@@ -25,8 +26,19 @@ public sealed record CharacterEntry(string Id, string DisplayName, string? Direc
 /// </summary>
 public sealed class CharacterStore
 {
-    /// <summary>The reserved id of the always-present built-in head+body character.</summary>
+    /// <summary>The reserved id of the always-present built-in blob character.</summary>
     public const string DefaultId = "default";
+
+    /// <summary>The reserved id of the built-in pig character.</summary>
+    public const string PigId = "pig";
+
+    /// <summary>The built-in characters shipped inside the app: reserved id, display name, and the
+    /// embedded (avares) footage folder each renders from. Always present, never on disk.</summary>
+    private static readonly (string Id, string Name, string Footage)[] BuiltInTable =
+    {
+        (DefaultId, "Default", "Assets/DefaultCharacters/TypePet"),
+        (PigId, "Pig", "Assets/DefaultCharacters/Pig"),
+    };
 
     private const string ManifestFile = "manifest.json";
     private const string MetaFile = "character.json"; // stores the custom display name
@@ -71,18 +83,40 @@ public sealed class CharacterStore
             "TypePet", "Characters");
     }
 
-    /// <summary>The built-in head+body default (no folder; rendered from the embedded DefaultCharacter).</summary>
+    /// <summary>The built-in blob default (no folder; rendered from the embedded footage).</summary>
     public static CharacterEntry BuiltInDefault() => new(DefaultId, "Default", null, true);
 
-    /// <summary>The default first, then every valid character folder under <see cref="Root"/>, sorted.</summary>
+    /// <summary>Every built-in character, in display order.</summary>
+    public static IReadOnlyList<CharacterEntry> BuiltIns()
+    {
+        var result = new List<CharacterEntry>(BuiltInTable.Length);
+        foreach (var (id, name, _) in BuiltInTable) result.Add(new CharacterEntry(id, name, null, true));
+        return result;
+    }
+
+    /// <summary>The embedded footage folder for a built-in id (e.g. <c>Assets/DefaultCharacters/Pig</c>),
+    /// or null when the id isn't a built-in. The renderer-side loader uses this to pick the
+    /// avares folder to decode.</summary>
+    public static string? EmbeddedFootage(string? id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        // Case-insensitive: ids land in folder names on case-insensitive filesystems, so a
+        // manually created "Pig"/"PIG" dir must still resolve to (and never shadow) a built-in.
+        foreach (var (bid, _, footage) in BuiltInTable)
+            if (string.Equals(id, bid, StringComparison.OrdinalIgnoreCase)) return footage;
+        return null;
+    }
+
+    /// <summary>The built-ins first, then every valid character folder under <see cref="Root"/>, sorted.</summary>
     public IReadOnlyList<CharacterEntry> List()
     {
-        var result = new List<CharacterEntry> { BuiltInDefault() };
+        var result = new List<CharacterEntry>(BuiltIns());
         try
         {
             if (Directory.Exists(Root))
                 foreach (var dir in Directory.GetDirectories(Root).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
-                    if (File.Exists(Path.Combine(dir, ManifestFile)))
+                    if (File.Exists(Path.Combine(dir, ManifestFile))
+                        && EmbeddedFootage(Path.GetFileName(dir)) is null) // a dir named like a built-in id would shadow it
                         result.Add(EntryFor(dir));
         }
         catch { /* a transient IO error just yields the default-only list */ }
@@ -90,10 +124,13 @@ public sealed class CharacterStore
     }
 
     /// <summary>The entry for <paramref name="id"/>, or null if it isn't a known character. The
-    /// reserved/empty id resolves to the built-in default.</summary>
+    /// empty id resolves to the built-in default; the reserved ids to their built-ins.</summary>
     public CharacterEntry? Get(string? id)
     {
-        if (string.IsNullOrEmpty(id) || id == DefaultId) return BuiltInDefault();
+        if (string.IsNullOrEmpty(id)) return BuiltInDefault();
+        foreach (var (bid, name, _) in BuiltInTable)
+            if (string.Equals(id, bid, StringComparison.OrdinalIgnoreCase))
+                return new CharacterEntry(bid, name, null, true);
         var dir = SafeDir(id);
         if (dir is not null && File.Exists(Path.Combine(dir, ManifestFile))) return EntryFor(dir);
         return null;
@@ -109,7 +146,7 @@ public sealed class CharacterStore
     private string? SafeDir(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return null;
-        if (id == DefaultId) return null;
+        if (EmbeddedFootage(id) is not null) return null; // built-in ids never map to a folder
         if (id.Contains('/') || id.Contains('\\') || id.Contains("..")) return null;
         return Path.Combine(Root, id);
     }
@@ -218,7 +255,7 @@ public sealed class CharacterStore
     }
 
     // ------------------------------------------------------------------ delete
-    /// <summary>Delete a character folder. The built-in default is never deletable.</summary>
+    /// <summary>Delete a character folder. Built-ins are never deletable.</summary>
     public void Delete(string id)
     {
         var dir = SafeDir(id);
@@ -230,8 +267,8 @@ public sealed class CharacterStore
     /// <summary>
     /// Write a character to <paramref name="destZip"/> in the same shape we import: the footage wrapped
     /// in a single top-level folder named after the display name. The custom-name file is excluded so
-    /// the zip is portable footage only (the file name carries the name). No-op for the built-in
-    /// default, which has no footage folder.
+    /// the zip is portable footage only (the file name carries the name). No-op for built-ins,
+    /// which have no footage folder on disk.
     /// </summary>
     public void Export(string id, string destZip)
     {

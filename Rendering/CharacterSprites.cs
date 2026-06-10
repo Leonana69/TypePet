@@ -124,7 +124,7 @@ public sealed class CharacterSprites : IDisposable
     }
 
     /// <summary>
-    /// Load and decode footage embedded as Avalonia resources (the bundled DefaultCharacter / footage).
+    /// Load and decode footage embedded as Avalonia resources (the bundled Assets/DefaultCharacters/*).
     /// Returns <c>null</c> (and traces) on any failure so the renderer can fall back to the placeholder
     /// shape instead of crashing the overlay. Must be called after Avalonia has initialized (e.g. from a
     /// Window's OnOpened), since it decodes bitmaps. <paramref name="hitTestPoses"/> bounds the drag
