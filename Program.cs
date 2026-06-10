@@ -73,6 +73,15 @@ internal static class Program
             return TypePet.Views.HubUiTest.Run();
         }
 
+        // Dev-only: render the styled pill buttons offscreen and measure label-vs-pill vertical centering
+        // (the Browse-tab Install/Remove optical alignment). Builds real controls + bitmaps, so set up
+        // Avalonia without starting the UI.
+        if (Array.IndexOf(args, "--button-align-test") >= 0)
+        {
+            BuildAvaloniaApp().SetupWithoutStarting();
+            return TypePet.Views.ButtonAlignTest.Run();
+        }
+
         // Dev-only: validate the user command library + merged registry headlessly, and optionally run one
         // command. Needs Avalonia's asset loader (bundled avares image refs / seeding). Usage:
         // --commands-test ["<name>"].

@@ -78,15 +78,23 @@
       <Setter Property="Margin" Value="0,12" />
     </Style>
 
-    <!-- ============================ buttons ============================ -->
+    <!-- ============================ buttons ============================
+         Pill paddings are deliberately bottom-heavy (6 top / 8 bottom): Avalonia centers the font's
+         line box, whose center for Segoe UI sits ~0.7px above the visible glyphs, so symmetric
+         padding makes labels look slightly low (Fluent's own ButtonPadding is 8,5,8,6 for the same
+         reason). Verified pixel-exact via the button-align-test harness (see Program.cs). -->
     <Style Selector="Button.accent">
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Foreground" Value="#04201F" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Padding" Value="16,7" />
+      <Setter Property="Padding" Value="16,6,16,8" />
     </Style>
     <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#20C9C2" />
+      <!-- Rest-state foreground must live on the presenter (same gotcha as chromeClose above):
+           Fluent styles it there directly, beating the Button-level value — without this the label
+           rendered white at rest and only went dark on hover/press. -->
+      <Setter Property="Foreground" Value="#04201F" />
     </Style>
     <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#45D6D0" />
@@ -101,7 +109,7 @@
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Foreground" Value="White" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Padding" Value="16,7" />
+      <Setter Property="Padding" Value="16,6,16,8" />
     </Style>
     <Style Selector="Button.danger /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#E0484A" />
@@ -117,7 +125,7 @@
     <Style Selector="Button.ghost">
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Foreground" Value="#E7EFEF" />
-      <Setter Property="Padding" Value="16,7" />
+      <Setter Property="Padding" Value="16,6,16,8" />
     </Style>
     <Style Selector="Button.ghost /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="#1FFFFFFF" />
