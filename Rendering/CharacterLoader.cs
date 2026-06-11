@@ -5,9 +5,10 @@ namespace TypePet.Rendering;
 
 /// <summary>
 /// Bridges the file-only <see cref="CharacterStore"/> to the renderer: turns a character id into
-/// decoded <see cref="CharacterSprites"/>. A disk character is loaded from its folder; the built-in
-/// default — and any character whose footage fails to decode — falls back to the bundled
-/// head+body <c>Assets/DefaultCharacter</c>, so the pet always has something valid to show.
+/// decoded <see cref="CharacterSprites"/>. A disk character is loaded from its folder; a built-in
+/// id is loaded from its embedded footage (<see cref="CharacterStore.EmbeddedFootage"/>); anything
+/// that fails to decode falls back to the bundled blob default, so the pet always has something
+/// valid to show.
 ///
 /// <paramref name="poses"/> is the set of poses the caller will show: it both bounds the drag
 /// hit-test and limits decoding to just those poses (the live pet plays
@@ -44,7 +45,17 @@ public static class CharacterLoader
             // Footage went missing/corrupt — fall through to the bundled default rather than blanking.
         }
 
-        return CharacterSprites.Load(footageDir: "Assets/DefaultCharacter", hitTestPoses: hitTestPoses,
+        // A non-default built-in (e.g. the pig) decodes from its own embedded folder; if that
+        // somehow fails, fall through to the blob default below rather than blanking.
+        string defaultFootage = CharacterStore.EmbeddedFootage(CharacterStore.DefaultId)!;
+        if (CharacterStore.EmbeddedFootage(entry?.Id) is { } footage && footage != defaultFootage)
+        {
+            var sprites = CharacterSprites.Load(footageDir: footage, hitTestPoses: hitTestPoses,
+                posesToLoad: posesToLoad, loadExpressions: loadExpressions);
+            if (sprites is not null) return sprites;
+        }
+
+        return CharacterSprites.Load(footageDir: defaultFootage, hitTestPoses: hitTestPoses,
             posesToLoad: posesToLoad, loadExpressions: loadExpressions);
     }
 }

@@ -207,10 +207,12 @@ public sealed class KnowledgeBase
         "skills, builds, cores, union, boss guides, etc.). A source written in the question's language is " +
         "preferred. Call with just `query` to get the ranked directory of matching sites and their URL " +
         "templates; then call again with a concrete `url` (built from a template, substituting the right " +
-        "English slug) to fetch and read that page.",
+        "English slug) AND the `query` — on a long page the query selects the sections matching it, so " +
+        "keep it set to the skill/topic you need.",
         new Dictionary<string, JsonElement>
         {
-            ["query"] = ToolSchema.String("What to look up (topic/keywords, in any language). Used to pick and rank sources."),
+            ["query"] = ToolSchema.String("What to look up (topic/keywords, in any language). Picks and ranks sources; " +
+                                          "combined with `url` it selects the matching sections of that page."),
             ["url"] = ToolSchema.String("Optional: a fully-resolved page URL to fetch and read. Build it from a template shown in the directory."),
         },
         Array.Empty<string>());
@@ -231,7 +233,9 @@ public sealed class KnowledgeBase
                 return ("Invalid url — pass an absolute http(s) URL built from one of the source templates.",
                         Array.Empty<WebSource>());
 
-            string body = await WebTools.FetchReadableAsync(url, ct).ConfigureAwait(false);
+            string body = await WebTools.FetchReadableAsync(url, query, ct).ConfigureAwait(false);
+            if (WebTools.IsFetchError(body))
+                return (body, Array.Empty<WebSource>()); // nothing was read — don't cite a source
             var match = _sources.FirstOrDefault(s => MatchesHost(s, uri));
             string title = ExtractTitle(body) ?? match?.Name ?? uri.Host;
             string header = match is not null ? $"From {match.Name} [{string.Join(",", match.Languages)}]:\n" : "";
@@ -247,7 +251,8 @@ public sealed class KnowledgeBase
         sb.AppendLine($"Question language: {lang}. Sources are ranked below — a {lang} source is preferred. " +
                       "Do NOT answer from this directory alone: pick the top source, build a concrete `url` from " +
                       "its template (map the class name to the English slug), then call maple_lookup AGAIN with " +
-                      "that `url` to fetch the page — and answer the user from what that page says.");
+                      "that `url` PLUS a `query` naming the skill/topic you need (it pulls the matching sections " +
+                      "out of long pages) — and answer the user from what that page says.");
         sb.AppendLine();
         sb.Append(Directory(Rank(query, lang)));
         return (sb.ToString().TrimEnd(), Array.Empty<WebSource>());

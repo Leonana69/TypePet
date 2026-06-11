@@ -1,0 +1,123 @@
+{
+  "tool": "typepet-chargen+hand-edit",
+  "schema": 2,
+  "facing": "left",
+  "flip": false,
+  "scale": 1,
+  "items": [{ "category": "Body", "folder": "Body" }],
+  "animations": {
+    "stand1": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0, 1, 0, 2],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] },
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f01.png", "canvasX": 28, "canvasY": 45, "width": 63, "height": 57 }] },
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f02.png", "canvasX": 28, "canvasY": 45, "width": 63, "height": 57 }] }
+      ]
+    },
+    "walk1": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0, 1, 2, 3],
+      "frames": [
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f00.png", "canvasX": 28, "canvasY": 47, "width": 65, "height": 53 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f01.png", "canvasX": 28, "canvasY": 46, "width": 65, "height": 53 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f02.png", "canvasX": 28, "canvasY": 44, "width": 64, "height": 55 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f03.png", "canvasX": 28, "canvasY": 47, "width": 65, "height": 53 }] }
+      ]
+    },
+    "walk2": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0, 1, 2, 3],
+      "frames": [
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f00.png", "canvasX": 28, "canvasY": 47, "width": 65, "height": 53 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f01.png", "canvasX": 28, "canvasY": 46, "width": 65, "height": 53 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f02.png", "canvasX": 28, "canvasY": 44, "width": 64, "height": 55 }] },
+        { "delayMs": 170, "draw": [{ "category": "Body", "layer": "body", "image": "Body/walk1_f03.png", "canvasX": 28, "canvasY": 47, "width": 65, "height": 53 }] }
+      ]
+    },
+    "stand2": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "ladder": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "rope": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "jump": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "prone": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "proneStab": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "sit": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "alert": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "heal": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "fly": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "swingO1": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    },
+    "stabO1": {
+      "navel": { "x": 60, "y": 70 },
+      "playbackCycle": [0],
+      "frames": [
+        { "delayMs": 600, "draw": [{ "category": "Body", "layer": "body", "image": "Body/stand1_f00.png", "canvasX": 28, "canvasY": 45, "width": 64, "height": 56 }] }
+      ]
+    }
+  }
+}

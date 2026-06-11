@@ -118,8 +118,8 @@ public partial class PetWindow : Window
         _pet.RoamMaxY = Height - 150;
         _pet.RoamMinY = 150;
 
-        // Load the currently selected character (a user import from the store, or the bundled
-        // Body+Head default). CharacterLoader falls back to the default if the footage can't be
+        // Load the currently selected character (a user import from the store, or one of the
+        // bundled built-ins). CharacterLoader falls back to the default if the footage can't be
         // decoded; if even that fails, the renderer draws the placeholder shape. The live pet decodes
         // its action poses too (LivePoses) while the grab box stays sized to the played poses.
         _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId,

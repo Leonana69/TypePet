@@ -15,7 +15,7 @@ namespace TypePet.Views;
 
 /// <summary>
 /// The Characters tab of <see cref="ConfigWindow"/>. Shows one card per available character — the
-/// built-in Default plus every imported one — six per row in a scrolling grid, with a trailing import
+/// built-ins (Default + Pig) plus every imported one — six per row in a scrolling grid, with a trailing import
 /// card to add a new character from a zip. Clicking a card makes the pet wear it (via the
 /// <c>onSelect</c> callback); right-clicking offers Rename, Export, and Delete. The currently worn
 /// character gets an accent ring and a "WORN" badge.
@@ -210,7 +210,7 @@ public sealed class CharacterView : UserControl
 
         if (!entry.IsBuiltIn)
         {
-            // The built-in default can't be renamed/exported/deleted, so it gets no context menu.
+            // Built-ins can't be renamed/exported/deleted, so they get no context menu.
             // Rename lives here (not on a name-click) so it doesn't fight the card's wear-on-click.
             var rename = new MenuItem { Header = "Rename" };
             rename.Click += (_, _) => BeginRename(entry, namePanel);

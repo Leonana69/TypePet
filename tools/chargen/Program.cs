@@ -13,7 +13,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-class Program
+partial class Program
 {
     // ---- canvas / anchor constants (logical pixels) ----
     const int SS = 4;            // supersample factor for anti-aliasing
@@ -68,12 +68,32 @@ class Program
             return 0;
         }
 
+        // --pig-pose <pose.json> <out.png>: render a single posed pig frame (web editor save).
+        if (args.Length > 0 && args[0] == "--pig-pose")
+        {
+            if (args.Length < 3) { Console.Error.WriteLine("usage: --pig-pose <pose.json> <out.png>"); return 2; }
+            return PigPose(args[1], args[2]);
+        }
+
+        // --pig-anchors: dump the pig path anchor points (editor parser parity check).
+        if (args.Length > 0 && args[0] == "--pig-anchors")
+            return PigAnchors();
+
         // --arm <style> <outDir>: generate the full character set using the chosen arm style.
         if (args.Length > 0 && args[0] == "--arm")
         {
             ArmMode = Enum.Parse<ArmStyle>(args[1], ignoreCase: true);
             OutDir = args.Length > 2 ? args[2] : Path.Combine(Directory.GetCurrentDirectory(), "DefaultCharacterNew");
             args = new[] { OutDir }; // fall through to normal generation
+        }
+
+        // An unrecognized flag must not fall through as "args[0] is the output directory" —
+        // e.g. the retired --pig would otherwise silently generate the blob into "./--pig".
+        if (args.Length > 0 && args[0].StartsWith("--", StringComparison.Ordinal))
+        {
+            Console.Error.WriteLine(
+                $"unknown option '{args[0]}'. Modes: --arm-preview, --all-preview, --arm, --pig-pose, --pig-anchors, or <outDir>.");
+            return 2;
         }
 
         OutDir = args.Length > 0 ? args[0] : Path.Combine(Directory.GetCurrentDirectory(), "DefaultCharacterNew");
