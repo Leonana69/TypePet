@@ -59,7 +59,9 @@ public sealed class CommandStore
     /// <summary>
     /// Resolve the commands folder. Run from source it walks up to the project root and uses
     /// <c>&lt;repo&gt;/Assets/Commands</c> (beside the other assets); a published build with no project
-    /// file falls back to <c>%LOCALAPPDATA%\TypePet\Commands</c> (writable per-user). Mirrors
+    /// file uses the same shape next to the binary — <c>&lt;exe dir&gt;/Assets/Commands</c> — keeping
+    /// the install portable. Data left at the old published location
+    /// (<c>%LOCALAPPDATA%\TypePet\Commands</c>) is copied across once. Mirrors
     /// <see cref="CharacterStore.ResolveDefaultRoot"/>.
     /// </summary>
     public static string ResolveDefaultRoot()
@@ -74,11 +76,30 @@ public sealed class CommandStore
                 dir = dir.Parent;
             }
         }
-        catch { /* fall through to app-data */ }
+        catch { /* fall through to the exe-relative folder */ }
 
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TypePet", "Commands");
+        string root = Path.Combine(AppContext.BaseDirectory, "Assets", "Commands");
+        MigrateLegacyRoot(root);
+        return root;
+    }
+
+    /// <summary>One-time migration from the old published-build location
+    /// (<c>%LOCALAPPDATA%\TypePet\Commands</c>): if the exe-relative root hasn't been created yet but
+    /// the old folder holds commands, copy them across — copy, not move, so an older build pointed at
+    /// app-data still finds its data. Folder names are the command ids, so per-command settings
+    /// (disabled scripts, network approvals) and hub provenance keep resolving.</summary>
+    private static void MigrateLegacyRoot(string newRoot)
+    {
+        try
+        {
+            if (Directory.Exists(newRoot)) return;
+            string legacy = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TypePet", "Commands");
+            if (Directory.Exists(legacy) && Directory.GetDirectories(legacy).Length > 0)
+                CopyDirectory(legacy, newRoot);
+        }
+        catch { /* best effort; worst case the library starts empty and seeding repopulates the bundled set */ }
     }
 
     /// <summary>Every command folder under <see cref="Root"/> (parsed for name/kind/validity), sorted by id.

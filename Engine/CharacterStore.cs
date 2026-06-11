@@ -59,10 +59,13 @@ public sealed class CharacterStore
     }
 
     /// <summary>
-    /// Resolve the characters folder. When run from the source tree (the normal case) this walks up
-    /// from the executable to the project root and uses <c>&lt;repo&gt;/Assets/Characters</c>, so
-    /// characters sit beside the rest of the assets. When that can't be found (a published build with
-    /// no project file), fall back to the per-user app-data folder so the location is still writable.
+    /// Resolve the characters folder. When run from the source tree this walks up from the executable
+    /// to the project root and uses <c>&lt;repo&gt;/Assets/Characters</c>, so characters sit beside the
+    /// rest of the assets. A published build (no project file above the exe) uses the same shape next
+    /// to the binary — <c>&lt;exe dir&gt;/Assets/Characters</c> — keeping the install fully portable,
+    /// like settings.json which already sits beside the exe (the exe must therefore live somewhere
+    /// user-writable, not Program Files). Data left at the old published location
+    /// (<c>%LOCALAPPDATA%\TypePet\Characters</c>) is copied across once.
     /// </summary>
     public static string ResolveDefaultRoot()
     {
@@ -76,11 +79,30 @@ public sealed class CharacterStore
                 dir = dir.Parent;
             }
         }
-        catch { /* fall through to app-data */ }
+        catch { /* fall through to the exe-relative folder */ }
 
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TypePet", "Characters");
+        string root = Path.Combine(AppContext.BaseDirectory, "Assets", "Characters");
+        MigrateLegacyRoot(root);
+        return root;
+    }
+
+    /// <summary>One-time migration from the old published-build location
+    /// (<c>%LOCALAPPDATA%\TypePet\Characters</c>): if the exe-relative root hasn't been created yet but
+    /// the old folder holds characters, copy them across — copy, not move, so an older build pointed at
+    /// app-data still finds its data. Folder names are the character ids, so the remembered
+    /// selected-character setting keeps resolving.</summary>
+    private static void MigrateLegacyRoot(string newRoot)
+    {
+        try
+        {
+            if (Directory.Exists(newRoot)) return;
+            string legacy = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TypePet", "Characters");
+            if (Directory.Exists(legacy) && Directory.GetDirectories(legacy).Length > 0)
+                CopyDirectory(legacy, newRoot);
+        }
+        catch { /* best effort; worst case the library starts empty and the user re-imports */ }
     }
 
     /// <summary>The built-in blob default (no folder; rendered from the embedded footage).</summary>
