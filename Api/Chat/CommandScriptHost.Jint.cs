@@ -178,9 +178,10 @@ public static partial class CommandScriptHost
         WebSource? link = string.IsNullOrWhiteSpace(linkUrl) ? null
             : new WebSource(string.IsNullOrWhiteSpace(linkTitle) ? linkUrl! : linkTitle!, linkUrl!, "");
 
+        // Link only — not also mirrored into Sources, or the chat history bubble (which renders the
+        // link button AND a "Sources" list) would show the same URL twice.
         return CommandResult.Ok(
             string.IsNullOrEmpty(text) ? (m.Help ?? "") : text!,
-            sources: link is null ? null : new[] { link },
             link: link,
             imageUrl: image,
             clipboardText: clip,
@@ -194,8 +195,7 @@ public static partial class CommandScriptHost
         string? img = IsSafeImage(v.ImageUrl) ? v.ImageUrl : null;
         WebSource? link = string.IsNullOrWhiteSpace(v.InfoUrl) ? null
             : new WebSource(string.IsNullOrWhiteSpace(v.InfoTitle) ? v.InfoUrl! : v.InfoTitle!, v.InfoUrl!, "");
-        return CommandResult.Ok(text, sources: link is null ? null : new[] { link },
-            link: link, imageUrl: img, holdSeconds: hold);
+        return CommandResult.Ok(text, link: link, imageUrl: img, holdSeconds: hold);
     }
 
     private static RankView ToRankView(ObjectInstance o) => new(

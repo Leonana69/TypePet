@@ -55,6 +55,7 @@ public static class CommandTest
             if (r.ClipboardText is not null) Console.WriteLine($"  clipboard    : {r.ClipboardText}");
             if (r.ImageUrl is not null) Console.WriteLine($"  image        : {r.ImageUrl}");
             if (r.Link is not null) Console.WriteLine($"  link         : {r.Link.Title} -> {r.Link.Url}");
+            foreach (var s in r.Sources) Console.WriteLine($"  source       : {s.Title} -> {s.Url}");
             if (r.HoldSeconds is not null) Console.WriteLine($"  holdSeconds  : {r.HoldSeconds}");
         }
 

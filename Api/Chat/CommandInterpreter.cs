@@ -96,7 +96,7 @@ public sealed class CommandInterpreter
         var src = new WebSource(string.IsNullOrWhiteSpace(m.LinkTitle) ? url : m.LinkTitle!, url, "");
         await ApplyReaction(m);
         string text = string.IsNullOrWhiteSpace(m.Help) ? url : m.Help!;
-        return CommandResult.Ok(text, sources: new[] { src }, link: src, holdSeconds: m.HoldSeconds);
+        return CommandResult.Ok(text, link: src, holdSeconds: m.HoldSeconds);
     }
 
     private async Task<CommandResult> RunPrompt(CommandManifest m, string args, CancellationToken ct)
