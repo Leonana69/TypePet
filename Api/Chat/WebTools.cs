@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -30,6 +31,10 @@ public sealed class WebTools
     private const int MaxResults = 5;
     private const int FetchCharCap = 6000;
     private const int MaxDownloadBytes = 3_000_000;
+    private const int EmbeddedCharCap = 200_000;
+    private const int ExcerptRadius = 800;
+    private const int MaxMatchesPerToken = 24;
+    private const int MaxWindowChars = 2400;
 
     private static readonly HttpClient Http = CreateHttp();
     private static readonly HtmlParser Parser = new();
@@ -54,8 +59,15 @@ public sealed class WebTools
 
     public ChatToolDef FetchDefinition => new(
         FetchToolName,
-        "Fetch a web page and return its readable text. Use after web_search to read a result in full.",
-        new Dictionary<string, JsonElement> { ["url"] = ToolSchema.String("The absolute URL to fetch.") },
+        "Fetch a web page and return its readable text, including data embedded by JavaScript apps. Use " +
+        "after web_search to read a result in full. For long pages, pass `query` keywords to get the " +
+        "sections that mention them instead of just the beginning of the page.",
+        new Dictionary<string, JsonElement>
+        {
+            ["url"] = ToolSchema.String("The absolute URL to fetch."),
+            ["query"] = ToolSchema.String("Optional keywords (the fact you're after, e.g. a skill or item name); " +
+                                          "on a long page the result becomes the sections matching them."),
+        },
         new[] { "url" });
 
     // ---- web_search --------------------------------------------------------------
@@ -151,12 +163,30 @@ public sealed class WebTools
     // ---- web_fetch ---------------------------------------------------------------
 
     public Task<string> RunFetchAsync(string argumentsJson, CancellationToken ct)
-        => FetchReadableAsync(Arg(argumentsJson, "url"), ct);
+        => FetchReadableAsync(Arg(argumentsJson, "url"), Arg(argumentsJson, "query"), ct);
+
+    /// <summary>Tool-free overload (prompt-command RAG): no focus query, and a neutral truncation marker —
+    /// the receiving model has no tools, so "call again with `query`" would be an un-followable hint.</summary>
+    public static Task<string> FetchReadableAsync(string url, CancellationToken ct)
+        => FetchCoreAsync(url, "", toolHint: false, ct);
+
+    public static Task<string> FetchReadableAsync(string url, string focus, CancellationToken ct)
+        => FetchCoreAsync(url, focus, toolHint: true, ct);
+
+    /// <summary>True when a <see cref="FetchReadableAsync"/> result reports that no page was read (bad URL
+    /// or transport failure) rather than page content. Lets callers avoid citing a source that was never
+    /// actually fetched.</summary>
+    public static bool IsFetchError(string result) =>
+        result.StartsWith("Fetch failed:", StringComparison.Ordinal) ||
+        result.StartsWith("Invalid or missing URL.", StringComparison.Ordinal);
 
     /// <summary>Download a page and return its readable text — "Title: …", "Summary: …" (meta description),
-    /// then the body, capped. Static and keyless so the knowledge base (<see cref="KnowledgeBase"/>) reuses
-    /// the exact same fetch as the <c>web_fetch</c> tool. Best-effort: any failure returns a short message.</summary>
-    public static async Task<string> FetchReadableAsync(string url, CancellationToken ct)
+    /// then the body plus any JSON data the page embeds for a JavaScript app (where sites like Grandis
+    /// Library keep ALL the real content), capped. A non-empty <paramref name="focus"/> turns the cap into
+    /// relevance selection: the sections matching the focus words are returned instead of the page's head.
+    /// Static and keyless so the knowledge base (<see cref="KnowledgeBase"/>) reuses the exact same fetch
+    /// as the <c>web_fetch</c> tool. Best-effort: any failure returns a short message.</summary>
+    private static async Task<string> FetchCoreAsync(string url, string focus, bool toolHint, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
@@ -175,6 +205,10 @@ public sealed class WebTools
             string title = Collapse(doc.Title ?? "");
             string desc = MetaDescription(doc);
 
+            // SPA pages (Next.js and friends) ship their REAL content as JSON inside a script tag that the
+            // text extraction below throws away — harvest it first so skill tables, stats, and prices survive.
+            string embedded = ExtractEmbeddedData(doc);
+
             // Plain text drops <a> hrefs, so a link like "Class Discord" loses its real invite URL and the
             // model guesses one. Fold the target into the text ("Class Discord (https://discord.gg/…)") first.
             AnnotateLinks(doc, uri);
@@ -183,10 +217,14 @@ public sealed class WebTools
                 el.Remove();
             string body = Collapse(doc.Body?.TextContent ?? "");
 
+            string content = embedded.Length == 0 ? body
+                : body.Length == 0 ? "Embedded page data:\n" + embedded
+                : body + "\nEmbedded page data:\n" + embedded;
+
             var sb = new StringBuilder();
             if (title.Length > 0) sb.AppendLine("Title: " + title);
             if (desc.Length > 0) sb.AppendLine("Summary: " + desc);
-            if (body.Length > 0) sb.AppendLine(body.Length <= FetchCharCap ? body : body[..FetchCharCap] + " …[truncated]");
+            if (content.Length > 0) sb.AppendLine(Clip(content, focus, toolHint));
 
             var outp = sb.ToString().Trim();
             return outp.Length > 0
@@ -197,6 +235,23 @@ public sealed class WebTools
         {
             return $"Fetch failed: {ex.Message}";
         }
+    }
+
+    /// <summary>Cap long content: with a focus, return the sections matching it; without one, head-truncate
+    /// (hinting that re-fetching with `query` pulls specific sections, when the caller has tools).</summary>
+    private static string Clip(string content, string focus, bool toolHint)
+    {
+        if (content.Length <= FetchCharCap) return content;
+        if (!string.IsNullOrWhiteSpace(focus))
+        {
+            string picked = SelectRelevant(content, focus, FetchCharCap);
+            if (picked.Length > 0)
+                return $"(long page — showing the sections matching \"{Collapse(focus)}\")\n" + picked;
+            return content[..FetchCharCap] + $" …[truncated — nothing on the page matched \"{Collapse(focus)}\"; try different `query` keywords]";
+        }
+        return content[..FetchCharCap] + (toolHint
+            ? " …[truncated — call again with `query` keywords to pull the sections you need]"
+            : " …[truncated]");
     }
 
     private static async Task<string> ReadCappedAsync(HttpContent content, CancellationToken ct)
@@ -211,6 +266,173 @@ public sealed class WebTools
             if (ms.Length >= MaxDownloadBytes) break;
         }
         return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
+    }
+
+    // ---- embedded JSON data --------------------------------------------------------
+
+    /// <summary>Harvest the JSON state SPA frameworks embed in the page (Next.js's
+    /// <c>__NEXT_DATA__</c>, SvelteKit data scripts, schema.org <c>ld+json</c>) as readable text. For
+    /// data-driven sites this is where the actual content lives — the rendered HTML is just a shell.</summary>
+    private static string ExtractEmbeddedData(IDocument doc)
+    {
+        var sb = new StringBuilder();
+        foreach (var s in doc.QuerySelectorAll("script[type='application/json'], script[type='application/ld+json']"))
+        {
+            if (sb.Length >= EmbeddedCharCap) break;
+            string json = s.TextContent;
+            if (string.IsNullOrWhiteSpace(json)) continue;
+            try
+            {
+                using var d = JsonDocument.Parse(json);
+                FlattenJson(d.RootElement, sb);
+            }
+            catch { /* not valid JSON — skip */ }
+        }
+        return sb.ToString().Trim();
+    }
+
+    /// <summary>Flatten JSON to text, one line per object holding its primitive fields ("name: X; type: Origin
+    /// Skill") so related values stay together for excerpt selection. URL/path-like and empty values are
+    /// dropped as noise (icons, asset paths).</summary>
+    private static void FlattenJson(JsonElement el, StringBuilder sb)
+    {
+        if (sb.Length >= EmbeddedCharCap) return;
+        switch (el.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var line = new StringBuilder();
+                foreach (var p in el.EnumerateObject())
+                {
+                    string v = PrimitiveText(p.Value);
+                    if (v.Length == 0) continue;
+                    if (line.Length > 0) line.Append("; ");
+                    line.Append(p.Name).Append(": ").Append(v);
+                }
+                if (line.Length > 0) sb.AppendLine(line.ToString());
+                foreach (var p in el.EnumerateObject())
+                    if (p.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+                        FlattenJson(p.Value, sb);
+                break;
+            case JsonValueKind.Array:
+                foreach (var item in el.EnumerateArray()) FlattenJson(item, sb);
+                break;
+            default:
+                string s = PrimitiveText(el);
+                if (s.Length > 0) sb.AppendLine(s);
+                break;
+        }
+    }
+
+    private static string PrimitiveText(JsonElement el)
+    {
+        switch (el.ValueKind)
+        {
+            case JsonValueKind.String:
+                string s = Collapse(el.GetString() ?? "");
+                if (s.Length == 0 || LooksLikeUrlOrPath(s)) return "";
+                return s.Length <= 1000 ? s : s[..1000] + "…";
+            case JsonValueKind.Number: return el.GetRawText();
+            case JsonValueKind.True: return "true";
+            case JsonValueKind.False: return "false";
+            default: return "";
+        }
+    }
+
+    private static bool LooksLikeUrlOrPath(string s) =>
+        s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+        s.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+        s.StartsWith("//", StringComparison.Ordinal) ||
+        (s.StartsWith("/", StringComparison.Ordinal) && !s.Contains(' '));
+
+    // ---- relevance selection -------------------------------------------------------
+
+    /// <summary>Pick the windows of <paramref name="text"/> around matches of <paramref name="focus"/> —
+    /// the whole phrase plus its words — merged, ranked (windows matching more distinct tokens first, so
+    /// "Origin Skill" sections beat generic "skill" mentions), and joined in document order up to
+    /// <paramref name="cap"/> chars. Windows stop at line boundaries so one flattened JSON object stays
+    /// intact without dragging in its neighbors. Empty when nothing matches.</summary>
+    private static string SelectRelevant(string text, string focus, int cap)
+    {
+        // Tokens: the full phrase first (most specific), then words. Short Latin words are noise; short
+        // CJK tokens are real words and kept.
+        var tokens = new List<string>();
+        string phrase = Collapse(focus);
+        if (phrase.Length >= 2) tokens.Add(phrase);
+        foreach (var w in Regex.Split(phrase, @"[^\p{L}\p{N}]+"))
+        {
+            if (w.Length == 0) continue;
+            bool cjk = false;
+            foreach (var ch in w) if (ch >= 0x2E80) { cjk = true; break; }
+            if ((w.Length >= 3 || cjk) && !tokens.Contains(w, StringComparer.OrdinalIgnoreCase))
+                tokens.Add(w);
+        }
+
+        // Every match position of every token.
+        var marks = new List<(int pos, int len, string tok)>();
+        foreach (var t in tokens)
+        {
+            int from = 0, found = 0;
+            while (found < MaxMatchesPerToken &&
+                   (from = text.IndexOf(t, from, StringComparison.OrdinalIgnoreCase)) >= 0)
+            {
+                marks.Add((from, t.Length, t));
+                from += t.Length;
+                found++;
+            }
+        }
+        if (marks.Count == 0) return "";
+        marks.Sort((a, b) => a.pos.CompareTo(b.pos));
+
+        // Expand each match to a window (bounded by its line) and merge overlaps, tracking which tokens
+        // each merged window covers. Growth is capped: on a dense single-line body the matches would
+        // otherwise chain-merge into one window bigger than the whole budget.
+        var windows = new List<(int start, int end, HashSet<string> toks)>();
+        foreach (var (pos, len, tok) in marks)
+        {
+            int lineStart = text.LastIndexOf('\n', Math.Max(0, pos - 1)) + 1;
+            int lineEnd = text.IndexOf('\n', pos + len);
+            if (lineEnd < 0) lineEnd = text.Length;
+            int ws = Math.Max(lineStart, pos - ExcerptRadius);
+            int we = Math.Min(lineEnd, pos + len + ExcerptRadius);
+
+            if (windows.Count > 0 && ws <= windows[^1].end &&
+                Math.Max(windows[^1].end, we) - windows[^1].start <= MaxWindowChars)
+            {
+                var last = windows[^1];
+                last.toks.Add(tok);
+                windows[^1] = (last.start, Math.Max(last.end, we), last.toks);
+            }
+            else
+            {
+                // Start past the previous window so refusing a merge can't emit the same text twice.
+                int start = windows.Count > 0 ? Math.Max(ws, windows[^1].end) : ws;
+                if (start >= we) continue; // fully inside the previous window already
+                windows.Add((start, we, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { tok }));
+            }
+        }
+
+        // Greedily keep the most specific windows — exact-phrase windows beat any combination of single
+        // generic words — then emit the kept ones in document order. Window size never exceeds
+        // MaxWindowChars < cap, so something is always kept when there was a match.
+        var kept = new List<(int start, int end)>();
+        int total = 0;
+        foreach (var w in windows.OrderByDescending(w => (w.toks.Contains(phrase) ? tokens.Count : 0) + w.toks.Count)
+                                 .ThenBy(w => w.start))
+        {
+            int size = w.end - w.start;
+            if (total + size > cap) continue;
+            kept.Add((w.start, w.end));
+            total += size;
+        }
+        kept.Sort((a, b) => a.start.CompareTo(b.start));
+
+        var sb = new StringBuilder();
+        foreach (var (s, e) in kept)
+        {
+            if (sb.Length > 0) sb.Append("\n…\n");
+            sb.Append(text[s..e].Trim());
+        }
+        return sb.ToString();
     }
 
     // ---- helpers -----------------------------------------------------------------

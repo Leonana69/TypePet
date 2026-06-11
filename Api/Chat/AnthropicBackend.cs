@@ -76,42 +76,44 @@ public sealed class AnthropicBackend : IChatBackend
     private static List<MessageParam> ToParams(IReadOnlyList<ChatMessage> messages)
     {
         var result = new List<MessageParam>();
-        var pendingToolResults = new List<ContentBlockParam>();
+        // Consecutive user-side messages (tool results, then perhaps an agent nudge or back-to-back user
+        // texts) fold into ONE user turn of blocks — the API requires tool_result blocks in a user message
+        // and rejects empty content, and this keeps roles cleanly alternating.
+        var pendingUserBlocks = new List<ContentBlockParam>();
 
         void Flush()
         {
-            if (pendingToolResults.Count == 0) return;
-            result.Add(new MessageParam { Role = Role.User, Content = new List<ContentBlockParam>(pendingToolResults) });
-            pendingToolResults.Clear();
+            if (pendingUserBlocks.Count == 0) return;
+            result.Add(new MessageParam { Role = Role.User, Content = new List<ContentBlockParam>(pendingUserBlocks) });
+            pendingUserBlocks.Clear();
         }
 
         foreach (var m in messages)
         {
             if (m.Role == ChatRole.Tool)
             {
-                pendingToolResults.Add(new ToolResultBlockParam
+                pendingUserBlocks.Add(new ToolResultBlockParam
                 {
                     ToolUseID = m.ToolCallId ?? "",
                     Content = m.Text ?? "",
                     IsError = m.IsError,
                 });
-                continue;
             }
-
-            Flush();
-
-            if (m.Role == ChatRole.User)
+            else if (m.Role == ChatRole.User)
             {
-                result.Add(new MessageParam { Role = Role.User, Content = m.Text ?? "" });
+                pendingUserBlocks.Add(new TextBlockParam { Text = m.Text ?? "" });
             }
             else if (m.Role == ChatRole.Assistant)
             {
                 var blocks = new List<ContentBlockParam>();
-                if (!string.IsNullOrEmpty(m.Text))
+                // Whitespace-only counts as empty: the API rejects text blocks with no non-whitespace.
+                if (!string.IsNullOrWhiteSpace(m.Text))
                     blocks.Add(new TextBlockParam { Text = m.Text });
                 if (m.ToolCalls is { } calls)
                     foreach (var c in calls)
                         blocks.Add(new ToolUseBlockParam { ID = c.Id, Name = c.Name, Input = ParseInput(c.ArgumentsJson) });
+                if (blocks.Count == 0) continue; // empty assistant turn — the API rejects empty content
+                Flush();
                 result.Add(new MessageParam { Role = Role.Assistant, Content = blocks });
             }
         }

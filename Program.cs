@@ -92,11 +92,13 @@ internal static class Program
         }
 
         // Dev-only: print exactly what web_fetch / maple_lookup would extract from a page (incl. annotated
-        // link targets). Pure HTTP + HTML parse, no Avalonia. Usage: --fetch-test "<url>".
+        // link targets and embedded SPA JSON data). Pure HTTP + HTML parse, no Avalonia.
+        // Usage: --fetch-test "<url>" [--fetch-query "<keywords>"] — the query selects matching sections.
         if (ParseOption(args, "--fetch-test") is string fetchUrl)
         {
             try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { /* redirected */ }
-            Console.WriteLine(TypePet.Api.Chat.WebTools.FetchReadableAsync(fetchUrl, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
+            string fetchQuery = ParseOption(args, "--fetch-query") ?? "";
+            Console.WriteLine(TypePet.Api.Chat.WebTools.FetchReadableAsync(fetchUrl, fetchQuery, System.Threading.CancellationToken.None).GetAwaiter().GetResult());
             return 0;
         }
 
