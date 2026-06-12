@@ -33,9 +33,9 @@ matching `AssemblyVersion`/`FileVersion` and add an entry here when releasing.
   maximized keeps the pet visible. Toggle it in Settings → System ("Hide in fullscreen apps") or via
   `hideWhenFullscreen` in `settings.json` (default on).
 
-## [1.0.0] - 2026-06-03
+## [0.1.0] - 2026-06-03
 
-First tagged release. The desktop pet walks, jumps, and climbs along the geometry derived from your
+First release. The desktop pet walks, jumps, and climbs along the geometry derived from your
 open windows and the taskbar.
 
 ### Added
