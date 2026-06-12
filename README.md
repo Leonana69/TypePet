@@ -106,6 +106,8 @@ Built on **.NET 10** and **Avalonia 11.3**.
   `/fortune`, … — are installed from the hub, not bundled.
 
 ### Command hub
+> 📦 The community command registry lives at **[Leonana69/TypePet-Commands](https://github.com/Leonana69/TypePet-Commands)** — browse it, install commands in-app, or publish your own.
+
 - **Browse & install** (tray → *Browse hub…*). Anonymously fetches the registry from
   [`Leonana69/TypePet-Commands`](https://github.com/Leonana69/TypePet-Commands) and lists Official /
   Community commands with **Install / Update / Remove**. A pre-install disclosure summarizes the author,
