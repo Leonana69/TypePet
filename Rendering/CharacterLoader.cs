@@ -12,8 +12,8 @@ namespace TypePet.Rendering;
 ///
 /// <paramref name="poses"/> is the set of poses the caller will show: it both bounds the drag
 /// hit-test and limits decoding to just those poses (the live pet plays
-/// <see cref="CharacterAnimator.ActivePoses"/>; a card thumbnail needs only <c>stand1</c>), so we
-/// never decode a character's full footage when a fraction is used. <paramref name="loadExpressions"/>
+/// <see cref="CharacterAnimator.ActivePosesFor"/>; a card thumbnail needs only the stand poses), so
+/// we never decode a character's full footage when a fraction is used. <paramref name="loadExpressions"/>
 /// pulls in the Face item's swappable expressions (the live pet wants them for drag reactions; a
 /// thumbnail doesn't). The returned sprites own native bitmaps and must be
 /// <see cref="CharacterSprites.Dispose">disposed</see> when swapped out.
@@ -28,8 +28,8 @@ public static class CharacterLoader
     /// As <see cref="Load(CharacterStore, string?, IReadOnlyCollection{string}?, bool)"/>, but with the
     /// decode set (<paramref name="posesToLoad"/>) separate from the hit-test set
     /// (<paramref name="hitTestPoses"/>). The live pet decodes its action poses too
-    /// (<see cref="CharacterAnimator.LivePoses"/>) while sizing the grab box to only the played
-    /// locomotion poses (<see cref="CharacterAnimator.ActivePoses"/>), so wide attack sprites don't
+    /// (<see cref="CharacterAnimator.LivePosesFor"/>) while sizing the grab box to only the played
+    /// locomotion poses (<see cref="CharacterAnimator.ActivePosesFor"/>), so wide attack sprites don't
     /// inflate where the pet is grabbable.
     /// </summary>
     public static CharacterSprites? Load(CharacterStore store, string? id,
