@@ -291,5 +291,33 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+
+    <!-- ============================ say-bar command dropdown ============================
+         Fluent's default selection paints the row in a near-opaque accent teal, which left the gray
+         help line on the highlighted command nearly unreadable. Use the frosted translucent-teal
+         highlight instead (same family as Border.charCard.selected) and lift the help line's color
+         on the selected row. -->
+    <Style Selector="ListBox.commandMenu ListBoxItem">
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="ListBox.commandMenu ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#14FFFFFF" />
+    </Style>
+    <Style Selector="ListBox.commandMenu ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#3320C9C2" />
+    </Style>
+    <Style Selector="ListBox.commandMenu ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#3D20C9C2" />
+    </Style>
+    <Style Selector="ListBox.commandMenu ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#3D20C9C2" />
+    </Style>
+    <!-- the command's help line: secondary gray normally, brightened while its row is highlighted -->
+    <Style Selector="ListBox.commandMenu TextBlock.cmdHelp">
+      <Setter Property="Foreground" Value="#8AA0A5" />
+    </Style>
+    <Style Selector="ListBox.commandMenu ListBoxItem:selected TextBlock.cmdHelp">
+      <Setter Property="Foreground" Value="#C8DBDD" />
+    </Style>
   </Application.Styles>
 </Application>
