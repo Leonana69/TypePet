@@ -8,6 +8,9 @@
   "use strict";
 
   const SPR = "assets/sprites/";
+  // The sprite demos ARE the page's content, so they always animate. This flag only
+  // tones down decorative motion (scroll reveals, smooth scrolling) — note Windows
+  // reports "reduce" whenever OS "Animation effects" are off, not just for a11y users.
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ----- sprite frame tables (frame ids + per-frame ms) --------------------
@@ -188,16 +191,6 @@
     const imgEl = document.getElementById(imgId);
     if (!stage || !petEl || !imgEl) return;
     const bubbleEl = bubbleId ? document.getElementById(bubbleId) : null;
-
-    if (reduceMotion) {
-      // static: stand the pet on the dock, no roaming
-      petEl.style.transformOrigin = "bottom center";
-      imgEl.src = src(POSES.stand.frames[0]);
-      const w = stage.clientWidth, h = stage.clientHeight;
-      const bw = petEl.offsetWidth || 72, bh = petEl.offsetHeight || 70;
-      petEl.style.transform = `translate(${0.5 * w - bw / 2}px, ${0.88 * h - bh}px)`;
-      return;
-    }
     pets.push(createPet(stage, petEl, imgEl, bubbleEl));
   }
 
@@ -208,7 +201,6 @@
     document.querySelectorAll(".pose-sprite").forEach((img) => {
       const pose = img.getAttribute("data-pose");
       if (!POSES[pose]) return;
-      if (reduceMotion) { img.src = src(POSES[pose].frames[0]); return; }
       addLoop(img, pose);
     });
   }
@@ -237,11 +229,6 @@
       requestAnimationFrame(() => el.classList.add("show"));
       while (log.children.length > 6) log.removeChild(log.firstChild);
       log.scrollTop = log.scrollHeight;
-    }
-
-    if (reduceMotion) {
-      CHAT.slice(0, 2).forEach((c) => { addMsg("chat__msg--user", c.u); addMsg("chat__msg--pet", c.p); });
-      return;
     }
 
     let i = 0, started = false;
@@ -295,14 +282,14 @@
     const petImg = document.getElementById("cmdPetImg");
     if (!chips || !typedEl || !bubble || !petImg) return;
 
-    const cmdLoop = reduceMotion ? null : addLoop(petImg, "alert");
+    const cmdLoop = addLoop(petImg, "alert");
     let timer = null, typing = null, order = Object.keys(CMD), idx = 0;
 
     function select(key, fromClick) {
       const c = CMD[key];
       if (!c) return;
       chips.querySelectorAll(".chip").forEach((b) => b.classList.toggle("is-active", b.dataset.cmd === key));
-      if (cmdLoop) cmdLoop.pose = c.pose; else petImg.src = src(POSES[c.pose].frames[0]);
+      cmdLoop.pose = c.pose;
       // typewriter the command name
       clearInterval(typing);
       typedEl.textContent = "";
@@ -322,7 +309,6 @@
 
     function restart() {
       clearInterval(timer);
-      if (reduceMotion) return;
       timer = setInterval(() => { if (document.hidden) return; idx = (idx + 1) % order.length; select(order[idx]); }, 3400);
     }
 
@@ -466,7 +452,7 @@
     initCommands();
     initOSDetect();
     initScene("sceneStage", "heroPet", "heroPetImg", "heroBubble");
-    if (!reduceMotion) requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

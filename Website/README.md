@@ -65,4 +65,7 @@ A static server is closest to how Pages serves it (relative paths, no `file://` 
 ## Notes
 
 - No tracking, no cookies, no external JS — only the Google Fonts stylesheet is fetched remotely.
-- Animations respect `prefers-reduced-motion`: the pet stands still and demos render statically.
+- The sprite demos (hero pet, pose cards, chat & command demos) always animate — they're the page's
+  content, and Windows reports `prefers-reduced-motion: reduce` whenever OS "Animation effects" are
+  off (e.g. performance presets, Remote Desktop), which used to freeze the pet for those visitors.
+  Decorative motion (scroll reveals, smooth scrolling) still respects `prefers-reduced-motion`.
