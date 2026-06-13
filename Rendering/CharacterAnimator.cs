@@ -12,6 +12,7 @@ namespace TypePet.Rendering;
 public sealed class CharacterAnimator
 {
     private string _pose = "stand1";
+    private string _standPose = "stand1"; // the idle stance: "stand1", or "stand2" for two-handed characters
     private int _cycleIndex;    // position within the pose's playback cycle
     private double _elapsedMs;  // time spent on the current frame
 
@@ -44,6 +45,15 @@ public sealed class CharacterAnimator
 
     /// <summary>The active footage pose name (e.g. "stand1", "walk1", or a commanded action pose).</summary>
     public string Pose => _pose;
+
+    /// <summary>The pose played while standing idle — "stand1", or "stand2" for a character set to its
+    /// two-handed stance (the picker card's checkbox). Also the fallback for any state without a
+    /// dedicated pose. Changing it re-poses the pet on its next <see cref="Update"/>.</summary>
+    public string StandPose
+    {
+        get => _standPose;
+        set => _standPose = string.IsNullOrWhiteSpace(value) ? "stand1" : value;
+    }
 
     /// <summary>The resolved frame index into the pose's <c>Frames</c> list.</summary>
     public int FrameIndex { get; private set; }
@@ -281,21 +291,27 @@ public sealed class CharacterAnimator
 
     private static int Clamp(int frame, int count) => frame < 0 ? 0 : frame >= count ? count - 1 : frame;
 
-    private static string PoseFor(PetState state) => state switch
+    private string PoseFor(PetState state) => state switch
     {
         PetState.Walk => "walk1",
         PetState.Rope => "ladder", // window side-edges read as ladders; swap to "rope" for the rope pose
         PetState.Jump => "jump",
         PetState.Fly => "fly",     // commanded vertical glide shows the fly/float pose
-        _ => "stand1",
+        _ => _standPose,
     };
 
     /// <summary>The everyday locomotion poses, used to size the drag hit-test. Mirrors <see cref="PoseFor"/>
     /// EXCEPT the commanded <see cref="PetState.Fly"/> pose ("fly"): it's wider (wings) and only shows for a
     /// brief commanded glide, so — like the attack stances — it's kept out of the grab box to avoid
     /// inflating it. ("fly" is still decoded for the live pet via <see cref="ActionPoses"/>.)</summary>
-    public static readonly IReadOnlyCollection<string> ActivePoses =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1", "walk1", "ladder", "jump" };
+    public static readonly IReadOnlyCollection<string> ActivePoses = ActivePosesFor(useStand2: false);
+
+    /// <summary>As <see cref="ActivePoses"/>, but idling in the stance the pet will actually play —
+    /// "stand2" (two-handed) when <paramref name="useStand2"/>, else "stand1" — so the grab box is
+    /// measured over the poses shown, not the other stance.</summary>
+    public static IReadOnlyCollection<string> ActivePosesFor(bool useStand2) =>
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { useStand2 ? "stand2" : "stand1", "walk1", "ladder", "jump" };
 
     /// <summary>The non-locomotion poses the control API can command via <c>DoAction</c> (mapped from
     /// friendly names by <see cref="TypePet.Engine.ActionRegistry"/>), including the whole attack
@@ -312,15 +328,15 @@ public sealed class CharacterAnimator
         return set;
     }
 
-    /// <summary>Every pose the live pet should decode: the state-driven poses plus the commandable
-    /// action poses. Passed as the load's <c>posesToLoad</c> while <see cref="ActivePoses"/> stays the
+    /// <summary>Every pose the live pet should decode for the chosen idle stance: the state-driven
+    /// poses, BOTH stand stances (so the preference can be resolved against what actually decoded, and
+    /// a character with only the other stand still idles on something), and the commandable action
+    /// poses. Passed as the load's <c>posesToLoad</c> while <see cref="ActivePosesFor"/> stays the
     /// hit-test set.</summary>
-    public static readonly IReadOnlyCollection<string> LivePoses = BuildLivePoses();
-
-    private static IReadOnlyCollection<string> BuildLivePoses()
+    public static IReadOnlyCollection<string> LivePosesFor(bool useStand2)
     {
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var p in ActivePoses) set.Add(p);
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1", "stand2" };
+        foreach (var p in ActivePosesFor(useStand2)) set.Add(p);
         foreach (var p in ActionPoses) set.Add(p);
         return set;
     }

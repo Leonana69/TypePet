@@ -412,9 +412,12 @@ public partial class App : Application
     {
         if (_settings is null || _store is null || _petWindow is null) return;
 
+        bool useStand2 = _settings.UsesStand2(id);
         var sprites = CharacterLoader.Load(_store, id,
-            hitTestPoses: CharacterAnimator.ActivePoses, posesToLoad: CharacterAnimator.LivePoses, loadExpressions: true);
+            hitTestPoses: CharacterAnimator.ActivePosesFor(useStand2),
+            posesToLoad: CharacterAnimator.LivePosesFor(useStand2), loadExpressions: true);
         _petWindow.SetCharacter(sprites);
+        _petWindow.SetStandPose(useStand2);
         _settings.CurrentCharacterId = id;
         _settings.Save();
 

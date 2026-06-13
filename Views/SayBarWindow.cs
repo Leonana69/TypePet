@@ -132,16 +132,20 @@ public sealed class SayBarWindow : Window
                     FontSize = 13,
                     Foreground = FrostTheme.TextPrimary,
                 });
-                sp.Children.Add(new TextBlock
+                var help = new TextBlock
                 {
                     Text = ci.Aliases.Count > 0 ? $"aka {string.Join(", ", ci.Aliases)} — {ci.Help}" : ci.Help,
                     FontSize = 11,
-                    Foreground = FrostTheme.TextSecondary,
                     TextWrapping = TextWrapping.Wrap,
-                });
+                };
+                // Foreground comes from the App.axaml cmdHelp styles (gray at rest, lifted on the
+                // selected row) — a local value here would beat those styles and pin it gray.
+                help.Classes.Add("cmdHelp");
+                sp.Children.Add(help);
                 return sp;
             }, supportsRecycling: true),
         };
+        _commandMenu.Classes.Add("commandMenu");
         // A click/tap on a row accepts it (selection updates on press, before this fires).
         _commandMenu.Tapped += (_, _) =>
         {

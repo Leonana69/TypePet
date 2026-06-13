@@ -23,6 +23,8 @@ public sealed class Settings
     public double WorldPollHz { get; set; } = 8;     // how often window geometry is re-read
     public string SpriteSheet { get; set; } = "Assets/pet-spritesheet.png";
     public string CurrentCharacterId { get; set; } = "default"; // selected character (CharacterStore id), or "default"
+    public List<string> Stand2CharacterIds { get; set; } = new(); // characters that idle in their two-handed
+                                                                  // stance ("stand2") — per-card checkbox in the picker
 
     public bool EnableMcpServer { get; set; } = false; // expose the pet over a local MCP tool server (LLM control)
     public int McpPort { get; set; } = 8765;           // localhost port the MCP server listens on when enabled
@@ -128,6 +130,9 @@ public sealed class Settings
         if (string.IsNullOrWhiteSpace(CurrentCharacterId)) CurrentCharacterId = d.CurrentCharacterId;
         if (string.IsNullOrWhiteSpace(SayInputHotkey)) SayInputHotkey = d.SayInputHotkey;
 
+        Stand2CharacterIds ??= new();
+        Stand2CharacterIds.RemoveAll(string.IsNullOrWhiteSpace);
+
         DisabledCommandIds ??= new();
         NetworkApprovedCommands ??= new();
         NetworkApprovedCommands.RemoveAll(g => g is null || string.IsNullOrWhiteSpace(g.Id));
@@ -153,6 +158,21 @@ public sealed class Settings
 
         static double Positive(double value, double fallback) =>
             double.IsFinite(value) && value > 0 ? value : fallback;
+    }
+
+    /// <summary>True when character <paramref name="id"/> is set to idle in its two-handed stance
+    /// ("stand2" — the picker card's top-left checkbox) rather than the default "stand1". Ids compare
+    /// case-insensitively, matching how built-in ids resolve in <see cref="CharacterStore"/>.</summary>
+    public bool UsesStand2(string? id) =>
+        !string.IsNullOrEmpty(id)
+        && Stand2CharacterIds.Any(c => string.Equals(c, id, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Record whether character <paramref name="id"/> idles in its two-handed stance. The
+    /// caller persists via <see cref="Save"/>.</summary>
+    public void SetUsesStand2(string id, bool useStand2)
+    {
+        Stand2CharacterIds.RemoveAll(c => string.Equals(c, id, StringComparison.OrdinalIgnoreCase));
+        if (useStand2) Stand2CharacterIds.Add(id);
     }
 
     /// <summary>True if command <paramref name="id"/> has a standing network grant whose approved host

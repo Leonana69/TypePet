@@ -121,10 +121,13 @@ public partial class PetWindow : Window
         // Load the currently selected character (a user import from the store, or one of the
         // bundled built-ins). CharacterLoader falls back to the default if the footage can't be
         // decoded; if even that fails, the renderer draws the placeholder shape. The live pet decodes
-        // its action poses too (LivePoses) while the grab box stays sized to the played poses.
+        // its action poses too (LivePosesFor) while the grab box stays sized to the played poses.
+        bool useStand2 = _cfg.UsesStand2(_cfg.CurrentCharacterId);
         _sprites = CharacterLoader.Load(_store, _cfg.CurrentCharacterId,
-            hitTestPoses: CharacterAnimator.ActivePoses, posesToLoad: CharacterAnimator.LivePoses, loadExpressions: true);
+            hitTestPoses: CharacterAnimator.ActivePosesFor(useStand2),
+            posesToLoad: CharacterAnimator.LivePosesFor(useStand2), loadExpressions: true);
         _animator = new CharacterAnimator();
+        SetStandPose(useStand2);
         View.Sprites = _sprites;
         View.Animator = _animator;
         View.ShowDebug = _cfg.ShowOverlay;
@@ -183,6 +186,19 @@ public partial class PetWindow : Window
         View.Sprites = sprites;
         old?.Dispose(); // free the previous character's bitmaps (each load owns its own instances)
         _control?.NotifyCapabilitiesChanged(); // available actions/expressions are character-specific
+    }
+
+    /// <summary>Point the animator's idle stance at the character's preferred stand pose: "stand2"
+    /// (the two-handed stance) when preferred — or when it's the only stand the footage defines —
+    /// else "stand1". Resolved against the loaded sprites so a stale preference (e.g. a hand-edited
+    /// settings.json naming a stance this character lacks) can never idle the pet on a missing pose.
+    /// Call after <see cref="SetCharacter"/> so the check sees the new footage.</summary>
+    public void SetStandPose(bool preferStand2)
+    {
+        if (_animator is null) return;
+        bool hasStand1 = _sprites?.GetPose("stand1") is not null;
+        bool hasStand2 = _sprites?.GetPose("stand2") is not null;
+        _animator.StandPose = hasStand2 && (preferStand2 || !hasStand1) ? "stand2" : "stand1";
     }
 
     /// <summary>

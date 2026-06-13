@@ -18,7 +18,9 @@ namespace TypePet.Views;
 /// built-ins (Default + Pig) plus every imported one — six per row in a scrolling grid, with a trailing import
 /// card to add a new character from a zip. Clicking a card makes the pet wear it (via the
 /// <c>onSelect</c> callback); right-clicking offers Rename, Export, and Delete. The currently worn
-/// character gets an accent ring and a "WORN" badge.
+/// character gets an accent ring and a "WORN" badge. Each card's top-left checkbox picks the stance
+/// the character idles in (ticked = the two-handed "stand2"), grayed out when the footage defines
+/// only one stand pose.
 /// </summary>
 public sealed class CharacterView : UserControl
 {
@@ -34,9 +36,11 @@ public sealed class CharacterView : UserControl
     // Where the user can build/obtain importable character footage.
     private const string MapleSimUrl = "https://maple-sim.net/";
 
-    // A thumbnail only ever draws the idle frame, so decode just that one pose (not the whole footage).
+    // A thumbnail only ever draws an idle frame, so decode just the stand poses (not the whole
+    // footage). Both stances come along: the card previews the stance the pet would idle in, and the
+    // corner checkbox needs to know whether the character has a second stand pose at all.
     private static readonly IReadOnlyCollection<string> ThumbnailPoses =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "stand1", "stand2" };
 
     private readonly CharacterStore _store;
     private readonly Settings _cfg;
@@ -46,9 +50,17 @@ public sealed class CharacterView : UserControl
     private readonly UniformGrid _grid;
     private readonly TextBlock _status;
 
+    /// <summary>One card's cached preview: the rendered idle-stance bitmap plus which stand poses the
+    /// footage defines (drives the stance checkbox).</summary>
+    private sealed record CardThumb(Bitmap? Image, bool HasStand1, bool HasStand2)
+    {
+        public static readonly CardThumb Empty = new(null, false, false);
+    }
+
     // Render each card's thumbnail once and reuse it across Rebuilds (which happen on every
-    // select/rename/import/delete). Keyed by character id; disposed on delete and on window close.
-    private readonly Dictionary<string, Bitmap?> _thumbs = new();
+    // select/rename/import/delete). Keyed by character id; disposed on delete, on a stance toggle
+    // (the new stance must be re-rendered), and on window close.
+    private readonly Dictionary<string, CardThumb> _thumbs = new();
 
     /// <param name="onChanged">Notified when the store is mutated without re-selecting (a rename), so
     /// callers can refresh anything derived from the worn character's display name (e.g. the tray header).</param>
@@ -116,7 +128,7 @@ public sealed class CharacterView : UserControl
     /// <summary>Release the cached thumbnail bitmaps. Called by the host window when it closes.</summary>
     public void DisposeThumbnails()
     {
-        foreach (var bmp in _thumbs.Values) bmp?.Dispose();
+        foreach (var t in _thumbs.Values) t.Image?.Dispose();
         _thumbs.Clear();
     }
 
@@ -133,13 +145,14 @@ public sealed class CharacterView : UserControl
     private Control BuildCard(CharacterEntry entry)
     {
         bool isCurrent = string.Equals(entry.Id, _cfg.CurrentCharacterId, StringComparison.Ordinal);
+        var cardThumb = Thumbnail(entry);
 
         var thumb = new Image
         {
             Width = ThumbW,
             Height = ThumbH,
             Stretch = Stretch.Uniform,
-            Source = Thumbnail(entry),
+            Source = cardThumb.Image,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -181,9 +194,11 @@ public sealed class CharacterView : UserControl
             Children = { thumbWell, namePanel },
         };
 
-        // Overlay host so the worn badge can float over the top-right corner.
+        // Overlay host so the stance checkbox (top-left) and worn badge (top-right) can float over
+        // the card's corners.
         var inner = new Grid();
         inner.Children.Add(content);
+        inner.Children.Add(StanceToggle(entry, cardThumb, isCurrent));
         if (isCurrent)
             inner.Children.Add(WornBadge());
 
@@ -243,6 +258,53 @@ public sealed class CharacterView : UserControl
             Margin = new Thickness(0, 4, 4, 0),
             Child = label,
         };
+    }
+
+    /// <summary>The card's top-left stance checkbox: ticked = this character idles in its two-handed
+    /// stand pose ("stand2", the stance of two-hand weapons). Disabled — grayed out — when the footage
+    /// defines only one stand pose; the transparent wrapper then keeps the explanatory tooltip alive
+    /// (a disabled control receives no pointer events of its own). Toggling persists the choice,
+    /// re-renders the card in the new stance, and re-applies the worn character to the live pet.
+    /// Clicks land on the checkbox (which handles them), so they don't also wear the card.</summary>
+    private Control StanceToggle(CharacterEntry entry, CardThumb thumb, bool isCurrent)
+    {
+        bool hasBoth = thumb.HasStand1 && thumb.HasStand2;
+        var box = new CheckBox
+        {
+            // A stand2-only character idles in stand2 no matter the setting; tick the box to say so.
+            IsChecked = thumb.HasStand2 && (_cfg.UsesStand2(entry.Id) || !thumb.HasStand1),
+            IsEnabled = hasBoth,
+            MinWidth = 0,
+            MinHeight = 0, // collapse Fluent's 32px MinHeight to the bare 20px glyph box
+            Padding = new Thickness(0),
+        };
+
+        if (hasBoth)
+        {
+            box.IsCheckedChanged += (_, _) =>
+            {
+                bool useStand2 = box.IsChecked == true;
+                if (useStand2 == _cfg.UsesStand2(entry.Id)) return; // already recorded; nothing to do
+                _cfg.SetUsesStand2(entry.Id, useStand2);
+                _cfg.Save();
+                if (_thumbs.Remove(entry.Id, out var t)) t.Image?.Dispose(); // re-render in the new stance
+                if (isCurrent) _onSelect(entry.Id); // reload the worn character so the pet re-poses
+                Rebuild();
+            };
+        }
+
+        var host = new Border
+        {
+            Background = Brushes.Transparent, // hit-test visible, so the tooltip shows over a disabled box
+            Child = box,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(2, 2, 0, 0),
+        };
+        ToolTip.SetTip(host, hasBoth
+            ? "Idle in the two-handed stance (stand2)"
+            : "This character has only one stand pose");
+        return host;
     }
 
     private Control BuildAddCard()
@@ -439,7 +501,9 @@ public sealed class CharacterView : UserControl
 
         bool wasCurrent = string.Equals(entry.Id, _cfg.CurrentCharacterId, StringComparison.Ordinal);
         _store.Delete(entry.Id);
-        if (_thumbs.Remove(entry.Id, out var thumb)) thumb?.Dispose();
+        if (_thumbs.Remove(entry.Id, out var thumb)) thumb.Image?.Dispose();
+        // Drop the deleted character's stance preference too, so settings.json doesn't accrue dead ids.
+        if (_cfg.UsesStand2(entry.Id)) { _cfg.SetUsesStand2(entry.Id, false); _cfg.Save(); }
         if (wasCurrent)
             _onSelect(CharacterStore.DefaultId); // deleting the worn character restores the default
         Rebuild();
@@ -447,23 +511,30 @@ public sealed class CharacterView : UserControl
     }
 
     // ------------------------------------------------------------------ thumbnail
-    /// <summary>The card thumbnail for a character, rendered once and cached by id.</summary>
-    private Bitmap? Thumbnail(CharacterEntry entry)
+    /// <summary>The card preview for a character (bitmap + which stand stances exist), rendered once
+    /// and cached by id.</summary>
+    private CardThumb Thumbnail(CharacterEntry entry)
     {
         if (_thumbs.TryGetValue(entry.Id, out var cached)) return cached;
-        var bmp = RenderThumbnail(entry);
-        _thumbs[entry.Id] = bmp;
-        return bmp;
+        var thumb = RenderThumbnail(entry);
+        _thumbs[entry.Id] = thumb;
+        return thumb;
     }
 
-    /// <summary>Render the character's idle (stand1) frame into a small bitmap for its card. Decodes
-    /// only the stand1 pose and disposes that throwaway sprite set once the bitmap is rasterized.</summary>
-    private Bitmap? RenderThumbnail(CharacterEntry entry)
+    /// <summary>Render the character's idle frame — the stand pose the pet would actually play —
+    /// into a small bitmap for its card. Decodes only the stand poses and disposes that throwaway
+    /// sprite set once the bitmap is rasterized.</summary>
+    private CardThumb RenderThumbnail(CharacterEntry entry)
     {
         try
         {
             using var sprites = CharacterLoader.Load(_store, entry.Id, ThumbnailPoses);
-            if (sprites is null) return null;
+            if (sprites is null) return CardThumb.Empty;
+
+            bool hasStand1 = sprites.GetPose("stand1") is not null;
+            bool hasStand2 = sprites.GetPose("stand2") is not null;
+            // Mirror PetWindow.SetStandPose, so the card previews the stance the pet would wear.
+            string pose = hasStand2 && (_cfg.UsesStand2(entry.Id) || !hasStand1) ? "stand2" : "stand1";
 
             // Draw the footage at 100% — it's native-resolution pixel art, so any non-integer scale
             // would shimmer/blur it. Every character shares one body rig, so at 1:1 their heads already
@@ -478,13 +549,13 @@ public sealed class CharacterView : UserControl
                 // Vertically center the drawn figure (it spans HeightAboveFeet up from the feet), but
                 // never push the feet past the bottom edge — a tall hat then crops at the top instead.
                 double feetY = Math.Min(ThumbH - ThumbFootMargin, (ThumbH + sprites.HeightAboveFeet) / 2);
-                PetRenderer.DrawCharacter(ctx, sprites, "stand1", 0, centerX, feetY, flipHorizontal: false);
+                PetRenderer.DrawCharacter(ctx, sprites, pose, 0, centerX, feetY, flipHorizontal: false);
             }
-            return rtb;
+            return new CardThumb(rtb, hasStand1, hasStand2);
         }
         catch
         {
-            return null;
+            return CardThumb.Empty;
         }
     }
 

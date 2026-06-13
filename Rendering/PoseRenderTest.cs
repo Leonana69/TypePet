@@ -61,7 +61,7 @@ public static class PoseRenderTest
             rtb.Dispose();
         }
 
-        foreach (var pose in new[] { "stand1", "walk1", "jump", "ladder", "rope" })
+        foreach (var pose in new[] { "stand1", "stand2", "walk1", "jump", "ladder", "rope" })
         {
             var p = sprites.GetPose(pose);
             if (p is null) continue;
